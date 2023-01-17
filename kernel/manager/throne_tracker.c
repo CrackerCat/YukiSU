@@ -523,7 +523,7 @@ static void track_throne_locked(bool prune_only, bool force_scan)
 		data = kzalloc(sizeof(*data), GFP_KERNEL);
 		if (!data) {
 			pr_err("track_throne: OOM appid=%u\n", res);
-			continue;
+			goto out;
 		}
 		data->appid = res;
 		strscpy(data->package, package, KSU_MAX_PACKAGE_NAME);
