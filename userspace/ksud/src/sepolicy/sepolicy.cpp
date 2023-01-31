@@ -141,43 +141,6 @@ const char* parse_word(const char* p, std::string& out) {
     return p;
 }
 
-// Helper: parse objects (single word, {word1 word2 ...}, or *)
-const char* parse_seobj(const char* p, std::vector<std::string>& out) {
-    out.clear();
-    p = skip_space(p);
-
-    if (*p == '*') {
-        out.push_back("*");
-        return p + 1;
-    }
-
-    if (*p == '{') {
-        p++;  // skip '{'
-        while (*p && *p != '}') {
-            p = skip_space(p);
-            if (*p == '}')
-                break;
-            std::string word;
-            p = parse_word(p, word);
-            if (!word.empty()) {
-                out.push_back(word);
-            }
-            p = skip_space(p);
-        }
-        if (*p == '}')
-            p++;
-        return p;
-    }
-
-    // Single word
-    std::string word;
-    p = parse_word(p, word);
-    if (!word.empty()) {
-        out.push_back(word);
-    }
-    return p;
-}
-
 const char* parse_seobj_strict(const char* p, std::vector<std::string>& out) {
     out.clear();
     if (*p == '*') {
@@ -375,65 +338,78 @@ bool parse_rule(const std::string& rule, std::vector<AtomicStatement>& statement
         return true;
     }
 
-    // permissive/enforce type
     if (cmd_str == "permissive" || cmd_str == "enforce") {
         const uint32_t subcmd = (cmd_str == "permissive") ? SUBCMD_PERMISSIVE : SUBCMD_ENFORCING;
-
         std::vector<std::string> types;
-        p = parse_seobj(p, types);
-
-        for (const auto& t : types) {
+        p = skip_required_space(p);
+        if (p == nullptr)
+            return false;
+        p = parse_seobj_strict(p, types);
+        if (p == nullptr || *skip_space(p) != '\0' ||
+            std::find(types.begin(), types.end(), "*") != types.end())
+            return false;
+        for (const auto& type : types) {
             AtomicStatement stmt;
             stmt.cmd = CMD_TYPE_STATE;
             stmt.subcmd = subcmd;
-            stmt.sepol1 = PolicyObject::from_str(t);
+            stmt.sepol1 = PolicyObject::from_str(type);
             statements.push_back(stmt);
         }
         return true;
     }
 
-    // type type_name attr1 attr2 ...
     if (cmd_str == "type") {
         std::string type_name;
-        p = skip_space(p);
+        p = skip_required_space(p);
+        if (p == nullptr)
+            return false;
         p = parse_word(p, type_name);
-
+        if (type_name.empty())
+            return false;
         std::vector<std::string> attrs;
-        p = parse_seobj(p, attrs);
-
-        if (attrs.empty()) {
-            // Type with no attributes
+        if (*skip_space(p) == '\0') {
+            attrs.emplace_back("domain");
+        } else {
+            p = skip_required_space(p);
+            if (p == nullptr)
+                return false;
+            p = parse_seobj_strict(p, attrs);
+            if (p == nullptr || *skip_space(p) != '\0' ||
+                std::find(attrs.begin(), attrs.end(), "*") != attrs.end())
+                return false;
+        }
+        for (const auto& attr : attrs) {
             AtomicStatement stmt;
             stmt.cmd = CMD_TYPE;
-            stmt.subcmd = 0;
             stmt.sepol1 = PolicyObject::from_str(type_name);
+            stmt.sepol2 = PolicyObject::from_str(attr);
             statements.push_back(stmt);
-        } else {
-            for (const auto& attr : attrs) {
-                AtomicStatement stmt;
-                stmt.cmd = CMD_TYPE;
-                stmt.subcmd = 0;
-                stmt.sepol1 = PolicyObject::from_str(type_name);
-                stmt.sepol2 = PolicyObject::from_str(attr);
-                statements.push_back(stmt);
-            }
         }
         return true;
     }
 
-    // typeattribute type attr1 attr2 ...
-    if (cmd_str == "typeattribute") {
+    if (cmd_str == "typeattribute" || cmd_str == "attradd") {
         std::vector<std::string> types;
         std::vector<std::string> attrs;
-        p = parse_seobj(p, types);
-        p = parse_seobj(p, attrs);
-
-        for (const auto& t : types) {
+        p = skip_required_space(p);
+        if (p == nullptr)
+            return false;
+        p = parse_seobj_strict(p, types);
+        if (p == nullptr)
+            return false;
+        p = skip_required_space(p);
+        if (p == nullptr)
+            return false;
+        p = parse_seobj_strict(p, attrs);
+        if (p == nullptr || *skip_space(p) != '\0' ||
+            std::find(types.begin(), types.end(), "*") != types.end() ||
+            std::find(attrs.begin(), attrs.end(), "*") != attrs.end())
+            return false;
+        for (const auto& type : types) {
             for (const auto& attr : attrs) {
                 AtomicStatement stmt;
                 stmt.cmd = CMD_TYPE_ATTR;
-                stmt.subcmd = 0;
-                stmt.sepol1 = PolicyObject::from_str(t);
+                stmt.sepol1 = PolicyObject::from_str(type);
                 stmt.sepol2 = PolicyObject::from_str(attr);
                 statements.push_back(stmt);
             }
@@ -456,7 +432,7 @@ bool parse_rule(const std::string& rule, std::vector<AtomicStatement>& statement
     }
 
     // type_transition source target:class default_type [object_name]
-    if (cmd_str == "type_transition") {
+    if (cmd_str == "type_transition" || cmd_str == "name_transition") {
         std::string source;
         std::string target;
         std::string tclass;
