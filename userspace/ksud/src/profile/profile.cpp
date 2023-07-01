@@ -23,7 +23,8 @@ int profile_get_sepolicy(const std::string& package) {
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters) package then policy
 int profile_set_sepolicy(const std::string& package, const std::string& policy) {
-    ensure_dir_exists(PROFILE_SELINUX_DIR);
+    if (!ensure_dir_exists(PROFILE_SELINUX_DIR))
+        return 1;
     const std::string path = std::string(PROFILE_SELINUX_DIR) + package;
 
     if (!write_file(path, policy)) {
@@ -31,7 +32,7 @@ int profile_set_sepolicy(const std::string& package, const std::string& policy) 
         return 1;
     }
 
-    return 0;
+    return sepolicy_apply_file(path);
 }
 
 int profile_get_template(const std::string& id) {
