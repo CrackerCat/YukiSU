@@ -954,9 +954,10 @@ int boot_patch_impl(const std::vector<std::string>& args) {
     const bool patch_file = !parsed.boot_image.empty();
 
     if (patch_file) {
-        bootimage = parsed.boot_image;
-        if (access(bootimage.c_str(), R_OK) != 0) {
-            LOGE("Boot image not found: %s", bootimage.c_str());
+        std::error_code error;
+        bootimage = fs::canonical(parsed.boot_image, error).string();
+        if (error || access(bootimage.c_str(), R_OK) != 0) {
+            LOGE("Cannot read boot image: %s", parsed.boot_image.c_str());
             cleanup();
             return 1;
         }
@@ -1670,9 +1671,10 @@ int boot_restore(const std::vector<std::string>& args) {
     std::string bootdevice;
 
     if (!parsed.boot_image.empty()) {
-        bootimage = parsed.boot_image;
-        if (access(bootimage.c_str(), R_OK) != 0) {
-            LOGE("Boot image not found: %s", bootimage.c_str());
+        std::error_code error;
+        bootimage = fs::canonical(parsed.boot_image, error).string();
+        if (error || access(bootimage.c_str(), R_OK) != 0) {
+            LOGE("Cannot read boot image: %s", parsed.boot_image.c_str());
             cleanup();
             return 1;
         }
