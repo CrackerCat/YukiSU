@@ -1100,6 +1100,7 @@ int install(const std::optional<std::string>& magiskboot_path,
     // Ensure BINARY_DIR and multi-call symlinks exist
     if (ensure_binaries(false) != 0) {
         LOGW("Failed to ensure binaries");
+        return 1;
     }
 
     // Create symlink
@@ -1111,6 +1112,7 @@ int install(const std::optional<std::string>& magiskboot_path,
     unlink(DAEMON_LINK_PATH);
     if (symlink(DAEMON_PATH, DAEMON_LINK_PATH) != 0) {
         LOGW("Failed to create symlink: %s", strerror(errno));
+        return 1;
     }
 
     // Copy magiskboot if provided
