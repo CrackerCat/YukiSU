@@ -1249,84 +1249,91 @@ int module_list() {
     return 0;
 }
 
-int uninstall_all_modules() {
-    DIR* dir = opendir(MODULE_DIR);
-    if (!dir)
-        return 0;
+namespace {
 
-    struct dirent* entry;
-    while ((entry = readdir(dir)) != nullptr) {
-        if (entry->d_name[0] == '.')
+std::optional<std::vector<std::filesystem::path>> module_directories() {
+    std::error_code error;
+    std::filesystem::directory_iterator entry(MODULE_DIR, error);
+    if (error == std::errc::no_such_file_or_directory)
+        return std::vector<std::filesystem::path>{};
+    std::vector<std::filesystem::path> modules;
+    for (; !error && entry != std::filesystem::directory_iterator{}; entry.increment(error)) {
+        if (entry->path().filename().string().front() == '.')
             continue;
-        if (entry->d_type != DT_DIR)
-            continue;
-
-        module_uninstall(entry->d_name);
+        const auto status = entry->symlink_status(error);
+        if (error)
+            break;
+        if (std::filesystem::is_directory(status))
+            modules.push_back(entry->path());
     }
+    if (error) {
+        LOGE("Failed to enumerate modules: %s", error.message().c_str());
+        return std::nullopt;
+    }
+    return modules;
+}
 
-    closedir(dir);
+}  // namespace
+
+int uninstall_all_modules() {
+    const auto modules = module_directories();
+    if (!modules)
+        return 1;
+    for (const auto& module : *modules) {
+        if (module_uninstall(module.filename().string()) != 0)
+            return 1;
+    }
     return 0;
 }
 
 int prune_modules() {
-    // Remove modules marked for removal
-    DIR* dir = opendir(MODULE_DIR);
-    if (!dir)
-        return 0;
-
-    struct dirent* entry;
-    while ((entry = readdir(dir)) != nullptr) {
-        if (entry->d_name[0] == '.')
-            continue;
-        if (entry->d_type != DT_DIR)
-            continue;
-
-        const std::string module_path = std::string(MODULE_DIR) + entry->d_name;
-        const std::string remove_flag = module_path + "/" + REMOVE_FILE_NAME;
-
-        if (file_exists(remove_flag)) {
-            const std::string module_id = entry->d_name;
-            const auto props = parse_module_prop(module_path + "/module.prop");
-            const bool removing_metamodule = is_metamodule(props);
-
-            if (removing_metamodule) {
-                remove_metamodule_symlink();
-            } else {
-                const int metauninstall_rc = metamodule_exec_uninstall_script(module_id);
-                if (metauninstall_rc != 0) {
-                    LOGW("metauninstall.sh failed for %s with code %d", module_id.c_str(),
-                         metauninstall_rc);
-                }
-            }
-
-            const std::string uninstall_script = module_path + "/uninstall.sh";
-            if (file_exists(uninstall_script)) {
-                const int uninstall_rc =
-                    run_script(uninstall_script, ScriptWait::forever(), module_id);
-                if (uninstall_rc != 0) {
-                    LOGW("uninstall.sh failed for %s with code %d", module_id.c_str(),
-                         uninstall_rc);
-                }
-            }
-
-            std::error_code config_error;
-            std::filesystem::remove_all(std::string(MODULE_CONFIG_DIR) + module_id, config_error);
-            if (config_error) {
-                LOGW("Failed to remove config for %s: %s", module_id.c_str(),
-                     config_error.message().c_str());
-            }
-
-            std::error_code ec;
-            std::filesystem::remove_all(module_path, ec);
-            if (ec) {
-                LOGW("Failed to remove module %s: %s", entry->d_name, ec.message().c_str());
-            } else {
-                LOGI("Removed module %s", entry->d_name);
-            }
+    const auto modules = module_directories();
+    if (!modules)
+        return 1;
+    std::vector<std::pair<bool, std::filesystem::path>> removed;
+    for (const auto& module : *modules) {
+        std::error_code error;
+        const bool marked = std::filesystem::exists(module / REMOVE_FILE_NAME, error);
+        if (error) {
+            LOGE("Failed to inspect module removal flag: %s", error.message().c_str());
+            return 1;
         }
+        if (marked)
+            removed.emplace_back(
+                is_metamodule(parse_module_prop((module / "module.prop").string())), module);
     }
-
-    closedir(dir);
+    // Keep the metamodule available until every regular module has run its cleanup hook.
+    std::stable_sort(removed.begin(), removed.end(),
+                     [](const auto& left, const auto& right) { return left.first < right.first; });
+    for (const auto& [removing_metamodule, module] : removed) {
+        const std::string module_id = module.filename().string();
+        if (removing_metamodule) {
+            remove_metamodule_symlink();
+        } else {
+            const int metauninstall_rc = metamodule_exec_uninstall_script(module_id);
+            if (metauninstall_rc != 0)
+                LOGW("metauninstall.sh failed for %s with code %d", module_id.c_str(),
+                     metauninstall_rc);
+        }
+        const std::string uninstall_script = (module / "uninstall.sh").string();
+        if (file_exists(uninstall_script)) {
+            const int uninstall_rc = run_script(uninstall_script, ScriptWait::forever(), module_id);
+            if (uninstall_rc != 0)
+                LOGW("uninstall.sh failed for %s with code %d", module_id.c_str(), uninstall_rc);
+        }
+        std::error_code error;
+        std::filesystem::remove_all(std::string(MODULE_CONFIG_DIR) + module_id, error);
+        if (error) {
+            LOGW("Failed to remove config for %s: %s", module_id.c_str(), error.message().c_str());
+            return 1;
+        }
+        std::filesystem::remove_all(module, error);
+        if (error) {
+            LOGW("Failed to remove module %s: %s", module_id.c_str(), error.message().c_str());
+            return 1;
+        }
+        LOGI("Removed module %s", module_id.c_str());
+    }
     return 0;
 }
 

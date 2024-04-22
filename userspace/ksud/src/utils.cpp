@@ -6,6 +6,7 @@
 #include "core/restorecon.hpp"
 #include "defs.hpp"
 #include "log.hpp"
+#include "module/module.hpp"
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -1151,39 +1152,21 @@ int uninstall(const std::optional<std::string>& magiskboot_path) {
         return ret;
     }
 
-    // Uninstall modules
-    std::error_code fs_error;
-    if (std::filesystem::exists(MODULE_DIR, fs_error) && !fs_error) {
-        printf("- Uninstall modules..\n");
-        // Disable all modules
-        std::error_code ec;
-        for (auto it = std::filesystem::directory_iterator(MODULE_DIR, ec);
-             it != std::filesystem::directory_iterator() && !ec; it.increment(ec)) {
-            if (it->is_directory()) {
-                const std::string disable_file = it->path().string() + "/disable";
-                const int marker = open(disable_file.c_str(), O_WRONLY | O_CREAT | O_CLOEXEC, 0644);
-                if (marker >= 0)
-                    close(marker);
-            }
-        }
-        if (ec) {
-            LOGW("Error disabling modules: %s", ec.message().c_str());
-        }
-    }
+    printf("- Uninstall modules..\n");
+    if (const int result = uninstall_all_modules(); result != 0)
+        return result;
+    if (const int result = prune_modules(); result != 0)
+        return result;
 
     printf("- Removing directories..\n");
-    fs_error.clear();
-    std::filesystem::remove_all(WORKING_DIR, fs_error);
-    if (fs_error)
-        LOGW("Failed to remove %s: %s", WORKING_DIR, fs_error.message().c_str());
-    fs_error.clear();
-    std::filesystem::remove(DAEMON_PATH, fs_error);
-    if (fs_error)
-        LOGW("Failed to remove %s: %s", DAEMON_PATH, fs_error.message().c_str());
-    fs_error.clear();
-    std::filesystem::remove_all(MODULE_DIR, fs_error);
-    if (fs_error)
-        LOGW("Failed to remove %s: %s", MODULE_DIR, fs_error.message().c_str());
+    for (const char* path : {MODULE_DIR, WORKING_DIR, DAEMON_PATH}) {
+        std::error_code error;
+        std::filesystem::remove_all(path, error);
+        if (error) {
+            LOGE("Failed to remove %s: %s", path, error.message().c_str());
+            return 1;
+        }
+    }
 
     printf("- Uninstall YukiSU manager..\n");
     const auto uninstall_result = exec_command({"pm", "uninstall", "com.anatdx.yukisu"});
