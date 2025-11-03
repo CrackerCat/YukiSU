@@ -83,6 +83,12 @@ private fun rememberFeatureToggleState(
     FeatureToggleState(if (displayInverted) !enabled else enabled)
 }
 
+@Composable
+private fun rememberFeatureStatus(featureId: Int): State<String> =
+    produceState(initialValue = "loading", featureId) {
+        value = getFeatureStatus(featureId)
+    }
+
 private fun CoroutineScope.persistFeature(
     state: FeatureToggleState,
     featureId: Int,
@@ -146,9 +152,11 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
     var requestedSuCompat by remember { mutableStateOf<SuCompatMode?>(null) }
     var suPathSaving by remember { mutableStateOf(false) }
     var suPathRevision by remember { mutableIntStateOf(0) }
-    val suCompatForced = remember { getFeatureStatus(Natives.FEATURE_SU_COMPAT) == "forced" }
-    val suCompatSupported = remember { getFeatureStatus(Natives.FEATURE_SU_COMPAT) == "supported" }
-    val ksmSupported = remember { getFeatureStatus(Natives.FEATURE_KASUMI_SUCOMPAT) == "supported" }
+    val suCompatStatus by rememberFeatureStatus(Natives.FEATURE_SU_COMPAT)
+    val ksmStatus by rememberFeatureStatus(Natives.FEATURE_KASUMI_SUCOMPAT)
+    val suCompatForced = suCompatStatus == "forced"
+    val suCompatSupported = suCompatStatus == "supported"
+    val ksmSupported = ksmStatus == "supported"
     val kasumi = rememberFeatureToggleState(Natives.FEATURE_KASUMI)
     val kasumiSupported = remember { getFeatureValueOrNull(Natives.FEATURE_KASUMI) != null }
     var kasumiInitialized by remember { mutableStateOf(Natives.kasumiIsInitialized()) }
@@ -389,6 +397,7 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
                     SuCompatSelector(
                         selected = requestedSuCompat ?: suCompat.mode,
                         forced = suCompatForced,
+                        managed = suCompatStatus == "managed",
                         enabled = suCompatSupported && !magiskCompat.saving && !kasumi.saving && !suPathSaving,
                         ksmSupported = ksmSupported && kasumiAvailable,
                         onSelect = { mode ->
@@ -518,7 +527,7 @@ private fun FeatureSwitchItem(
     enabled: Boolean = true,
     onChange: (Boolean) -> Unit
 ) {
-    val status = remember(featureId) { getFeatureStatus(featureId) }
+    val status by rememberFeatureStatus(featureId)
     val renderedSummary = when (status) {
         "unsupported" -> stringResource(R.string.feature_status_unsupported_summary)
         "managed" -> stringResource(R.string.feature_status_managed_summary)

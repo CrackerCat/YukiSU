@@ -24,6 +24,7 @@ internal fun SuCompatSelector(
     enabled: Boolean,
     ksmSupported: Boolean,
     forced: Boolean = false,
+    managed: Boolean = false,
     onSelect: (SuCompatMode) -> Unit,
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -37,7 +38,11 @@ internal fun SuCompatSelector(
     SettingItem(
         icon = Icons.Rounded.RemoveModerator,
         title = title,
-        summary = if (forced) stringResource(R.string.feature_status_forced_summary) else labels[selected.ordinal],
+        summary = when {
+            forced -> stringResource(R.string.feature_status_forced_summary)
+            managed -> stringResource(R.string.feature_status_managed_summary)
+            else -> labels[selected.ordinal]
+        },
         enabled = enabled,
         onClick = { showDialog = true },
     )

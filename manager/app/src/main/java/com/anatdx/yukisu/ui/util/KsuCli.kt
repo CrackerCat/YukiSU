@@ -549,13 +549,11 @@ suspend fun getYukiZygiskStatusJson(): String? = withContext(Dispatchers.IO) {
         ?.takeIf { it.startsWith('{') && it.endsWith('}') }
 }
 
-fun getFeatureStatus(feature: Int): String {
-    val flags = Natives.getFeatureFlags(feature)
-    return when {
-        flags and 1 == 0 -> "unsupported"
-        flags and 2 != 0 -> "forced"
-        else -> "supported"
-    }
+suspend fun getFeatureStatus(feature: Int): String = withContext(Dispatchers.IO) {
+    runCatching { ksudReadString("feature check $feature") }
+        .getOrNull()
+        ?.takeIf { it in setOf("unsupported", "forced", "managed", "supported") }
+        ?: "unknown"
 }
 
 /** A feature's on/off state. Unsupported reads as off. */

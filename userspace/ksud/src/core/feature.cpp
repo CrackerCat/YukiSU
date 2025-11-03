@@ -17,6 +17,7 @@
 #include <cerrno>
 #include <cinttypes>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <set>
@@ -440,6 +441,64 @@ bool is_sucompat_feature_id(uint32_t feature_id) {
            feature_id == KSU_FEATURE_KASUMI_SUCOMPAT;
 }
 
+using FeatureManagers = std::map<uint32_t, std::set<std::string>>;
+
+FeatureManagers get_feature_managers() {
+    FeatureManagers managers;
+    for (const auto& [module, features] : get_managed_features()) {
+        for (const auto& name : features) {
+            const auto [id, valid] = parse_feature_id(name);
+            if (valid)
+                managers[id].insert(module);
+        }
+    }
+    return managers;
+}
+
+std::set<std::string> managing_modules(uint32_t id, const FeatureManagers& managers) {
+    std::set<std::string> modules;
+    for (const auto& [managed_id, owners] : managers) {
+        if (id == managed_id || (is_sucompat_feature_id(id) && is_sucompat_feature_id(managed_id)))
+            modules.insert(owners.begin(), owners.end());
+    }
+    return modules;
+}
+
+bool feature_forced(uint32_t id) {
+    return is_feature_forced(id) ||
+           (is_sucompat_feature_id(id) && is_feature_forced(KSU_FEATURE_SU_COMPAT));
+}
+
+bool allow_feature_change(uint32_t id, uint64_t value) {
+    if (feature_forced(id)) {
+        terminal::error("Feature '" + std::string(feature_id_to_name(id)) +
+                        "' is forced by boot config");
+        return false;
+    }
+    const auto managers = get_feature_managers();
+    const char* caller = getenv("KSU_MODULE");
+    const bool changes_sucompat =
+        is_sucompat_feature_id(id) || (id == KSU_FEATURE_KASUMI && value == 0);
+    // A su mode transition also changes its coupled feature IDs.
+    for (const auto& [managed_id, owners] : managers) {
+        if (managed_id != id && !(changes_sucompat && is_sucompat_feature_id(managed_id)))
+            continue;
+        if (caller && owners.count(caller) != 0)
+            continue;
+        std::string names;
+        for (const auto& owner : owners) {
+            if (!names.empty())
+                names += ", ";
+            names += owner;
+        }
+        terminal::error("Feature '" + std::string(feature_id_to_name(managed_id)) +
+                        "' is managed by module(s): " + names +
+                        ". Direct modification is not allowed.");
+        return false;
+    }
+    return true;
+}
+
 std::map<uint32_t, uint64_t> parse_text_feature_config(const std::string& content);
 
 uint64_t defaults_version(const std::map<uint32_t, uint64_t>& features) {
@@ -677,6 +736,8 @@ int feature_set(const std::string& id, uint64_t value) {
         return 1;
     }
 
+    if (!allow_feature_change(feature_id, value))
+        return 1;
     if (!is_sucompat_feature_id(feature_id) && feature_id != KSU_FEATURE_KASUMI &&
         feature_id != KSU_FEATURE_DEFAULT_NO_NEW_PRIVS) {
         return feature_set_impl(id, feature_id, value);
@@ -700,6 +761,8 @@ int feature_set_and_save(const std::string& id, uint64_t value) {
         return 1;
     }
 
+    if (!allow_feature_change(feature_id, value))
+        return 1;
     const SucompatTransitionLock transition;
     if (!transition.locked()) {
         return 1;
@@ -719,6 +782,7 @@ void feature_list() {
     terminal::heading(stdout, "Available Features:\n");
     printf("================================================================================\n");
 
+    const auto managers = get_feature_managers();
     for (const auto& [name, id] : get_feature_map()) {
         auto [value, supported] = get_feature(id);
 
@@ -733,8 +797,18 @@ void feature_list() {
 
         printf("[");
         terminal::status(stdout, status, supported && value != 0);
-        printf("] %s (ID=%u)%s\n", name.c_str(), id, is_feature_forced(id) ? " [FORCED]" : "");
+        const auto owners = managing_modules(id, managers);
+        const char* marker = owners.empty() ? "" : " [MODULE_MANAGED]";
+        if (feature_forced(id))
+            marker = " [FORCED]";
+        printf("] %s (ID=%u)%s\n", name.c_str(), id, marker);
         printf("    %s\n", feature_id_to_description(id));
+        if (!owners.empty()) {
+            printf("    Managed by module(s):");
+            for (const auto& owner : owners)
+                printf(" %s", owner.c_str());
+            printf("\n");
+        }
     }
 }
 
@@ -745,8 +819,13 @@ int feature_check(const std::string& id) {
         return 1;
     }
 
-    if (is_feature_forced(feature_id)) {
+    if (feature_forced(feature_id)) {
         printf("forced\n");
+        return 0;
+    }
+
+    if (!managing_modules(feature_id, get_feature_managers()).empty()) {
+        printf("managed\n");
         return 0;
     }
 
