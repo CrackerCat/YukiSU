@@ -5,6 +5,7 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <string_view>
 
 struct zip;
 
@@ -42,9 +43,12 @@ public:
     bool entry(uint64_t index, ZipEntry& result);
     std::optional<std::string> read_text(uint64_t index, uint64_t limit);
     bool extract_to_fd(uint64_t index, int fd, uint64_t limit);
+    bool extract_to_directory(const std::filesystem::path& destination,
+                              std::string_view excluded = {});
 
 private:
-    bool read_entry(uint64_t index, uint64_t limit, std::string* text, int fd);
+    bool read_entry(uint64_t index, uint64_t limit, std::string* text, int fd,
+                    bool symlink = false);
     zip* archive_ = nullptr;
     std::string error_;
 };

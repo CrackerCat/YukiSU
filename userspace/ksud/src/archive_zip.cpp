@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <array>
 #include <cerrno>
+#include <climits>
 #include <cstring>
 #include <memory>
 #include <vector>
@@ -102,6 +103,25 @@ bool supported_method(uint16_t method) {
     }
 }
 
+class ScopedFd {
+public:
+    explicit ScopedFd(int fd) : fd_(fd) {}
+    ~ScopedFd() { reset(-1); }
+    ScopedFd(const ScopedFd&) = delete;
+    ScopedFd& operator=(const ScopedFd&) = delete;
+    ScopedFd(ScopedFd&&) = delete;
+    ScopedFd& operator=(ScopedFd&&) = delete;
+    [[nodiscard]] int get() const { return fd_; }
+    void reset(int fd) {
+        if (fd_ >= 0)
+            close(fd_);
+        fd_ = fd;
+    }
+
+private:
+    int fd_;
+};
+
 struct EntryCloser {
     void operator()(zip_file_t* file) const { zip_fclose(file); }
 };
@@ -178,12 +198,13 @@ bool ZipReader::entry(uint64_t index, ZipEntry& result) {
     return true;
 }
 
-bool ZipReader::read_entry(uint64_t index, uint64_t limit, std::string* text, int fd) {
+bool ZipReader::read_entry(uint64_t index, uint64_t limit, std::string* text, int fd,
+                           bool symlink) {
     ZipEntry metadata;
     if (!entry(index, metadata))
         return false;
-    if (metadata.directory || metadata.symlink || metadata.encrypted || !metadata.supported ||
-        metadata.size > limit) {
+    if (metadata.directory || metadata.symlink != symlink || metadata.encrypted ||
+        !metadata.supported || metadata.size > limit) {
         error_ = "ZIP entry is unsupported or exceeds the size limit";
         return false;
     }
@@ -244,6 +265,95 @@ std::optional<std::string> ZipReader::read_text(uint64_t index, uint64_t limit) 
 
 bool ZipReader::extract_to_fd(uint64_t index, int fd, uint64_t limit) {
     return read_entry(index, limit, nullptr, fd);
+}
+
+bool ZipReader::extract_to_directory(const std::filesystem::path& destination,
+                                     std::string_view excluded) {
+    const ScopedFd root(open(destination.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
+    if (!valid() || root.get() < 0) {
+        error_ = "Cannot open extraction directory";
+        return false;
+    }
+    for (uint64_t index = 0; index < entry_count(); ++index) {
+        ZipEntry metadata;
+        if (!entry(index, metadata))
+            return false;
+        std::replace(metadata.name.begin(), metadata.name.end(), '\\', '/');
+        if (metadata.name.front() == '/' ||
+            (metadata.name.size() >= 2 && metadata.name[1] == ':')) {
+            error_ = "Absolute ZIP entry path";
+            return false;
+        }
+        std::vector<std::string> parts;
+        for (const auto& part : std::filesystem::path(metadata.name)) {
+            if (part == "..") {
+                error_ = "Parent traversal in ZIP entry path";
+                return false;
+            }
+            if (!part.empty() && part != ".")
+                parts.push_back(part.string());
+        }
+        if (parts.empty()) {
+            if (metadata.directory)
+                continue;
+            error_ = "Empty ZIP entry path";
+            return false;
+        }
+        if (!excluded.empty() && parts.front() == excluded)
+            continue;
+        if (metadata.encrypted || !metadata.supported) {
+            error_ = "Unsupported ZIP entry";
+            return false;
+        }
+        ScopedFd directory(fcntl(root.get(), F_DUPFD_CLOEXEC, 0));
+        if (directory.get() < 0) {
+            error_ = "Cannot duplicate extraction directory: " + std::string(strerror(errno));
+            return false;
+        }
+        const size_t directories = parts.size() - (metadata.directory ? 0U : 1U);
+        for (size_t part = 0; part < directories; ++part) {
+            if (mkdirat(directory.get(), parts[part].c_str(), 0755) != 0 && errno != EEXIST) {
+                error_ = "Cannot create ZIP directory: " + std::string(strerror(errno));
+                return false;
+            }
+            // Never follow a previously extracted symlink while writing later entries.
+            directory.reset(openat(directory.get(), parts[part].c_str(),
+                                   O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
+            if (directory.get() < 0) {
+                error_ = "Unsafe ZIP directory: " + std::string(strerror(errno));
+                return false;
+            }
+        }
+        if (metadata.directory)
+            continue;
+        if (metadata.symlink) {
+            std::string target;
+            if (!read_entry(index, PATH_MAX - 1, &target, -1, true))
+                return false;
+            if (target.empty() || target.find('\0') != std::string::npos ||
+                symlinkat(target.c_str(), directory.get(), parts.back().c_str()) != 0) {
+                error_ = "Cannot create ZIP symlink";
+                return false;
+            }
+            continue;
+        }
+        const ScopedFd output(openat(directory.get(), parts.back().c_str(),
+                                     O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0600));
+        if (output.get() < 0) {
+            error_ = "Cannot create ZIP file: " + std::string(strerror(errno));
+            return false;
+        }
+        if (!extract_to_fd(index, output.get(), metadata.size))
+            return false;
+        mode_t mode = static_cast<mode_t>(metadata.attributes >> 16U) & 0777;
+        if (mode == 0)
+            mode = 0644;
+        if (fchmod(output.get(), mode) != 0) {
+            error_ = "Cannot set ZIP file permissions: " + std::string(strerror(errno));
+            return false;
+        }
+    }
+    return true;
 }
 
 }  // namespace ksud

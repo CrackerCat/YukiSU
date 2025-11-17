@@ -1,4 +1,5 @@
 #include "module.hpp"
+#include "../archive_zip.hpp"
 #include "../assets.hpp"
 #include "../core/ksucalls.hpp"
 #include "../core/restorecon.hpp"
@@ -31,6 +32,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #if defined(RESETPROP_ALONE_AVAILABLE) && RESETPROP_ALONE_AVAILABLE
@@ -441,7 +443,8 @@ void remove_metamodule_symlink() {
     }
 }
 
-std::string build_install_wrapper_script(bool installing_metamodule) {
+std::string build_install_wrapper_script(bool installing_metamodule, bool& custom_installer) {
+    custom_installer = false;
     const std::string installer_path = std::string(BINARY_DIR) + INSTALLER_SCRIPT_NAME;
     std::string script = "#!/system/bin/sh\n. ";
     script += installer_path;
@@ -452,6 +455,7 @@ std::string build_install_wrapper_script(bool installing_metamodule) {
         const std::string metainstall_path = metamodule_path + "/" + METAMODULE_METAINSTALL_SCRIPT;
         if (!metamodule_path.empty() && !file_exists(metamodule_path + "/" + DISABLE_FILE_NAME) &&
             file_exists(metainstall_path)) {
+            custom_installer = true;
             LOGI("Using metainstall.sh from metamodule: %s", metainstall_path.c_str());
             script += ". ";
             script += metainstall_path;
@@ -463,6 +467,56 @@ std::string build_install_wrapper_script(bool installing_metamodule) {
     script += "install_module\nexit 0\n";
     return script;
 }
+
+bool prepare_metamodule_install(const std::string& zip_path, const std::string& module_id) {
+    ZipReader archive(zip_path);
+    if (!archive.valid() || !ensure_dir_exists(MODULE_UPDATE_DIR) || !setsyscon(MODULE_UPDATE_DIR))
+        return false;
+    const auto stage = std::filesystem::path(MODULE_UPDATE_DIR) / module_id;
+    std::error_code error;
+    std::filesystem::remove_all(stage, error);
+    if (error || !std::filesystem::create_directory(stage, error) || error)
+        return false;
+    // Custom installers receive an extracted module, but only their completed script may
+    // request hot installation. The ordinary installer prepares its own staging directory.
+    bool ready = archive.extract_to_directory(stage, HOT_INSTALL_MARKER);
+    if (!ready)
+        LOGE("Failed to prepare module archive: %s", archive.error().c_str());
+    const auto system = stage / "system";
+    if (ready) {
+        const auto status = std::filesystem::symlink_status(system, error);
+        if (error && error != std::errc::no_such_file_or_directory)
+            ready = false;
+        else if (std::filesystem::is_directory(status))
+            ready = chmod(system.c_str(), 0755) == 0 && restore_syscon(system);
+    }
+    if (!ready)
+        std::filesystem::remove_all(stage, error);
+    return ready;
+}
+
+class ModuleInstallRollback {
+public:
+    explicit ModuleInstallRollback(std::filesystem::path path) : path_(std::move(path)) {}
+    ModuleInstallRollback(const ModuleInstallRollback&) = delete;
+    ModuleInstallRollback& operator=(const ModuleInstallRollback&) = delete;
+    ModuleInstallRollback(ModuleInstallRollback&&) = delete;
+    ModuleInstallRollback& operator=(ModuleInstallRollback&&) = delete;
+    ~ModuleInstallRollback() {
+        if (path_.empty())
+            return;
+        std::error_code error;
+        std::filesystem::remove_all(path_, error);
+        if (error)
+            LOGE("Failed to remove unsuccessful module installation %s: %s", path_.c_str(),
+                 error.message().c_str());
+    }
+
+    void dismiss() { path_.clear(); }
+
+private:
+    std::filesystem::path path_;
+};
 
 bool exec_install_script(const std::string& zip_path, bool installing_metamodule,
                          const std::string& module_id) {
@@ -485,6 +539,17 @@ bool exec_install_script(const std::string& zip_path, bool installing_metamodule
         busybox = "/system/bin/sh";
     }
 
+    bool custom_installer = false;
+    const std::string wrapper_content =
+        build_install_wrapper_script(installing_metamodule, custom_installer);
+    if (custom_installer && !prepare_metamodule_install(zipfile, module_id)) {
+        printf("! Failed to prepare module for custom installer\n");
+        return false;
+    }
+    ModuleInstallRollback rollback(custom_installer
+                                       ? std::filesystem::path(MODULE_UPDATE_DIR) / module_id
+                                       : std::filesystem::path{});
+
     char wrapper_path[] = "/dev/ksud_installer_XXXXXX";
     const int wrapper_fd = mkstemp(wrapper_path);
     if (wrapper_fd < 0) {
@@ -492,7 +557,6 @@ bool exec_install_script(const std::string& zip_path, bool installing_metamodule
         return false;
     }
 
-    const std::string wrapper_content = build_install_wrapper_script(installing_metamodule);
     FILE* wrapper_file = fdopen(wrapper_fd, "w");
     if (wrapper_file == nullptr) {
         close(wrapper_fd);
@@ -500,7 +564,9 @@ bool exec_install_script(const std::string& zip_path, bool installing_metamodule
         printf("! Failed to open installer wrapper\n");
         return false;
     }
-    if (fputs(wrapper_content.c_str(), wrapper_file) == EOF || fclose(wrapper_file) != 0) {
+    const bool written = fputs(wrapper_content.c_str(), wrapper_file) != EOF;
+    const bool closed = fclose(wrapper_file) == 0;
+    if (!written || !closed) {
         unlink(wrapper_path);
         printf("! Failed to write installer wrapper\n");
         return false;
@@ -523,10 +589,16 @@ bool exec_install_script(const std::string& zip_path, bool installing_metamodule
         _exit(127);
     }
 
-    int status;
-    waitpid(pid, &status, 0);
+    int status = 0;
+    pid_t waited;
+    do {
+        waited = waitpid(pid, &status, 0);
+    } while (waited < 0 && errno == EINTR);
     unlink(wrapper_path);
-    return WIFEXITED(status) && WEXITSTATUS(status) == 0;
+    if (waited != pid || !WIFEXITED(status) || WEXITSTATUS(status) != 0)
+        return false;
+    rollback.dismiss();
+    return true;
 }
 
 }  // namespace
