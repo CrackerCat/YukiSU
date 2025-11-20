@@ -3,6 +3,7 @@
 #include "core/ksucalls.hpp"
 #include "defs.hpp"
 #include "log.hpp"
+#include "module/module_config.hpp"
 #include "utils.hpp"
 
 #include <fcntl.h>
@@ -297,18 +298,6 @@ bool parse_log_name(const std::filesystem::path& path, std::string* day, uint32_
     return false;
 }
 
-auto sulog_config_dir() -> std::filesystem::path {
-    return std::filesystem::path(MODULE_CONFIG_DIR) / SULOG_CONFIG_MODULE_ID;
-}
-
-auto sulog_persist_config_path() -> std::filesystem::path {
-    return sulog_config_dir() / PERSIST_CONFIG_NAME;
-}
-
-auto sulog_temp_config_path() -> std::filesystem::path {
-    return sulog_config_dir() / TEMP_CONFIG_NAME;
-}
-
 auto load_key_value_config(const std::filesystem::path& path)
     -> std::map<std::string, std::string> {
     std::map<std::string, std::string> config;
@@ -343,10 +332,6 @@ bool save_key_value_config(const std::filesystem::path& path,
     return true;
 }
 
-bool ensure_sulog_config_dir_exists() {
-    return ensure_dir_exists(MODULE_CONFIG_DIR) && ensure_dir_exists(sulog_config_dir().string());
-}
-
 bool parse_positive_u64(std::string_view raw, uint64_t* out_value) {
     const std::string_view value = trim_view(raw);
     if (value.empty()) {
@@ -363,24 +348,23 @@ bool parse_positive_u64(std::string_view raw, uint64_t* out_value) {
 
 auto ensure_sulog_config_value(const char* key, uint64_t default_value) -> std::string {
     std::string default_string = std::to_string(default_value);
-    if (!ensure_sulog_config_dir_exists()) {
+    const auto temp_config = module_config::load(SULOG_CONFIG_MODULE_ID, module_config::Type::Temp);
+    if (temp_config) {
+        const auto found = temp_config->find(key);
+        if (found != temp_config->end())
+            return found->second;
+    }
+
+    auto persist_config = module_config::load(SULOG_CONFIG_MODULE_ID, module_config::Type::Persist);
+    if (!persist_config)
         return default_string;
-    }
-
-    const auto temp_config = load_key_value_config(sulog_temp_config_path());
-    const auto temp_iter = temp_config.find(key);
-    if (temp_iter != temp_config.end()) {
-        return temp_iter->second;
-    }
-
-    auto persist_config = load_key_value_config(sulog_persist_config_path());
-    const auto persist_iter = persist_config.find(key);
-    if (persist_iter != persist_config.end()) {
+    const auto persist_iter = persist_config->find(key);
+    if (persist_iter != persist_config->end()) {
         return persist_iter->second;
     }
 
-    persist_config[key] = default_string;
-    save_key_value_config(sulog_persist_config_path(), persist_config);
+    (*persist_config)[key] = default_string;
+    module_config::save(SULOG_CONFIG_MODULE_ID, module_config::Type::Persist, *persist_config);
     return default_string;
 }
 

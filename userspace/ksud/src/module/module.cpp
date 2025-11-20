@@ -10,6 +10,7 @@
 #include "../yzctl.hpp"
 #include "hot_install.hpp"
 #include "metamodule.hpp"
+#include "module_config.hpp"
 #include "preinit.hpp"
 
 #include <dirent.h>
@@ -1753,36 +1754,10 @@ int load_system_prop() {
 
 // Parse bool config value (true, yes, 1, on -> true)
 bool parse_bool_config(const std::string& value) {
-    std::string lower = value;
+    std::string lower(trim_view(value));
     for (char& c : lower)
-        c = tolower(c);
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
     return lower == "true" || lower == "yes" || lower == "1" || lower == "on";
-}
-
-// Merge module configs (persist + temp, temp takes priority)
-std::map<std::string, std::string> merge_module_configs(const std::string& module_id) {
-    std::map<std::string, std::string> config;
-
-    const std::string config_dir = std::string(MODULE_CONFIG_DIR) + module_id + "/";
-    const std::string persist_path = config_dir + PERSIST_CONFIG_NAME;
-    const std::string temp_path = config_dir + TEMP_CONFIG_NAME;
-
-    const auto merge_content = [&config](const std::optional<std::string>& content) {
-        if (!content)
-            return;
-        for_each_line(*content, [&config](std::string_view line) {
-            const size_t eq = line.find('=');
-            if (eq != std::string_view::npos) {
-                config[std::string(line.substr(0, eq))] = std::string(line.substr(eq + 1));
-            }
-        });
-    };
-
-    // Temp values override persisted ones.
-    merge_content(read_file(persist_path));
-    merge_content(read_file(temp_path));
-
-    return config;
 }
 
 std::map<std::string, std::vector<std::string>> get_managed_features() {
@@ -1810,7 +1785,7 @@ std::map<std::string, std::vector<std::string>> get_managed_features() {
             continue;
 
         // Read module config
-        auto config = merge_module_configs(module_id);
+        auto config = module_config::merge(module_id);
 
         // Extract manage.* config entries
         std::vector<std::string> feature_list;

@@ -1,4 +1,5 @@
 #include "module_config.hpp"
+#include "../cli_args.hpp"
 #include "../defs.hpp"
 #include "../log.hpp"
 #include "../terminal.hpp"
@@ -6,147 +7,290 @@
 
 #include <dirent.h>
 #include <unistd.h>
+#include <algorithm>
+#include <array>
+#include <cerrno>
+#include <cstdint>
+#include <cstdio>
 #include <cstdlib>
-#include <map>
+#include <memory>
 
 namespace ksud {
-
+namespace module_config {
 namespace {
+constexpr uint32_t MAGIC = 0x4b53554d;
+constexpr uint32_t VERSION = 1;
+constexpr size_t MAX_FILE_LEN = 12 + (MAX_COUNT * (8 + MAX_KEY_LEN + MAX_VALUE_LEN));
 
-std::string get_module_id() {
-    const char* id = getenv("KSU_MODULE");
-    return id ? std::string(id) : "";
+std::string config_path(const std::string& id, Type type) {
+    return std::string(MODULE_CONFIG_DIR) + id + "/" +
+           (type == Type::Temp ? TEMP_CONFIG_NAME : PERSIST_CONFIG_NAME);
 }
 
-std::string get_config_dir(const std::string& module_id) {
-    return std::string(MODULE_CONFIG_DIR) + module_id + "/";
-}
-
-std::map<std::string, std::string> load_config(const std::string& path) {
-    std::map<std::string, std::string> config;
-    auto content = read_file(path);
-    if (!content)
-        return config;
-
-    for_each_line(*content, [&config](std::string_view line) {
-        const size_t eq = line.find('=');
-        if (eq != std::string_view::npos) {
-            config[std::string(line.substr(0, eq))] = std::string(line.substr(eq + 1));
+bool valid_utf8(std::string_view value) {
+    size_t i = 0;
+    while (i < value.size()) {
+        const auto lead = static_cast<unsigned char>(value[i++]);
+        if (lead < 0x80)
+            continue;
+        unsigned count;
+        uint32_t code;
+        uint32_t minimum;
+        if (lead >= 0xc2 && lead <= 0xdf) {
+            count = 1;
+            code = lead & 0x1f;
+            minimum = 0x80;
+        } else if (lead >= 0xe0 && lead <= 0xef) {
+            count = 2;
+            code = lead & 0x0f;
+            minimum = 0x800;
+        } else if (lead >= 0xf0 && lead <= 0xf4) {
+            count = 3;
+            code = lead & 0x07;
+            minimum = 0x10000;
+        } else {
+            return false;
         }
-    });
+        if (value.size() - i < count)
+            return false;
+        while (count-- != 0) {
+            const auto next = static_cast<unsigned char>(value[i++]);
+            if ((next & 0xc0) != 0x80)
+                return false;
+            code = (code << 6) | (next & 0x3f);
+        }
+        if (code < minimum || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff))
+            return false;
+    }
+    return true;
+}
 
+bool read_u32(std::string_view& input, uint32_t& value) {
+    if (input.size() < 4)
+        return false;
+    value = 0;
+    for (unsigned i = 0; i < 4; ++i)
+        value |= static_cast<uint32_t>(static_cast<unsigned char>(input[i])) << (i * 8);
+    input.remove_prefix(4);
+    return true;
+}
+
+void append_u32(std::string& output, uint32_t value) {
+    for (unsigned i = 0; i < 4; ++i)
+        output.push_back(static_cast<char>((value >> (i * 8)) & 0xff));
+}
+
+std::optional<Config> decode(std::string_view input) {
+    Config config;
+    std::string_view rest = input;
+    uint32_t magic = 0;
+    if (read_u32(rest, magic) && magic == MAGIC) {
+        uint32_t version = 0;
+        uint32_t count = 0;
+        if (!read_u32(rest, version) || version != VERSION || !read_u32(rest, count))
+            return std::nullopt;
+        for (uint32_t i = 0; i < count; ++i) {
+            uint32_t length = 0;
+            if (!read_u32(rest, length) || length > rest.size())
+                return std::nullopt;
+            std::string key(rest.substr(0, length));
+            rest.remove_prefix(length);
+            if (!read_u32(rest, length) || length > rest.size())
+                return std::nullopt;
+            std::string value(rest.substr(0, length));
+            rest.remove_prefix(length);
+            if (!valid_utf8(key) || !valid_utf8(value))
+                return std::nullopt;
+            config[std::move(key)] = std::move(value);
+        }
+        return config;
+    }
+
+    // Older C++ releases wrote unescaped key=value lines at these same paths.
+    if (input.find('\0') != std::string_view::npos || !valid_utf8(input))
+        return std::nullopt;
+    bool valid = true;
+    for_each_line(input, [&](std::string_view line) {
+        if (line.empty())
+            return true;
+        const size_t eq = line.find('=');
+        if (eq > MAX_KEY_LEN || line.size() - eq - 1 > MAX_VALUE_LEN) {
+            valid = false;
+            return false;
+        }
+        config[std::string(line.substr(0, eq))] = std::string(line.substr(eq + 1));
+        valid = config.size() <= MAX_COUNT;
+        return valid;
+    });
+    return valid ? std::optional(std::move(config)) : std::nullopt;
+}
+}  // namespace
+
+bool valid_id(std::string_view id) {
+    const auto alpha = [](unsigned char ch) {
+        return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
+    };
+    return id.size() >= 2 && alpha(id.front()) &&
+           std::all_of(id.begin(), id.end(), [&](unsigned char ch) {
+               return alpha(ch) || (ch >= '0' && ch <= '9') || ch == '.' || ch == '_' || ch == '-';
+           });
+}
+
+bool valid_key(std::string_view key) {
+    return key.size() <= MAX_KEY_LEN && valid_id(key);
+}
+
+std::optional<Config> load(const std::string& module_id, Type type) {
+    if (!valid_id(module_id)) {
+        terminal::error("Invalid module configuration ID");
+        return std::nullopt;
+    }
+    const std::string path = config_path(module_id, type);
+    const std::unique_ptr<FILE, decltype(&fclose)> file(fopen(path.c_str(), "re"), fclose);
+    if (!file) {
+        if (errno == ENOENT)
+            return Config{};
+        terminal::file_error("cannot read configuration", path, errno);
+        return std::nullopt;
+    }
+    std::string content;
+    std::array<char, 8192> buffer{};
+    for (;;) {
+        const size_t count = fread(buffer.data(), 1, buffer.size(), file.get());
+        if (count > MAX_FILE_LEN - content.size()) {
+            terminal::error("Module configuration exceeds size limit");
+            return std::nullopt;
+        }
+        content.append(buffer.data(), count);
+        if (count < buffer.size()) {
+            if (ferror(file.get())) {
+                terminal::file_error("cannot read configuration", path, errno);
+                return std::nullopt;
+            }
+            break;
+        }
+    }
+    auto config = decode(content);
+    if (!config)
+        terminal::error("Invalid module configuration: " + path);
     return config;
 }
 
-bool save_config(const std::string& path, const std::map<std::string, std::string>& config) {
-    std::string out;
-    for (const auto& [key, value] : config) {
-        out += key;
-        out += '=';
-        out += value;
-        out += '\n';
+bool save(const std::string& module_id, Type type, const Config& config) {
+    if (!valid_id(module_id) || config.size() > MAX_COUNT) {
+        terminal::error("Invalid module ID or too many configuration entries (maximum 32)");
+        return false;
     }
-    return write_file(path, out);
+    std::string output;
+    append_u32(output, MAGIC);
+    append_u32(output, VERSION);
+    append_u32(output, static_cast<uint32_t>(config.size()));
+    for (const auto& [key, value] : config) {
+        if (!valid_key(key) || value.size() > MAX_VALUE_LEN || !valid_utf8(value)) {
+            terminal::error(
+                "Invalid configuration key or value (maximum 256-byte key, 1 MiB UTF-8 value)");
+            return false;
+        }
+        append_u32(output, static_cast<uint32_t>(key.size()));
+        output += key;
+        append_u32(output, static_cast<uint32_t>(value.size()));
+        output += value;
+    }
+    const std::string dir = std::string(MODULE_CONFIG_DIR) + module_id;
+    const std::string path = config_path(module_id, type);
+    if (!ensure_dir_exists(dir) || !write_file_atomic(path, output)) {
+        terminal::file_error("cannot save configuration", path, errno);
+        return false;
+    }
+    return true;
 }
 
-}  // namespace
-
-int module_config_handle(const std::vector<std::string>& args) {
-    if (args.empty()) {
-        printf("USAGE: ksud module config <get|set|list|delete|clear> ...\n");
-        return 1;
+Config merge(const std::string& module_id) {
+    auto config = load(module_id, Type::Persist).value_or(Config{});
+    if (auto temp = load(module_id, Type::Temp)) {
+        for (auto& [key, value] : *temp)
+            config[key] = std::move(value);
     }
+    return config;
+}
+}  // namespace module_config
 
-    const std::string module_id = get_module_id();
-    if (module_id.empty()) {
-        return terminal::error(
-            "KSU_MODULE is not set",
-            "Run module config from a module script or set KSU_MODULE to its ID.");
-    }
-
-    const std::string config_dir = get_config_dir(module_id);
-
-    const std::string persist_path = config_dir + PERSIST_CONFIG_NAME;
-    const std::string temp_path = config_dir + TEMP_CONFIG_NAME;
-
-    const std::string& cmd = args[0];
-
-    if (cmd == "get" && args.size() > 1) {
-        const std::string& key = args[1];
-
-        // Temp config takes priority
-        auto temp_config = load_config(temp_path);
-        if (temp_config.count(key)) {
-            printf("%s\n", temp_config[key].c_str());
-            return 0;
-        }
-
-        auto persist_config = load_config(persist_path);
-        if (persist_config.count(key)) {
-            printf("%s\n", persist_config[key].c_str());
-            return 0;
-        }
-
-        terminal::errorf("Key '%s' not found\n", key.c_str());
-        return 1;
-    } else if (cmd == "set" && args.size() > 2) {
-        const std::string& key = args[1];
-        const std::string& value = args[2];
-        const bool is_temp = args.size() > 3 && (args[3] == "-t" || args[3] == "--temp");
-
-        const std::string path = is_temp ? temp_path : persist_path;
-        auto config = load_config(path);
-        config[key] = value;
-
-        if (!ensure_dir_exists(config_dir) || !save_config(path, config)) {
-            terminal::errorf("Failed to save config\n");
-            return 1;
-        }
-
-        return 0;
-    } else if (cmd == "list") {
-        auto persist_config = load_config(persist_path);
-        auto temp_config = load_config(temp_path);
-
-        // Merge configs (temp overrides persist)
-        for (const auto& [key, value] : temp_config) {
-            persist_config[key] = value;
-        }
-
-        if (persist_config.empty()) {
-            printf("No config entries found\n");
+int module_config_handle(const CliArguments& cli) {
+    using namespace module_config;
+    const auto& args = cli.args;
+    if (args.size() < 2)
+        return terminal::error("A module config subcommand is required");
+    const char* environment_id = getenv("KSU_MODULE");
+    std::string module_id = environment_id ? environment_id : "";
+    if (cli.has("--internal"))
+        module_id = "internal." + cli.value("--internal");
+    if (!valid_id(module_id))
+        return terminal::error("Invalid or missing KSU_MODULE",
+                               "Run in a module context or pass --internal <name>.");
+    const auto type = cli.has("--temp") ? Type::Temp : Type::Persist;
+    const std::string& command = args[1];
+    if (command == "get" || command == "list") {
+        const auto config = merge(module_id);
+        if (command == "get") {
+            const auto found = config.find(args[2]);
+            if (found == config.end())
+                return terminal::error("Key '" + args[2] + "' not found");
+            if (fwrite(found->second.data(), 1, found->second.size(), stdout) !=
+                found->second.size())
+                return 1;
+            putchar('\n');
+        } else if (config.empty()) {
+            puts("No config entries found");
         } else {
-            for (const auto& [key, value] : persist_config) {
-                printf("%s=%s\n", key.c_str(), value.c_str());
+            for (const auto& [key, value] : config) {
+                if (fwrite(key.data(), 1, key.size(), stdout) != key.size())
+                    return 1;
+                putchar('=');
+                if (fwrite(value.data(), 1, value.size(), stdout) != value.size())
+                    return 1;
+                putchar('\n');
             }
         }
-
-        return 0;
-    } else if (cmd == "delete" && args.size() > 1) {
-        const std::string& key = args[1];
-        const bool is_temp = args.size() > 2 && (args[2] == "-t" || args[2] == "--temp");
-
-        const std::string path = is_temp ? temp_path : persist_path;
-        auto config = load_config(path);
-        config.erase(key);
-
-        if (!ensure_dir_exists(config_dir) || !save_config(path, config)) {
-            terminal::errorf("Failed to save config\n");
-            return 1;
-        }
-
-        return 0;
-    } else if (cmd == "clear") {
-        const bool is_temp = args.size() > 1 && (args[1] == "-t" || args[1] == "--temp");
-
-        const std::string path = is_temp ? temp_path : persist_path;
+        return ferror(stdout) ? 1 : 0;
+    }
+    if (command == "clear") {
+        const std::string path = config_path(module_id, type);
         if (unlink(path.c_str()) != 0 && errno != ENOENT)
             return terminal::file_error("cannot clear configuration", path, errno);
         return 0;
     }
-
-    terminal::errorf("Unknown config command: %s\n", cmd.c_str());
-    return 1;
+    if (command != "set" && command != "delete")
+        return terminal::error("Unknown module config command: " + command);
+    auto config = load(module_id, type);
+    if (!config)
+        return 1;
+    const std::string& key = args[2];
+    if (command == "delete") {
+        if (config->erase(key) == 0)
+            return terminal::error("Key '" + key + "' not found in config");
+    } else {
+        if (!valid_key(key))
+            return terminal::error("Invalid configuration key");
+        std::string value;
+        if (args.size() > 3 && !cli.has("--stdin")) {
+            value = args[3];
+        } else {
+            std::array<char, 8192> buffer{};
+            for (;;) {
+                const size_t count = fread(buffer.data(), 1, buffer.size(), stdin);
+                if (count > MAX_VALUE_LEN - value.size())
+                    return terminal::error("Configuration value exceeds 1 MiB");
+                value.append(buffer.data(), count);
+                if (count < buffer.size()) {
+                    if (ferror(stdin))
+                        return terminal::error("Failed to read configuration value from stdin");
+                    break;
+                }
+            }
+        }
+        (*config)[key] = std::move(value);
+    }
+    return save(module_id, type, *config) ? 0 : 1;
 }
 
 void clear_all_temp_configs() {

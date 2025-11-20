@@ -88,9 +88,20 @@ const std::vector<Command>& commands() {
          true},
         {"module compat reset", "Restore actual module versions", ""},
         {"module compat env", "Print module version environment for a shell", ""},
-        {"module config", "Manage configuration in a module's environment", "<COMMAND>"},
+        {"module config",
+         "Manage configuration in a module's environment",
+         "<COMMAND>",
+         0,
+         0,
+         {{"--internal", "", "NAME", "", "Use an internal configuration namespace"}}},
         {"module config get", "Read a configuration value", "<KEY>", 1, 1},
-        {"module config set", "Write a configuration value", "<KEY> <VALUE>", 2, 2, {kTemp}},
+        {"module config set",
+         "Write a configuration value",
+         "<KEY> [VALUE]",
+         1,
+         2,
+         {kTemp,
+          {"--stdin", "", "", "", "Read the value from stdin (also used when VALUE is omitted)"}}},
         {"module config list", "List configuration values", ""},
         {"module config delete", "Delete a configuration value", "<KEY>", 1, 1, {kTemp}},
         {"module config clear", "Clear configuration values", "", 0, 0, {kTemp}},
@@ -804,13 +815,6 @@ int validate(const Command& command, const std::vector<std::string>& operands,
     const auto numeric = [&](size_t index, uint64_t maximum, bool auto_base = false) {
         return unsigned_value(operands[index], maximum, auto_base);
     };
-    if (path == "module config get" || path == "module config set" ||
-        path == "module config delete") {
-        if (operands[0].find_first_of("=\r\n") != std::string::npos)
-            return bad("module configuration keys cannot contain '=' or line breaks");
-        if (path == "module config set" && operands[1].find_first_of("\r\n") != std::string::npos)
-            return bad("module configuration values must fit on one line");
-    }
     if ((path == "feature set" || path == "feature set-save") && !numeric(1, UINT64_MAX))
         return bad("invalid value '" + operands[1] + "'; expected an unsigned 64-bit integer");
     if (path.substr(0, 11) == "debug mark " && !operands.empty() && !numeric(0, INT32_MAX))

@@ -112,7 +112,8 @@ void print_version() {
            versions.ksud_version_code.c_str(), versions.uapi_version.c_str());
 }
 
-int cmd_module(const std::vector<std::string>& args) {
+int cmd_module(const CliArguments& cli) {
+    const auto& args = cli.args;
     if (args[0] == "compat")
         return module_compat_handle(std::vector<std::string>(args.begin() + 1, args.end()));
 
@@ -121,6 +122,8 @@ int cmd_module(const std::vector<std::string>& args) {
         LOGE("Failed to switch mount namespace");
         return 1;
     }
+    if (args[0] == "config")
+        return module_config_handle(cli);
 
     const std::string& subcmd = args[0];
 
@@ -144,13 +147,6 @@ int cmd_module(const std::vector<std::string>& args) {
         if (args[1] == "reset" && args.size() == 2)
             return preinit::reset_bootcount();
         return 1;
-    } else if (subcmd == "config") {
-        // Handle module config subcommands
-        if (args.size() < 2) {
-            printf("USAGE: ksud module config <get|set|list|delete|clear> ...\n");
-            return 1;
-        }
-        return module_config_handle(std::vector<std::string>(args.begin() + 1, args.end()));
     }
 
     terminal::errorf("Unknown module subcommand: %s\n", subcmd.c_str());
@@ -654,7 +650,7 @@ int cli_run(int argc, char** argv) {
         return input_result;
     const auto& cmd = cli.command;
     auto& args = cli.args;
-    if (cli.has("--temp"))
+    if (cli.has("--temp") && cli.path.rfind("module config ", 0) != 0)
         args.emplace_back("--temp");
     if (cli.path == "debug su" && cli.has("-g"))
         args.emplace_back("-g");
@@ -711,7 +707,7 @@ int cli_run(int argc, char** argv) {
     } else if (cmd == "soft-reboot") {
         return soft_reboot();
     } else if (cmd == "module") {
-        return cmd_module(args);
+        return cmd_module(cli);
     } else if (cmd == "plugin") {
         return plugin_handle(args);
     } else if (cmd == "install") {
