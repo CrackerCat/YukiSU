@@ -9,6 +9,7 @@ namespace ksud {
 
 // Feature management
 int feature_get(const std::string& id);
+int feature_get_config(const std::string& id);
 int feature_set(const std::string& id, uint64_t value);
 int feature_set_and_save(const std::string& id, uint64_t value);
 void feature_list();

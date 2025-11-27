@@ -728,6 +728,8 @@ int cli_run(int argc, char** argv) {
     } else if (cmd == "profile") {
         return cmd_profile(args);
     } else if (cmd == "feature") {
+        if (cli.path == "feature get" && cli.has("--config"))
+            return feature_get_config(args[1]);
         return cmd_feature(args);
     } else if (cmd == "kagami") {
         return kagami::embedded_command(args);

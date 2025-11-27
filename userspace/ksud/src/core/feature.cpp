@@ -922,6 +922,24 @@ int feature_save_config() {
     return feature_save_config_locked();
 }
 
+int feature_get_config(const std::string& id) {
+    const auto [feature_id, valid] = parse_feature_id(id);
+    if (!valid)
+        return terminal::error("Unknown feature: " + id);
+    const auto config = load_binary_config().value_or(
+        parse_text_feature_config(read_file(FEATURE_CONFIG_PATH).value_or("")));
+    printf("Feature: %s (%u)\n", feature_id_to_name(feature_id), feature_id);
+    printf("Description: %s\n", feature_id_to_description(feature_id));
+    const auto found = config.find(feature_id);
+    if (found == config.end()) {
+        printf("Not set in config\n");
+    } else {
+        printf("Value: %" PRIu64 "\n", found->second);
+        printf("Status: %s\n", found->second != 0 ? "enabled" : "disabled");
+    }
+    return 0;
+}
+
 int refresh_sucompat_vfs() {
     const SucompatTransitionLock transition;
     if (!transition.locked()) {
