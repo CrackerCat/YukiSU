@@ -199,6 +199,7 @@ fun TemplateEditorScreen(
             RootProfileConfig(fixedName = true,
                 profile = toNativeProfile(template),
                 onProfileChange = {
+                    if (readOnly) return@RootProfileConfig
                     template.copy(
                         uid = it.uid,
                         gid = it.gid,

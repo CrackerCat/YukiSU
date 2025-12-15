@@ -26,6 +26,7 @@ import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.profile.Capabilities
 import com.anatdx.yukisu.profile.Groups
+import com.anatdx.yukisu.ui.component.SuperDropdown
 import com.anatdx.yukisu.ui.component.rememberCustomDialog
 import com.anatdx.yukisu.ui.component.YukiSwitch
 import com.anatdx.yukisu.ui.component.YukiDialogTheme
@@ -48,62 +49,6 @@ fun RootProfileConfig(
                 onValueChange = { onProfileChange(profile.copy(name = it)) }
             )
         }
-
-        /* 
-        var expanded by remember { mutableStateOf(false) }
-        val currentNamespace = when (profile.namespace) {
-            Natives.Profile.Namespace.INHERITED.ordinal -> stringResource(R.string.profile_namespace_inherited)
-            Natives.Profile.Namespace.GLOBAL.ordinal -> stringResource(R.string.profile_namespace_global)
-            Natives.Profile.Namespace.INDIVIDUAL.ordinal -> stringResource(R.string.profile_namespace_individual)
-            else -> stringResource(R.string.profile_namespace_inherited)
-        }
-        ListItem(headlineContent = {
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                        .fillMaxWidth(),
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.profile_namespace)) },
-                    value = currentNamespace,
-                    onValueChange = {},
-                    trailingIcon = {
-                        if (expanded) Icon(Icons.Filled.ArrowDropUp, null)
-                        else Icon(Icons.Filled.ArrowDropDown, null)
-                    },
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.profile_namespace_inherited)) },
-                        onClick = {
-                            onProfileChange(profile.copy(namespace = Natives.Profile.Namespace.INHERITED.ordinal))
-                            expanded = false
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.profile_namespace_global)) },
-                        onClick = {
-                            onProfileChange(profile.copy(namespace = Natives.Profile.Namespace.GLOBAL.ordinal))
-                            expanded = false
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.profile_namespace_individual)) },
-                        onClick = {
-                            onProfileChange(profile.copy(namespace = Natives.Profile.Namespace.INDIVIDUAL.ordinal))
-                            expanded = false
-                        },
-                    )
-                }
-            }
-        })
-        */
 
         UidPanel(uid = profile.uid, label = "uid", onUidChange = {
             onProfileChange(
@@ -150,6 +95,19 @@ fun RootProfileConfig(
             )
         }
 
+        SuperDropdown(
+            title = stringResource(R.string.profile_namespace),
+            items = listOf(
+                stringResource(R.string.profile_namespace_inherited),
+                stringResource(R.string.profile_namespace_global),
+                stringResource(R.string.profile_namespace_individual),
+            ),
+            selectedIndex = profile.namespace,
+            onSelectedIndexChange = {
+                onProfileChange(profile.copy(namespace = it, rootUseDefault = false))
+            },
+        )
+
         SELinuxPanel(profile = profile, onSELinuxChange = { domain, rules ->
             onProfileChange(
                 profile.copy(
@@ -160,8 +118,7 @@ fun RootProfileConfig(
             )
         })
 
-        // When the profile still uses the default, seed the toggle from the
-        // global "防逃逸" default; once customized, reflect the profile's flag.
+        // Seed uncustomized profiles from the global no-new-privileges default.
         val noNewPrivs = if (profile.rootUseDefault) {
             Natives.isDefaultNoNewPrivsEnabled()
         } else {

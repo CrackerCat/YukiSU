@@ -125,6 +125,10 @@
     <string name="profile_template">Template</string>
     <string name="profile_custom">Custom</string>
     <string name="profile_name">Profile name</string>
+    <string name="profile_namespace" tools:ignore="MissingTranslation">Mount namespace</string>
+    <string name="profile_namespace_inherited" tools:ignore="MissingTranslation">Inherited</string>
+    <string name="profile_namespace_global" tools:ignore="MissingTranslation">Global</string>
+    <string name="profile_namespace_individual" tools:ignore="MissingTranslation">Individual</string>
     <string name="profile_groups">Groups</string>
     <string name="profile_capabilities">Capabilities</string>
     <string name="profile_selinux_context">SELinux context</string>
