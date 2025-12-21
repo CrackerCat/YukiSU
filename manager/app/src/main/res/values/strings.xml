@@ -111,6 +111,7 @@
     <string name="hide_system_apps">Hide system apps</string>
     <string name="send_log">Send logs</string>
     <string name="safe_mode">Safe mode</string>
+    <string name="safe_mode_module_disabled" tools:ignore="MissingTranslation">Module installation is disabled in safe mode</string>
     <string name="home_jailbreak">Jailbreak</string>
     <string name="home_jailbreak_failed">Failed to start jailbreak service</string>
     <string name="jailbreak_timeout">Jailbreak may have failed, please check logs</string>

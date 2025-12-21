@@ -1,6 +1,7 @@
 package com.anatdx.yukisu.ui.activity.util
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -9,6 +10,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.anatdx.yukisu.Natives
+import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.MainActivity
 import com.anatdx.yukisu.ui.util.*
 import kotlinx.coroutines.Dispatchers
@@ -79,6 +81,11 @@ object UltraActivityUtils {
                     )
                 )
             } else if (moduleUris.isNotEmpty() && kernelFile == null) {
+                if (Natives.isSafeMode) {
+                    ZipFileDetector.cleanupStagedFiles(zipFiles)
+                    Toast.makeText(activity, R.string.safe_mode_module_disabled, Toast.LENGTH_LONG).show()
+                    return@launch
+                }
                 navigator.navigate(
                     FlashScreenDestination(
                         FlashIt.FlashModules(ArrayList(moduleUris))
