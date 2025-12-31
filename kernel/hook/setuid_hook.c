@@ -12,7 +12,6 @@
 #include <linux/version.h>
 
 #include "policy/allowlist.h"
-#include "policy/feature.h"
 #include "feature/kernel_umount.h"
 #include "extension/uts_view.h"
 #ifdef CONFIG_KSU_YUKIZYGISK
@@ -25,29 +24,6 @@
 #include "hook/setuid_hook.h"
 #include "supercall/supercall.h"
 #include "hook/tp_marker.h"
-
-static bool ksu_enhanced_security_enabled = false;
-
-static int enhanced_security_feature_get(u64 *value)
-{
-	*value = ksu_enhanced_security_enabled ? 1 : 0;
-	return 0;
-}
-
-static int enhanced_security_feature_set(u64 value)
-{
-	bool enable = value != 0;
-	ksu_enhanced_security_enabled = enable;
-	pr_info("enhanced_security: set to %d\n", enable);
-	return 0;
-}
-
-static const struct ksu_feature_handler enhanced_security_handler = {
-    .feature_id = KSU_FEATURE_ENHANCED_SECURITY,
-    .name = "enhanced_security",
-    .get_handler = enhanced_security_feature_get,
-    .set_handler = enhanced_security_feature_set,
-};
 
 /*
  * Called AFTER the original setresuid syscall has succeeded (via TSR
@@ -62,35 +38,6 @@ int ksu_handle_setresuid(uid_t old_uid, uid_t new_uid)
 	ksu_yukizygisk_on_setresuid(old_uid, new_uid);
 #endif // #ifdef CONFIG_KSU_YUKIZYGISK
 	ksu_uts_view_on_setresuid(old_uid, new_uid);
-
-	// if old process is root, ignore it.
-	if (old_uid != 0 && ksu_enhanced_security_enabled) {
-		// disallow any non-ksu domain escalation from non-root to root!
-		if (unlikely(new_uid == 0)) {
-			if (!is_ksu_domain()) {
-				pr_warn("find suspicious EoP: %d %s, from %d "
-					"to %d\n",
-					current->pid, current->comm, old_uid,
-					new_uid);
-				force_sig(SIGKILL);
-				return 0;
-			}
-		}
-		// disallow appuid decrease to any other uid if it is not
-		// allowed to su
-		if (is_appuid(old_uid)) {
-			if (new_uid < old_uid &&
-			    !ksu_is_allow_uid_for_current(old_uid)) {
-				pr_warn("find suspicious EoP: %d %s, from %d "
-					"to %d\n",
-					current->pid, current->comm, old_uid,
-					new_uid);
-				force_sig(SIGKILL);
-				return 0;
-			}
-		}
-		return 0;
-	}
 
 	/*
 	 * Match the specialization target directly. ksu_get_manager_appid()
@@ -132,15 +79,10 @@ int ksu_handle_setresuid(uid_t old_uid, uid_t new_uid)
 void ksu_setuid_hook_init(void)
 {
 	ksu_kernel_umount_init();
-	if (ksu_register_feature_handler(&enhanced_security_handler)) {
-		pr_err(
-		    "Failed to register enhanced security feature handler\n");
-	}
 }
 
 void ksu_setuid_hook_exit(void)
 {
 	pr_info("ksu_core_exit\n");
 	ksu_kernel_umount_exit();
-	ksu_unregister_feature_handler(KSU_FEATURE_ENHANCED_SECURITY);
 }

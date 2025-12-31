@@ -169,7 +169,6 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
     val suLog = rememberFeatureToggleState(Natives.FEATURE_SULOG)
     val adbRoot = rememberFeatureToggleState(Natives.FEATURE_ADB_ROOT)
     val shellSuAdbOnly = rememberFeatureToggleState(Natives.FEATURE_SHELL_SU_ADB_ONLY)
-    val enhancedSecurity = rememberFeatureToggleState(Natives.FEATURE_ENHANCED_SECURITY)
     val magiskCompat = rememberFeatureToggleState(Natives.FEATURE_MAGISK_COMPAT)
     val defaultNoNewPrivs = rememberFeatureToggleState(Natives.FEATURE_DEFAULT_NO_NEW_PRIVS)
     LaunchedEffect(Unit) {
@@ -336,28 +335,12 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
 
                 SettingsCard(title = stringResource(R.string.yukisu_features)) {
                     FeatureSwitchItem(
-                        featureId = Natives.FEATURE_ENHANCED_SECURITY,
-                        icon = Icons.Rounded.EnhancedEncryption,
-                        title = stringResource(R.string.settings_enable_enhanced_security),
-                        summary = stringResource(R.string.settings_enable_enhanced_security_summary),
-                        state = enhancedSecurity,
-                        groupPosition = MoreSettingsItemPosition.First,
-                        onChange = { enabled ->
-                            scope.persistFeature(
-                                state = enhancedSecurity,
-                                featureId = Natives.FEATURE_ENHANCED_SECURITY,
-                                featureName = "enhanced_security",
-                                kernelEnabled = enabled
-                            )
-                        }
-                    )
-
-                    FeatureSwitchItem(
                         featureId = Natives.FEATURE_UNSHARE_MNT,
                         icon = ImageVector.vectorResource(R.drawable.ic_mount_view_cleanup),
                         title = stringResource(R.string.settings_unshare_mnt),
                         summary = stringResource(R.string.settings_unshare_mnt_summary),
                         state = unshareMnt,
+                        groupPosition = MoreSettingsItemPosition.First,
                         onChange = { enabled ->
                             scope.persistFeature(
                                 state = unshareMnt,

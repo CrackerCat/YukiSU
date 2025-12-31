@@ -37,6 +37,7 @@ constexpr uint32_t FEATURE_VERSION = 1;
 // Configuration metadata, never passed to the kernel as a feature ID.
 constexpr uint32_t DEFAULTS_VERSION_RECORD = UINT32_MAX;
 constexpr uint64_t DEFAULTS_VERSION = 1;
+constexpr uint32_t RETIRED_ENHANCED_SECURITY = 100;
 constexpr const char* LEGACY_HIDE_BOOTLOADER_CONFIG = "/data/adb/ksu/.hide_bootloader";
 
 bool sync_feature_directory() {
@@ -51,7 +52,6 @@ const std::map<std::string, uint32_t>& get_feature_map() {
     static const std::map<std::string, uint32_t> map = {
         {"su_compat", KSU_FEATURE_SU_COMPAT},
         {"kernel_umount", KSU_FEATURE_KERNEL_UMOUNT},
-        {"enhanced_security", KSU_FEATURE_ENHANCED_SECURITY},
         {"adb_root", KSU_FEATURE_ADB_ROOT},
         {"selinux_hide", KSU_FEATURE_SELINUX_HIDE},
         {"shell_su_adb_only", KSU_FEATURE_SHELL_SU_ADB_ONLY},
@@ -74,8 +74,6 @@ const std::map<uint32_t, const char*>& get_feature_descriptions() {
          "stat-intercepted 'su' path; mutually exclusive with kasumi_sucompat"},
         {KSU_FEATURE_KERNEL_UMOUNT,
          "Kernel Umount - controls whether kernel automatically unmounts modules when not needed"},
-        {KSU_FEATURE_ENHANCED_SECURITY,
-         "Enhanced Security - disable non-KSU root elevation and unauthorized UID downgrades"},
         {KSU_FEATURE_ADB_ROOT,
          "ADB Root - run adbd with root privileges via kernel feature injection"},
         {KSU_FEATURE_SELINUX_HIDE,
@@ -1031,7 +1029,8 @@ std::optional<std::map<uint32_t, uint64_t>> load_binary_config() {
             LOGW("Feature config truncated at entry %u of %u", i, count);
             return std::nullopt;
         }
-        features[id] = value;
+        if (id != RETIRED_ENHANCED_SECURITY)
+            features[id] = value;
     }
 
     LOGI("Loaded %zu features from binary config", features.size());
@@ -1072,6 +1071,7 @@ namespace {
 
 int apply_config_locked(std::map<uint32_t, uint64_t>& features) {
     LOGI("Applying feature configuration to kernel...");
+    features.erase(RETIRED_ENHANCED_SECURITY);
 
     int applied = 0;
     for (const auto& [id, value] : features) {

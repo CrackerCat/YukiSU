@@ -189,8 +189,6 @@
     <string name="su_not_allowed">Superuser %s zu erlauben ist nicht erlaubt</string>
     <string name="settings_disable_kernel_umount">Kernel-Aushängen deaktivieren</string>
     <string name="settings_disable_kernel_umount_summary">Das von KernelSU gesteuerte Aushängen auf Kernel-Ebene deaktivieren</string>
-    <string name="settings_enable_enhanced_security">Strenge Sicherheitsrichtlinie verwenden</string>
-    <string name="settings_enable_enhanced_security_summary">Rechteausweitung außerhalb der KernelSU-Domäne und unautorisierte Herabstufungen von App-UIDs blockieren</string>
     <string name="settings_selinux_hide">SELinux-Verbergung aktivieren</string>
     <string name="settings_selinux_hide_summary">Änderungen an der KernelSU-SELinux-Richtlinie vor App-seitigen Prüfungen verbergen.</string>
     <string name="feature_status_unsupported_summary">Der Kernel unterstützt diese Funktion nicht</string>

@@ -14,7 +14,7 @@ enum ksu_feature_id {
   // Keep former webview_zygote_umount ID 5 unused so stale configs cannot
   // apply.
   KSU_FEATURE_SHELL_SU_ADB_ONLY = 6,
-  KSU_FEATURE_ENHANCED_SECURITY = 100,
+  // Former enhanced_security ID 100 remains reserved.
   KSU_FEATURE_MAGISK_COMPAT = 101,
   // YukiSU extensions number from 100 up; 0-99 reserved for upstream KSU.
   KSU_FEATURE_DEFAULT_NO_NEW_PRIVS = 102,

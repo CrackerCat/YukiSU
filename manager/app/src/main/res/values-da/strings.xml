@@ -187,8 +187,6 @@
     <string name="su_not_allowed">Det er ikke tilladt at give superbruger til %s</string>
     <string name="settings_disable_kernel_umount">Deaktiver kerne-afmontering</string>
     <string name="settings_disable_kernel_umount_summary">Deaktiver afmonteringsadfærd på kerneniveau styret af KernelSU</string>
-    <string name="settings_enable_enhanced_security">Brug streng sikkerhedspolitik</string>
-    <string name="settings_enable_enhanced_security_summary">Bloker rettighedsforøgelse uden for KernelSU-domænet og uautoriserede nedgraderinger af app-UID</string>
     <string name="settings_selinux_hide">Aktivér SELinux-skjul</string>
     <string name="settings_selinux_hide_summary">Skjul KernelSU SELinux-politikændringer fra app-rettede probes</string>
     <string name="feature_status_unsupported_summary">Kernen understøtter ikke denne funktion</string>

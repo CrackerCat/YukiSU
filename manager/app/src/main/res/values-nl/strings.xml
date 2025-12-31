@@ -189,8 +189,6 @@
     <string name="su_not_allowed">Supergebruiker verlenen aan %s is niet toegestaan</string>
     <string name="settings_disable_kernel_umount">Kernel-umount uitschakelen</string>
     <string name="settings_disable_kernel_umount_summary">Schakel het door KernelSU bestuurde umount-gedrag op kernelniveau uit</string>
-    <string name="settings_enable_enhanced_security">Strikt beveiligingsbeleid gebruiken</string>
-    <string name="settings_enable_enhanced_security_summary">Blokkeer rechtenverhoging buiten het KernelSU-domein en ongeautoriseerde verlagingen van app-UID\'s</string>
     <string name="settings_selinux_hide">SELinux verbergen inschakelen</string>
     <string name="settings_selinux_hide_summary">Verberg wijzigingen in het KernelSU SELinux-beleid voor controles aan de app-zijde.</string>
     <string name="feature_status_unsupported_summary">De kernel ondersteunt deze functie niet</string>

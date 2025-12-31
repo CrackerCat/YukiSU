@@ -580,14 +580,6 @@ NativeBridge(setKernelUmountEnabled, jboolean, jboolean enabled) {
   return set_kernel_umount_enabled(enabled);
 }
 
-NativeBridgeNP(isEnhancedSecurityEnabled, jboolean) {
-  return is_enhanced_security_enabled();
-}
-
-NativeBridge(setEnhancedSecurityEnabled, jboolean, jboolean enabled) {
-  return set_enhanced_security_enabled(enabled);
-}
-
 NativeBridgeNP(isSuLogEnabled, jboolean) { return is_sulog_enabled(); }
 
 NativeBridge(setSuLogEnabled, jboolean, jboolean enabled) {

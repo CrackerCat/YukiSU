@@ -187,8 +187,6 @@
     <string name="su_not_allowed">Додељивање суперкорисника %s није дозвољено</string>
     <string name="settings_disable_kernel_umount">Онемогући демонтирање на нивоу језгра</string>
     <string name="settings_disable_kernel_umount_summary">Онемогући демонтирање на нивоу језгра којим управља KernelSU</string>
-    <string name="settings_enable_enhanced_security">Користите строгу безбедносну политику</string>
-    <string name="settings_enable_enhanced_security_summary">Блокирај подизање привилегија изван KernelSU домена и неовлашћене апликације UID на ниже верзије</string>
     <string name="settings_selinux_hide">Омогући сакривање SELinux</string>
     <string name="settings_selinux_hide_summary">Сакриј измене смерница KernelSU SELinux од сонди усмерених на апликацију</string>
     <string name="feature_status_unsupported_summary">Језгро не подржава ову функцију</string>

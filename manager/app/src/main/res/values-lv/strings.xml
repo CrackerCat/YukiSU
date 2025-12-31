@@ -189,8 +189,6 @@
     <string name="su_not_allowed">Superlietotāja tiesību piešķiršana %s nav atļauta</string>
     <string name="settings_disable_kernel_umount">Atspējot kodola umount</string>
     <string name="settings_disable_kernel_umount_summary">Atspējot KernelSU kontrolēto kodola līmeņa umount darbību</string>
-    <string name="settings_enable_enhanced_security">Izmantot stingru drošības politiku</string>
-    <string name="settings_enable_enhanced_security_summary">Bloķēt tiesību paaugstināšanu ārpus KernelSU domēna un neatļautu lietotņu UID pazemināšanu</string>
     <string name="settings_selinux_hide">Iespējot SELinux slēpšanu</string>
     <string name="settings_selinux_hide_summary">Slēpt KernelSU SELinux politikas izmaiņas no lietotņu puses pārbaudēm.</string>
     <string name="feature_status_unsupported_summary">Kodols neatbalsta šo funkciju</string>

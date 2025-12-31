@@ -137,15 +137,6 @@ object Natives {
     external fun setKernelUmountEnabled(enabled: Boolean): Boolean
 
     /**
-     * Enhanced security can be enabled/disabled.
-     *  0: disabled
-     *  1: enabled
-     *  negative : error
-     */
-    external fun isEnhancedSecurityEnabled(): Boolean
-    external fun setEnhancedSecurityEnabled(enabled: Boolean): Boolean
-
-    /**
      * Su Log can be enabled/disabled.
      *  0: disabled
      *  1: enabled
@@ -196,7 +187,6 @@ object Natives {
     const val FEATURE_ADB_ROOT = 3
     const val FEATURE_SELINUX_HIDE = 4
     const val FEATURE_SHELL_SU_ADB_ONLY = 6
-    const val FEATURE_ENHANCED_SECURITY = 100
     const val FEATURE_MAGISK_COMPAT = 101
     const val FEATURE_DEFAULT_NO_NEW_PRIVS = 102
     const val FEATURE_YUKIZYGISK = 103

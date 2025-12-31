@@ -187,8 +187,6 @@
     <string name="su_not_allowed">Dodelitev pravic superuporabnika za %s ni dovoljena</string>
     <string name="settings_disable_kernel_umount">Onemogoči umount jedra</string>
     <string name="settings_disable_kernel_umount_summary">Onemogoči vedenje umount na ravni jedra, ki ga nadzoruje KernelSU</string>
-    <string name="settings_enable_enhanced_security">Uporabi strogo varnostno politiko</string>
-    <string name="settings_enable_enhanced_security_summary">Blokiraj stopnjevanje pravic zunaj domene KernelSU in nepooblaščeno zniževanje UID aplikacij</string>
     <string name="settings_selinux_hide">Omogoči skrivanje SELinux</string>
     <string name="settings_selinux_hide_summary">Skrij spremembe politike SELinux KernelSU pred preverjanji na strani aplikacij.</string>
     <string name="feature_status_unsupported_summary">Jedro ne podpira te funkcije</string>

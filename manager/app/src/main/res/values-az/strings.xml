@@ -187,8 +187,6 @@
     <string name="su_not_allowed">%s üçün superistifadəçi səlahiyyəti verilməsinə icazə yoxdur</string>
     <string name="settings_disable_kernel_umount">Nüvə ayırmasını deaktiv et</string>
     <string name="settings_disable_kernel_umount_summary">KernelSU tərəfindən idarə olunan nüvə səviyyəsindəki ayırma davranışını deaktiv edin</string>
-    <string name="settings_enable_enhanced_security">Ciddi təhlükəsizlik siyasəti istifadə et</string>
-    <string name="settings_enable_enhanced_security_summary">KernelSU sahəsindən kənar səlahiyyət artırmanı və icazəsiz tətbiq UID aşağılamasını bloklayır</string>
     <string name="settings_selinux_hide">SELinux gizlətməsini aktivləşdir</string>
     <string name="settings_selinux_hide_summary">KernelSU SELinux siyasəti dəyişikliklərini tətbiq tərəfli yoxlamalardan gizlət</string>
     <string name="feature_status_unsupported_summary">Nüvə bu xüsusiyyəti dəstəkləmir</string>

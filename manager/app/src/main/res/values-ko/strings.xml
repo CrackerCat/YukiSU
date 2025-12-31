@@ -187,8 +187,6 @@
     <string name="su_not_allowed">%s에 슈퍼유저 권한을 부여할 수 없습니다</string>
     <string name="settings_disable_kernel_umount">커널 umount 비활성화</string>
     <string name="settings_disable_kernel_umount_summary">KernelSU가 제어하는 커널 수준 umount 동작을 비활성화합니다</string>
-    <string name="settings_enable_enhanced_security">엄격한 보안 정책 사용</string>
-    <string name="settings_enable_enhanced_security_summary">KernelSU 도메인 외부의 권한 상승 및 무단 앱 UID 강등을 차단합니다</string>
     <string name="settings_selinux_hide">SELinux 숨기기 활성화</string>
     <string name="settings_selinux_hide_summary">앱 측 탐지로부터 KernelSU SELinux 정책 변경을 숨깁니다.</string>
     <string name="feature_status_unsupported_summary">커널이 이 기능을 지원하지 않습니다</string>

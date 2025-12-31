@@ -187,8 +187,6 @@
     <string name="su_not_allowed">%s को सुपरयूज़र प्रदान करने की अनुमति नहीं है</string>
     <string name="settings_disable_kernel_umount">कर्नेल umount अक्षम करें</string>
     <string name="settings_disable_kernel_umount_summary">KernelSU द्वारा नियंत्रित कर्नेल-स्तरीय umount व्यवहार अक्षम करें</string>
-    <string name="settings_enable_enhanced_security">सख्त सुरक्षा नीति का उपयोग करें</string>
-    <string name="settings_enable_enhanced_security_summary">KernelSU डोमेन के बाहर विशेषाधिकार वृद्धि और अनधिकृत ऐप UID डाउनग्रेड को अवरुद्ध करें</string>
     <string name="settings_selinux_hide">SELinux छिपाना सक्षम करें</string>
     <string name="settings_selinux_hide_summary">KernelSU SELinux नीति परिवर्तनों को ऐप-सामना करने वाली जांच से छिपाएं</string>
     <string name="feature_status_unsupported_summary">कर्नेल इस सुविधा का समर्थन नहीं करता</string>

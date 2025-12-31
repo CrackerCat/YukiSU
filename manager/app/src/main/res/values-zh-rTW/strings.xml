@@ -201,8 +201,6 @@
     <string name="settings_unshare_mnt_summary">卸載後重建命名空間並整理可見編號，重新啟動應用程式後生效。</string>
     <string name="settings_disable_kernel_umount">停用核心卸載</string>
     <string name="settings_disable_kernel_umount_summary">停用由 KernelSU 控制的核心等級卸載</string>
-    <string name="settings_enable_enhanced_security">使用嚴格安全性策略</string>
-    <string name="settings_enable_enhanced_security_summary">阻止非 KernelSU 域的提權及未授權 app UID 降低行為</string>
     <string name="settings_selinux_hide">啟用 SELinux 隱藏</string>
     <string name="settings_selinux_hide_summary">對應用程式端 SELinux 探測隱藏 KernelSU 策略變更。</string>
     <string name="feature_status_unsupported_summary">核心不支援此功能</string>

@@ -71,10 +71,6 @@ int su_prompt_ready(uint64_t request_id, uint64_t nonce);
 bool set_kernel_umount_enabled(bool enabled);
 bool is_kernel_umount_enabled();
 
-// Enhanced security
-bool set_enhanced_security_enabled(bool enabled);
-bool is_enhanced_security_enabled();
-
 // Su log
 bool set_sulog_enabled(bool enabled);
 bool is_sulog_enabled();

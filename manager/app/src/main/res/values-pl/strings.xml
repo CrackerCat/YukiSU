@@ -189,8 +189,6 @@
     <string name="su_not_allowed">Przyznanie superużytkownika dla %s jest niedozwolone</string>
     <string name="settings_disable_kernel_umount">Wyłącz umount jądra</string>
     <string name="settings_disable_kernel_umount_summary">Wyłącz zachowanie umount na poziomie jądra kontrolowane przez KernelSU</string>
-    <string name="settings_enable_enhanced_security">Użyj rygorystycznej polityki bezpieczeństwa</string>
-    <string name="settings_enable_enhanced_security_summary">Blokuj eskalację uprawnień poza domeną KernelSU oraz nieautoryzowane obniżanie UID aplikacji</string>
     <string name="settings_selinux_hide">Włącz ukrywanie SELinux</string>
     <string name="settings_selinux_hide_summary">Ukryj zmiany polityki SELinux KernelSU przed sondami po stronie aplikacji.</string>
     <string name="feature_status_unsupported_summary">Jądro nie obsługuje tej funkcji</string>

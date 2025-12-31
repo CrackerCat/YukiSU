@@ -189,8 +189,6 @@
     <string name="su_not_allowed">Donner un super-utilisateur à %s n\'est pas autorisé</string>
     <string name="settings_disable_kernel_umount">Désactiver le démontage du noyau</string>
     <string name="settings_disable_kernel_umount_summary">Désactiver le comportement de démontage au niveau du noyau contrôlé par KernelSU</string>
-    <string name="settings_enable_enhanced_security">Utiliser une politique de sécurité stricte</string>
-    <string name="settings_enable_enhanced_security_summary">Bloquer l\'élévation de privilèges hors du domaine KernelSU et les rétrogradations d\'UID d\'application non autorisées</string>
     <string name="settings_selinux_hide">Activer le masquage SELinux</string>
     <string name="settings_selinux_hide_summary">Masquer les modifications de la politique SELinux de KernelSU vis-à-vis des sondes côté application.</string>
     <string name="feature_status_unsupported_summary">Le noyau ne prend pas en charge cette fonction</string>

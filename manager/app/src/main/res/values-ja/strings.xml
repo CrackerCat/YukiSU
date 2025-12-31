@@ -189,8 +189,6 @@
     <string name="su_not_allowed">「%s」にスーパーユーザー権限を付与することはできません</string>
     <string name="settings_disable_kernel_umount">カーネルアンマウントを無効化</string>
     <string name="settings_disable_kernel_umount_summary">KernelSU が制御するカーネルレベルの umount 動作を無効にします</string>
-    <string name="settings_enable_enhanced_security">厳格なセキュリティポリシーを使用</string>
-    <string name="settings_enable_enhanced_security_summary">KernelSU ドメイン外の権限昇格と未承認アプリの UID 低下をブロック</string>
     <string name="settings_selinux_hide">SELinux 隠蔽を有効化</string>
     <string name="settings_selinux_hide_summary">KernelSU の SELinux ポリシー変更をアプリ側の検知から隠します。</string>
     <string name="feature_status_unsupported_summary">カーネルがこの機能をサポートしていません</string>

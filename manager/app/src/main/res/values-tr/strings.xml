@@ -187,8 +187,6 @@
     <string name="su_not_allowed">%s için süper kullanıcı yetkisi verilemiyor</string>
     <string name="settings_disable_kernel_umount">Çekirdek ayırmasını devre dışı bırak</string>
     <string name="settings_disable_kernel_umount_summary">KernelSU tarafından kontrol edilen çekirdek seviyesindeki ayırma davranışını devre dışı bırakın</string>
-    <string name="settings_enable_enhanced_security">Katı güvenlik politikası kullan</string>
-    <string name="settings_enable_enhanced_security_summary">KernelSU alanı dışındaki yetki yükseltmeyi ve yetkisiz app UID düşürmeyi engeller</string>
     <string name="settings_selinux_hide">SELinux gizlemeyi etkinleştir</string>
     <string name="settings_selinux_hide_summary">KernelSU SELinux politika değişikliklerini uygulama tarafı sondalardan gizle.</string>
     <string name="feature_status_unsupported_summary">Çekirdek bu özelliği desteklemiyor</string>

@@ -187,8 +187,6 @@
     <string name="su_not_allowed">Superkasutaja õiguste andmine %s-le pole lubatud</string>
     <string name="settings_disable_kernel_umount">Keela kerneli umount</string>
     <string name="settings_disable_kernel_umount_summary">Keela KernelSU poolt juhitav kernelitaseme umount-käitumine</string>
-    <string name="settings_enable_enhanced_security">Kasuta ranget turbepoliitikat</string>
-    <string name="settings_enable_enhanced_security_summary">Blokeeri õiguste tõstmine väljaspool KernelSU domeeni ja rakenduste volitamata UID-i alandamine</string>
     <string name="settings_selinux_hide">Luba SELinuxi peitmine</string>
     <string name="settings_selinux_hide_summary">Peida KernelSU SELinuxi poliitika muudatused rakenduse poolsete kontrollide eest.</string>
     <string name="feature_status_unsupported_summary">Kernel ei toeta seda funktsiooni</string>

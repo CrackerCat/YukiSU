@@ -189,8 +189,6 @@
     <string name="su_not_allowed">Acordarea privilegiilor de superutilizator pentru %s nu este permisă</string>
     <string name="settings_disable_kernel_umount">Dezactivează umount-ul kernelului</string>
     <string name="settings_disable_kernel_umount_summary">Dezactivează comportamentul umount la nivel de kernel controlat de KernelSU</string>
-    <string name="settings_enable_enhanced_security">Folosește o politică de securitate strictă</string>
-    <string name="settings_enable_enhanced_security_summary">Blochează escaladarea privilegiilor în afara domeniului KernelSU și retrogradările neautorizate ale UID-urilor aplicațiilor</string>
     <string name="settings_selinux_hide">Activează ascunderea SELinux</string>
     <string name="settings_selinux_hide_summary">Ascunde modificările politicii SELinux a KernelSU față de verificările din partea aplicațiilor.</string>
     <string name="feature_status_unsupported_summary">Kernelul nu acceptă această funcție</string>

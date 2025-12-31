@@ -187,8 +187,6 @@
     <string name="su_not_allowed">%s ಗೆ ಸೂಪರ್‌ಯೂಸರ್ ನೀಡಲು ಅನುಮತಿಯಿಲ್ಲ</string>
     <string name="settings_disable_kernel_umount">ಕರ್ನಲ್ umount ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ</string>
     <string name="settings_disable_kernel_umount_summary">KernelSU ನಿಂದ ನಿಯಂತ್ರಿತ ಕರ್ನಲ್-ಮಟ್ಟದ umount ವರ್ತನೆಯನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ</string>
-    <string name="settings_enable_enhanced_security">ಕಠಿಣ ಭದ್ರತಾ ನೀತಿ ಬಳಸಿ</string>
-    <string name="settings_enable_enhanced_security_summary">KernelSU ಡೊಮೇನ್‌ನ ಹೊರಗಿನ ಸವಲತ್ತು ಹೆಚ್ಚಳ ಮತ್ತು ಅನಧಿಕೃತ ಆ್ಯಪ್ UID ಡೌನ್‌ಗ್ರೇಡ್‌ಗಳನ್ನು ನಿರ್ಬಂಧಿಸಿ</string>
     <string name="settings_selinux_hide">SELinux ಮರೆಮಾಡುವಿಕೆ ಸಕ್ರಿಯಗೊಳಿಸಿ</string>
     <string name="settings_selinux_hide_summary">ಆ್ಯಪ್-ಮುಖಿ ತನಿಖೆಗಳಿಂದ KernelSU SELinux ನೀತಿ ಬದಲಾವಣೆಗಳನ್ನು ಮರೆಮಾಡಿ</string>
     <string name="feature_status_unsupported_summary">ಕರ್ನಲ್ ಈ ವೈಶಿಷ್ಟ್ಯವನ್ನು ಬೆಂಬಲಿಸುವುದಿಲ್ಲ</string>

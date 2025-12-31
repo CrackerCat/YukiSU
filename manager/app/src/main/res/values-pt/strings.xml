@@ -187,8 +187,6 @@
     <string name="su_not_allowed">Conceder superusuário à %s não é permitido</string>
     <string name="settings_disable_kernel_umount">Desativar umount do kernel</string>
     <string name="settings_disable_kernel_umount_summary">Desativar o comportamento de umount em nível de kernel controlado pelo KernelSU</string>
-    <string name="settings_enable_enhanced_security">Usar política de segurança rígida</string>
-    <string name="settings_enable_enhanced_security_summary">Bloquear a elevação de privilégios fora do domínio do KernelSU e os rebaixamentos não autorizados de UID de aplicativos</string>
     <string name="settings_selinux_hide">Ativar ocultação do SELinux</string>
     <string name="settings_selinux_hide_summary">Ocultar as alterações da política SELinux do KernelSU das sondagens do lado do aplicativo.</string>
     <string name="feature_status_unsupported_summary">O kernel não oferece suporte a este recurso</string>

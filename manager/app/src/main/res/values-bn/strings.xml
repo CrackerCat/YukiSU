@@ -187,8 +187,6 @@
     <string name="su_not_allowed">%s কে সুপারইউজার প্রদান করার অনুমতি নেই</string>
     <string name="settings_disable_kernel_umount">কার্নেল umount নিষ্ক্রিয় করুন</string>
     <string name="settings_disable_kernel_umount_summary">KernelSU দ্বারা নিয়ন্ত্রিত কার্নেল-স্তরের umount আচরণ নিষ্ক্রিয় করুন</string>
-    <string name="settings_enable_enhanced_security">কঠোর নিরাপত্তা নীতি ব্যবহার করুন</string>
-    <string name="settings_enable_enhanced_security_summary">KernelSU ডোমেনের বাইরে সুবিধা বৃদ্ধি এবং অননুমোদিত অ্যাপ UID ডাউনগ্রেড ব্লক করুন</string>
     <string name="settings_selinux_hide">SELinux লুকানো সক্রিয় করুন</string>
     <string name="settings_selinux_hide_summary">অ্যাপ-মুখী প্রোব থেকে KernelSU SELinux নীতি পরিবর্তন লুকান</string>
     <string name="feature_status_unsupported_summary">কার্নেল এই বৈশিষ্ট্য সমর্থন করে না</string>

@@ -187,8 +187,6 @@
     <string name="su_not_allowed">A rendszergazdai jogosultság megadása nem engedélyezett ennek: %s</string>
     <string name="settings_disable_kernel_umount">Kernel umount letiltása</string>
     <string name="settings_disable_kernel_umount_summary">A KernelSU által vezérelt kernelszintű umount viselkedés letiltása</string>
-    <string name="settings_enable_enhanced_security">Szigorú biztonsági szabályzat használata</string>
-    <string name="settings_enable_enhanced_security_summary">A KernelSU tartományon kívüli jogosultságemelés és az alkalmazások jogosulatlan UID-csökkentésének blokkolása</string>
     <string name="settings_selinux_hide">SELinux elrejtés engedélyezése</string>
     <string name="settings_selinux_hide_summary">A KernelSU SELinux szabályzatmódosításainak elrejtése az alkalmazásoldali vizsgálatok elől.</string>
     <string name="feature_status_unsupported_summary">A kernel nem támogatja ezt a funkciót</string>

@@ -187,8 +187,6 @@
     <string name="su_not_allowed">Supervartotojo teisių suteikimas %s neleidžiamas</string>
     <string name="settings_disable_kernel_umount">Išjungti branduolio umount</string>
     <string name="settings_disable_kernel_umount_summary">Išjungti KernelSU valdomą branduolio lygio umount elgseną</string>
-    <string name="settings_enable_enhanced_security">Naudoti griežtą saugumo politiką</string>
-    <string name="settings_enable_enhanced_security_summary">Blokuoti teisių didinimą už KernelSU domeno ribų ir neautorizuotą programų UID mažinimą</string>
     <string name="settings_selinux_hide">Įjungti SELinux slėpimą</string>
     <string name="settings_selinux_hide_summary">Slėpti KernelSU SELinux politikos pakeitimus nuo programos pusės patikrinimų.</string>
     <string name="feature_status_unsupported_summary">Branduolys nepalaiko šios funkcijos</string>

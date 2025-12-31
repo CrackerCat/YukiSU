@@ -187,8 +187,6 @@
     <string name="su_not_allowed">Надання прав суперкористувача для %s заборонено</string>
     <string name="settings_disable_kernel_umount">Вимкнути umount ядра</string>
     <string name="settings_disable_kernel_umount_summary">Вимкнути поведінку umount на рівні ядра, керовану KernelSU</string>
-    <string name="settings_enable_enhanced_security">Використовувати сувору політику безпеки</string>
-    <string name="settings_enable_enhanced_security_summary">Блокувати підвищення привілеїв поза доменом KernelSU та неавторизоване зниження UID застосунків</string>
     <string name="settings_selinux_hide">Увімкнути приховування SELinux</string>
     <string name="settings_selinux_hide_summary">Приховувати зміни політики SELinux KernelSU від перевірок з боку застосунків.</string>
     <string name="feature_status_unsupported_summary">Ядро не підтримує цю функцію</string>

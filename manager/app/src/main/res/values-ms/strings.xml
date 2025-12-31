@@ -187,8 +187,6 @@
     <string name="su_not_allowed">Pemberian superuser kepada %s tidak dibenarkan</string>
     <string name="settings_disable_kernel_umount">Lumpuhkan nyahlekap kernel</string>
     <string name="settings_disable_kernel_umount_summary">Lumpuhkan kelakuan nyahlekap pada peringkat kernel yang dikawal oleh KernelSU</string>
-    <string name="settings_enable_enhanced_security">Gunakan dasar keselamatan ketat</string>
-    <string name="settings_enable_enhanced_security_summary">Sekat peningkatan keistimewaan di luar domain KernelSU dan penurunan UID aplikasi tanpa kebenaran</string>
     <string name="settings_selinux_hide">Dayakan penyembunyian SELinux</string>
     <string name="settings_selinux_hide_summary">Sembunyikan perubahan dasar SELinux KernelSU daripada pemeriksaan pihak aplikasi</string>
     <string name="feature_status_unsupported_summary">Kernel tidak menyokong ciri ini</string>
