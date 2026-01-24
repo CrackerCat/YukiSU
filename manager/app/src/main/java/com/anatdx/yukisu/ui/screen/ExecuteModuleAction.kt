@@ -2,6 +2,7 @@ package com.anatdx.yukisu.ui.screen
 
 import android.annotation.SuppressLint
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -30,7 +32,10 @@ import com.anatdx.yukisu.ui.component.KeyEventBlocker
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.util.LocalSnackbarHost
+import com.anatdx.yukisu.ui.util.listModules
+import com.anatdx.yukisu.ui.util.module.moduleActionAvailability
 import com.anatdx.yukisu.ui.util.runModuleAction
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,7 +52,11 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
     var tempText : String
     val logContent = remember { StringBuilder() }
     val activity = LocalActivity.current
+    val context = LocalContext.current
     var isActionRunning by rememberSaveable { mutableStateOf(true) }
+    val exitAction: () -> Unit = {
+        if (fromShortcut && activity != null) activity.finish() else navigator.popBackStack()
+    }
 
     BackHandler(enabled = isActionRunning) {
         // Disable back button if action is running
@@ -57,7 +66,29 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
         if (text.isNotEmpty()) {
             return@LaunchedEffect
         }
-        withContext(Dispatchers.IO) {
+        val availability = try {
+            withContext(Dispatchers.IO) { moduleActionAvailability(listModules(), moduleId) }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            Log.e("ModuleAction", "Cannot read module state", error)
+            Toast.makeText(context, R.string.operation_failed, Toast.LENGTH_SHORT).show()
+            isActionRunning = false
+            exitAction()
+            return@LaunchedEffect
+        }
+        if (availability?.available != true) {
+            val message = if (availability == null) {
+                context.getString(R.string.no_such_module, moduleId)
+            } else {
+                context.getString(R.string.module_unavailable, availability.name)
+            }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            isActionRunning = false
+            exitAction()
+            return@LaunchedEffect
+        }
+        val success = withContext(Dispatchers.IO) {
             runModuleAction(
                 moduleId = moduleId,
                 onStdout = {
@@ -77,11 +108,13 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
         isActionRunning = false
         if (fromShortcut) {
             activity?.let { act ->
-                Toast.makeText(
-                    act,
-                    act.getString(R.string.module_action_success),
-                    Toast.LENGTH_SHORT
-                ).show()
+                if (success) {
+                    Toast.makeText(
+                        act,
+                        act.getString(R.string.module_action_success),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 act.finish()
             }
         }
@@ -91,9 +124,7 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
         text = text,
         isActionRunning = isActionRunning,
         logContent = logContent,
-        onClose = {
-            if (fromShortcut && activity != null) activity.finish() else navigator.popBackStack()
-        },
+        onClose = exitAction,
     )
 }
 

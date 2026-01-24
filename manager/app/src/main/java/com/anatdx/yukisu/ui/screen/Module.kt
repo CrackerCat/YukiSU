@@ -1112,8 +1112,6 @@ private fun ModuleList(
         val success = loadingDialog.withLoading {
             withContext(Dispatchers.IO) {
                 if (isUninstall) {
-                    Shortcut.deleteModuleActionShortcut(context, module.dirId)
-                    Shortcut.deleteModuleWebUiShortcut(context, module.dirId)
                     uninstallModule(module.dirId)
                 } else {
                     undoUninstallModule(module.dirId)
@@ -1610,7 +1608,7 @@ fun ModuleItem(
                 }
                 if (module.hasActionScript) {
                     ModuleActionButton(
-                        enabled = !module.remove && localEnabled,
+                        enabled = !module.remove && !module.update && localEnabled,
                         onClick = {
                             navigator.navigate(ExecuteModuleActionScreenDestination(module.dirId))
                             viewModel.markNeedRefresh()
@@ -1622,7 +1620,7 @@ fun ModuleItem(
 
                 if (module.hasWebUi) {
                     ModuleActionButton(
-                        enabled = !module.remove && localEnabled,
+                        enabled = !module.remove && !module.update && localEnabled,
                         onClick = { onClick(module) },
                         imageVector = Icons.AutoMirrored.Outlined.Wysiwyg,
                         contentDescription = null
