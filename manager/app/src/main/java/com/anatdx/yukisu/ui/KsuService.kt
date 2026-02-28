@@ -41,8 +41,13 @@ class KsuService : RootService() {
 
     private fun loadAllPackages(): List<PackageInfo> {
         val tmp = arrayListOf<PackageInfo>()
-        for (user in (getSystemService(USER_SERVICE) as UserManager).userProfiles) {
-            val userId = user.getUserIdCompat()
+        val users = try {
+            queryAliveUserIds(getSystemService(USER_SERVICE) as UserManager)
+        } catch (error: Exception) {
+            Log.e(TAG, "Cannot enumerate Android users", error)
+            listOf(0)
+        }
+        for (userId in users) {
             tmp += getInstalledPackagesAsUser(userId)
         }
         return tmp
@@ -51,10 +56,7 @@ class KsuService : RootService() {
     internal inner class Stub : IKsuInterface.Stub() {
         override fun beginBackupSnapshot(): String {
             val started = SystemClock.elapsedRealtime()
-            val users = (getSystemService(USER_SERVICE) as UserManager).userProfiles.map { user ->
-                user.javaClass.getDeclaredMethod("getIdentifier").invoke(user) as Int
-            }.distinct()
-            check(users.isNotEmpty()) { "Cannot enumerate Android users" }
+            val users = queryAliveUserIds(getSystemService(USER_SERVICE) as UserManager)
             val packages = users.flatMap { userId ->
                 queryInstalledPackagesAsUser(userId).map { info ->
                     val uid = checkNotNull(info.applicationInfo) { "Package has no application info" }.uid
@@ -241,16 +243,5 @@ class KsuService : RootService() {
         )
         @Suppress("UNCHECKED_CAST")
         return method.invoke(pm, 0, userId) as List<PackageInfo>
-    }
-
-    private fun UserHandle.getUserIdCompat(): Int {
-        return try {
-            javaClass.getDeclaredField("identifier").apply { isAccessible = true }.getInt(this)
-        } catch (_: NoSuchFieldException) {
-            javaClass.getDeclaredMethod("getIdentifier").invoke(this) as Int
-        } catch (e: Throwable) {
-            Log.e("KsuService", "getUserIdCompat", e)
-            0
-        }
     }
 }
