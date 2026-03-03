@@ -251,6 +251,7 @@ const std::vector<Command>& commands() {
           {"--out-name", "", "NAME", "", "Name of the patched output image"},
           {"--module", "-m", "KO", "", "Use this LKM instead of an embedded one"},
           {"--kernel", "-k", "IMAGE", "", "Replace the kernel image"},
+          {"--cmdline", "", "TEXT", "", "Replace the boot image command line", false, true},
           {"--init", "-i", "FILE", "", "Replace init"},
           kOta,
           {"--partition", "", "boot|init_boot", "", "Select the boot partition"},

@@ -452,8 +452,9 @@ bool inject_imgpatch_config_into_lkm(const std::string& lkm_path, bool allow_she
 
 // Parse boot patch arguments
 struct BootPatchArgs {
-    std::string boot_image;         // -b, --boot
-    std::string kernel;             // -k, --kernel
+    std::string boot_image;  // -b, --boot
+    std::string kernel;      // -k, --kernel
+    std::optional<std::string> cmdline;
     std::string module;             // -m, --module (LKM path)
     std::string init;               // -i, --init
     std::string superkey;           // -s, --superkey
@@ -511,6 +512,7 @@ void print_boot_patch_usage() {
            "      --block-module <NAME> block kernel modules (comma-separated or repeated)\n"
            "      --enable-adbd      run adbd as root\n"
            "      --adb-debug-prop <text>  adb debug properties to embed\n"
+           "      --cmdline <text>     replace the boot image command line\n"
            "      --uts-config <file>      UTS template to embed (at most once)\n"
            "      --magiskboot <path>      accepted for compatibility; ignored\n"
            "  -h, --help             show this message\n");
@@ -533,13 +535,13 @@ BootPatchArgs parse_boot_patch_args(const std::vector<std::string>& args) {
 
         // arg stays bound to the flag itself across the ++i below, so it still
         // names the right thing in the messages here.
-        auto take_value = [&](std::string& destination) {
+        auto take_value = [&](std::string& destination, bool allow_empty = false) {
             if (i + 1 >= args.size()) {
                 reject(arg + " requires a value");
                 return;
             }
             destination = args[++i];
-            if (destination.empty())
+            if (destination.empty() && !allow_empty)
                 reject(arg + " requires a non-empty value");
         };
 
@@ -549,6 +551,12 @@ BootPatchArgs parse_boot_patch_args(const std::vector<std::string>& args) {
             take_value(result.boot_image);
         } else if (arg == "-k" || arg == "--kernel") {
             take_value(result.kernel);
+        } else if (arg == "--cmdline") {
+            std::string value;
+            take_value(value, true);
+            if (value.find_first_of("\r\n") != std::string::npos)
+                reject("--cmdline requires a single line");
+            result.cmdline = std::move(value);
         } else if (arg == "-m" || arg == "--module") {
             take_value(result.module);
         } else if (arg == "-i" || arg == "--init") {
@@ -1202,6 +1210,11 @@ int boot_patch_impl(const std::vector<std::string>& args) {
 
     if (!parsed.kernel.empty() && !copy_file_data(parsed.kernel, workdir + "/kernel")) {
         LOGE("Failed to replace kernel from %s", parsed.kernel.c_str());
+        cleanup();
+        return 1;
+    }
+    if (parsed.cmdline && !write_file(workdir + "/header", "cmdline=" + *parsed.cmdline + "\n")) {
+        LOGE("Failed to write boot image command line");
         cleanup();
         return 1;
     }
