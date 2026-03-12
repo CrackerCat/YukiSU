@@ -1105,6 +1105,7 @@ static void apply_root_domain_rules(struct policydb *db, const char *domain)
 
 void apply_kernelsu_rules(void)
 {
+	struct selinux_policy *pol, *old_pol;
 	struct policydb *db;
 
 	if (!getenforce()) {
@@ -1116,7 +1117,14 @@ void apply_kernelsu_rules(void)
 
 	backup_original_sepolicy_once();
 
-	db = get_policydb();
+	old_pol = rcu_dereference_protected(
+	    selinux_state.policy, lockdep_is_held(&selinux_state.policy_mutex));
+	pol = ksu_dup_sepolicy(old_pol);
+	if (IS_ERR(pol)) {
+		pr_err("failed to dup selinux_policy: %ld\n", PTR_ERR(pol));
+		goto out_unlock;
+	}
+	db = &pol->policydb;
 
 	ksu_type(db, KERNEL_SU_DOMAIN, "domain");
 	// Create unconstrained file type
@@ -1130,6 +1138,11 @@ void apply_kernelsu_rules(void)
 
 	// YukiZygisk system_server trampolines.
 	ksu_allow(db, "system_server", "system_server", "process", "execmem");
+	rcu_assign_pointer(selinux_state.policy, pol);
+	synchronize_rcu();
+	ksu_destroy_sepolicy(old_pol);
+	reset_avc_cache();
+out_unlock:
 	mutex_unlock(&selinux_state.policy_mutex);
 	mutex_unlock(&ksu_rules);
 }
