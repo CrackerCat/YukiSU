@@ -414,7 +414,7 @@ private fun AppProfileInner(
                         },
                     )
                 } else {
-                    AppMenuBox(packageName, enabled = !isSpecialApp) {
+                    AppMenuBox(packageName, uid / 100000, enabled = !isSpecialApp) {
                         ListItem(
                             content = {
                                 Text(
@@ -902,6 +902,7 @@ private fun ProfileBox(
 @Composable
 private fun AppMenuBox(
     packageName: String,
+    userId: Int,
     enabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -940,7 +941,7 @@ private fun AppMenuBox(
                 text = stringResource(id = R.string.launch_app),
                 onClick = {
                     expanded = false
-                    launchApp(packageName)
+                    launchApp(packageName, userId)
                 }
             )
 
@@ -948,7 +949,7 @@ private fun AppMenuBox(
                 text = stringResource(id = R.string.force_stop_app),
                 onClick = {
                     expanded = false
-                    forceStopApp(packageName)
+                    forceStopApp(packageName, userId)
                 }
             )
 
@@ -956,7 +957,7 @@ private fun AppMenuBox(
                 text = stringResource(id = R.string.restart_app),
                 onClick = {
                     expanded = false
-                    restartApp(packageName)
+                    restartApp(packageName, userId)
                 }
             )
         }

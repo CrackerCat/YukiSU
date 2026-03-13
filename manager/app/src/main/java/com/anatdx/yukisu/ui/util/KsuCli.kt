@@ -2028,28 +2028,31 @@ fun setAppProfileTemplate(id: String, template: String): Boolean =
 fun deleteAppProfileTemplate(id: String): Boolean =
     execKsud("profile delete-template ${shellArg(id)}")
 
-fun forceStopApp(packageName: String) {
+fun forceStopApp(packageName: String, userId: Int) {
+    require(userId >= 0)
     val shell = getRootShell()
-    val result = shell.newJob().add("am force-stop ${shellArg(packageName)}").exec()
+    val result = shell.newJob().add("am force-stop --user $userId ${shellArg(packageName)}").exec()
     Log.i(TAG, "force stop $packageName result: $result")
 }
 
-fun launchApp(packageName: String) {
+fun launchApp(packageName: String, userId: Int) {
+    require(userId >= 0)
 
     val shell = getRootShell()
     val result =
         shell.newJob()
             .add(
-                "cmd package resolve-activity --brief ${shellArg(packageName)} " +
-                    "| tail -n 1 | xargs cmd activity start-activity -n"
+                "cmd package resolve-activity --brief --user $userId ${shellArg(packageName)} " +
+                    "| tail -n 1 | xargs cmd activity start-activity --user $userId -n"
             )
             .exec()
     Log.i(TAG, "launch $packageName result: $result")
 }
 
-fun restartApp(packageName: String) {
-    forceStopApp(packageName)
-    launchApp(packageName)
+fun restartApp(packageName: String, userId: Int) {
+    require(userId >= 0)
+    forceStopApp(packageName, userId)
+    launchApp(packageName, userId)
 }
 
 
