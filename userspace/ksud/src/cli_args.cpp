@@ -276,6 +276,7 @@ const std::vector<Command>& commands() {
          0,
          {{"--boot", "-b", "IMAGE", "", "Read this image instead of the detected boot partition"},
           {"--flash", "-f", "", "", "Write the restored result back to the partition"},
+          {"--out", "-o", "DIRECTORY", "", "Write the restored image into this directory"},
           {"--out-name", "", "NAME", "", "Name of the restored output image"},
           kMagiskboot},
          true},

@@ -1451,7 +1451,7 @@ int boot_patch_impl(const std::vector<std::string>& args) {
     }
 
     // Output patched image
-    if (patch_file) {
+    if (patch_file || !parsed.flash || !parsed.out.empty() || !parsed.out_name.empty()) {
         const std::string output_dir = parsed.out.empty() ? "." : parsed.out;
         std::string name = parsed.out_name;
         if (name.empty()) {
@@ -1515,6 +1515,7 @@ struct BootRestoreArgs {
     bool flash = false;      // -f, --flash
     std::string magiskboot;  // --magiskboot
     std::string out_name;    // --out-name
+    std::string out;         // -o, --out
     bool help = false;       // -h, --help
     bool valid = true;
     std::string invalid_reason;
@@ -1531,6 +1532,7 @@ void print_boot_restore_usage() {
            "\n"
            "  -b, --boot <img>       restore from this image instead of the partition\n"
            "  -f, --flash            write the restored image back to the partition\n"
+           "  -o, --out <dir>        directory for the restored image\n"
            "      --out-name <name>  filename for the restored image\n"
            "      --magiskboot <path>  accepted for compatibility; ignored\n"
            "  -h, --help             show this message\n");
@@ -1569,6 +1571,8 @@ BootRestoreArgs parse_boot_restore_args(const std::vector<std::string>& args) {
             take_value(result.magiskboot);
         } else if (arg == "--out-name") {
             take_value(result.out_name);
+        } else if (arg == "-o" || arg == "--out") {
+            take_value(result.out);
         } else {
             reject("unknown argument: " + arg);
         }
@@ -1869,13 +1873,15 @@ int boot_restore(const std::vector<std::string>& args) {
     }
 
     // Output restored image
-    if (!parsed.boot_image.empty()) {
+    if (!parsed.boot_image.empty() || !parsed.flash || !parsed.out.empty() ||
+        !parsed.out_name.empty()) {
         std::string name = parsed.out_name;
         if (name.empty()) {
             name = make_restore_output_name("");
         }
 
-        const std::string output_image = "./" + name;
+        const std::string output_dir = parsed.out.empty() ? "." : parsed.out;
+        const std::string output_image = output_dir + "/" + name;
 
         if (!copy_file_data(new_boot, output_image)) {
             LOGE("Failed to write output file");
