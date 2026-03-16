@@ -237,6 +237,7 @@ const std::vector<Command>& commands() {
           {"--partition", "", "boot|init_boot", "", "Select the boot partition"},
           {"--kmi", "", "KMI", "", "Override the detected KMI"},
           {"--backup", "", "", "", "Back up the stock image"},
+          {"--no-install", "", "", "", "Update ramdisk configuration without replacing init/LKM"},
           {"--superkey", "-s", "KEY", "", "Set the SuperKey"},
           {"--signature-bypass", "", "", "", "Relax LKM signature checking"},
           {"--allow-shell", "", "", "", "Keep a root shell available"},

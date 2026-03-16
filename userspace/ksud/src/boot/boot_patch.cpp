@@ -25,6 +25,7 @@
 #include <ctime>
 #include <filesystem>
 #include <optional>
+#include <sstream>
 #include <string_view>
 #include <vector>
 
@@ -107,8 +108,41 @@ bool has_lz4_legacy_magic(const std::string& path) {
            memcmp(magic.data(), LZ4_LEGACY_MAGIC.data(), magic.size()) == 0;
 }
 
-std::optional<bool> lkm_supports_uts_boot_params(const std::string& lkm_path) {
-    const auto content = read_file(lkm_path);
+std::optional<std::string> read_extracted_regular_file(const std::string& path) {
+    struct stat status{};
+    // Reject archive-created devices before opening them.
+    if (lstat(path.c_str(), &status) != 0 || !S_ISREG(status.st_mode))
+        return std::nullopt;
+    const int fd = open(path.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK);
+    if (fd < 0)
+        return std::nullopt;
+    if (fstat(fd, &status) != 0 || !S_ISREG(status.st_mode)) {
+        close(fd);
+        return std::nullopt;
+    }
+    std::string content;
+    std::array<char, 8192> buffer{};
+    for (;;) {
+        const ssize_t count = read(fd, buffer.data(), buffer.size());
+        if (count > 0) {
+            content.append(buffer.data(), static_cast<size_t>(count));
+            continue;
+        }
+        if (count == 0)
+            break;
+        if (errno == EINTR)
+            continue;
+        close(fd);
+        return std::nullopt;
+    }
+    if (close(fd) != 0)
+        return std::nullopt;
+    return content;
+}
+
+std::optional<bool> lkm_supports_uts_boot_params(const std::string& lkm_path,
+                                                 bool from_ramdisk = false) {
+    const auto content = from_ramdisk ? read_extracted_regular_file(lkm_path) : read_file(lkm_path);
     if (!content)
         return std::nullopt;
     return content->find("parmtype=uts_boot_global:bool") != std::string::npos;
@@ -427,6 +461,7 @@ struct BootPatchArgs {
     bool ota = false;               // -u, --ota
     bool flash = false;             // -f, --flash
     bool backup = false;            // --backup
+    bool no_install = false;        // --no-install
     std::string out;                // -o, --out
     std::string magiskboot;         // --magiskboot
     std::string kmi;                // --kmi
@@ -466,10 +501,12 @@ void print_boot_patch_usage() {
            "      --partition <name> boot partition to use (boot, init_boot)\n"
            "      --kmi <kmi>        override the detected KMI\n"
            "      --backup           back up the stock image\n"
+           "      --no-install       update ramdisk configuration without replacing init/LKM\n"
            "  -s, --superkey <key>   set the SuperKey\n"
            "      --signature-bypass relax LKM signature checking\n"
            "      --allow-shell      keep a root shell available\n"
            "      --no-custom-rc     skip the custom init.rc injection\n"
+           "      --no-preinit       disable module preinit actions\n"
            "      --force-feature <FEATURE=VALUE> force a feature at boot (repeatable)\n"
            "      --block-module <NAME> block kernel modules (comma-separated or repeated)\n"
            "      --enable-adbd      run adbd as root\n"
@@ -524,6 +561,8 @@ BootPatchArgs parse_boot_patch_args(const std::vector<std::string>& args) {
             result.ota = true;
         } else if (arg == "-f" || arg == "--flash") {
             result.flash = true;
+        } else if (arg == "--no-install") {
+            result.no_install = true;
         } else if (arg == "--backup") {
             result.backup = true;
         } else if (arg == "-o" || arg == "--out") {
@@ -568,6 +607,12 @@ BootPatchArgs parse_boot_patch_args(const std::vector<std::string>& args) {
         }
     }
 
+    if (result.no_install &&
+        (!result.module.empty() || !result.init.empty() || !result.kernel.empty() ||
+         !result.superkey.empty() || result.signature_bypass)) {
+        reject("--no-install cannot be combined with --module, --init, --kernel, --superkey "
+               "or --signature-bypass");
+    }
     return result;
 }
 
@@ -953,120 +998,125 @@ int boot_patch_impl(const std::vector<std::string>& args) {
     const std::string kmod_file = workdir + "/kernelsu.ko";
     bool bundled_lkm = false;
 
-    if (!parsed.module.empty()) {
-        // Use specified module
-        if (!copy_file_data(parsed.module, kmod_file)) {
-            LOGE("Failed to copy kernel module from %s", parsed.module.c_str());
-            cleanup();
-            return 1;
-        }
-    } else {
-        // Try to extract LKM from embedded assets first
-        const std::string kmi_lkm_name = kmi + "_kernelsu.ko";
-        printf("- KMI: %s\n", kmi.c_str());
-
-        if (copy_asset_to_file(kmi_lkm_name, kmod_file)) {
-            bundled_lkm = true;
-            printf("- Using embedded LKM: %s\n", kmi_lkm_name.c_str());
-        } else {
-            // Fallback: try to find LKM from known locations
-            const std::vector<std::string> search_paths = {
-                std::string(BINARY_DIR) + kmi_lkm_name,  std::string(BINARY_DIR) + "kernelsu.ko",
-                std::string(WORKING_DIR) + kmi_lkm_name, std::string(WORKING_DIR) + "kernelsu.ko",
-                "/data/local/tmp/" + kmi_lkm_name,       "/data/local/tmp/kernelsu.ko",
-            };
-
-            bool found = false;
-            for (const auto& path : search_paths) {
-                if (access(path.c_str(), R_OK) == 0) {
-                    printf("- Found LKM at %s\n", path.c_str());
-                    if (copy_file_data(path, kmod_file)) {
-                        found = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!found) {
-                // List available KMIs from embedded assets
-                auto supported = list_supported_kmi();
-
-                printf("\n");
-                printf("! No LKM module found for KMI: %s\n", kmi.c_str());
-                printf("!\n");
-                if (!supported.empty()) {
-                    printf("! Supported KMIs in this build:\n");
-                    for (const auto& k : supported) {
-                        printf("!   - %s\n", k.c_str());
-                    }
-                    printf("!\n");
-                }
-                printf("! Please select an LKM file in Manager, or place it at:\n");
-                printf("!   %s%s\n", BINARY_DIR, kmi_lkm_name.c_str());
-                printf("!\n");
-                printf("! You can download LKM from:\n");
-                printf("!   https://github.com/Anatdx/YukiSU/releases\n");
-                printf("\n");
+    if (!parsed.no_install) {
+        if (!parsed.module.empty()) {
+            // Use specified module
+            if (!copy_file_data(parsed.module, kmod_file)) {
+                LOGE("Failed to copy kernel module from %s", parsed.module.c_str());
                 cleanup();
                 return 1;
             }
-        }
-    }
-
-    if (have_boot_uts_config) {
-        const auto supports_uts_boot = lkm_supports_uts_boot_params(kmod_file);
-        if (!supports_uts_boot.has_value()) {
-            LOGE("Failed to inspect selected LKM for UTS boot parameter support");
-            cleanup();
-            return 1;
-        }
-        if (!*supports_uts_boot) {
-            LOGE("Selected LKM does not support boot-global UTS configuration");
-            LOGE("Missing required module parameter marker: parmtype=uts_boot_global:bool");
-            LOGE("Select a UTS-capable YukiSU LKM or remove --uts-config");
-            cleanup();
-            return 1;
-        }
-        printf("- Selected LKM supports UTS boot-global parameters\n");
-    }
-
-    // Always inject verification mode (and SuperKey hash if set).
-    // Pure signature mode (no superkey) still needs flags=0 to be explicitly written,
-    // otherwise the LKM may have stale/wrong values and signature verification fails.
-    if (!parsed.superkey.empty()) {
-        printf("- Injecting SuperKey into LKM\n");
-    } else if (parsed.signature_bypass) {
-        printf("- Warning: signature_bypass requires superkey to be set, ignoring\n");
-    }
-    inject_superkey_to_lkm(kmod_file, parsed.superkey, parsed.signature_bypass);
-
-    // Prepare init if specified
-    const std::string init_file = workdir + "/init";
-    if (!parsed.init.empty()) {
-        if (!copy_file_data(parsed.init, init_file, 0755)) {
-            LOGE("Failed to copy init from %s", parsed.init.c_str());
-            cleanup();
-            return 1;
-        }
-    } else {
-        // Try to extract ksuinit from embedded assets first.
-        if (copy_asset_to_file("ksuinit", init_file)) {
-            printf("- Using embedded ksuinit\n");
         } else {
-            // Fallback: check standard location
-            const std::string ksuinit_path = std::string(BINARY_DIR) + "ksuinit";
-            if (access(ksuinit_path.c_str(), R_OK) == 0 &&
-                copy_file_data(ksuinit_path, init_file, 0755)) {
-                printf("- Using ksuinit from %s\n", ksuinit_path.c_str());
+            // Try to extract LKM from embedded assets first
+            const std::string kmi_lkm_name = kmi + "_kernelsu.ko";
+            printf("- KMI: %s\n", kmi.c_str());
+
+            if (copy_asset_to_file(kmi_lkm_name, kmod_file)) {
+                bundled_lkm = true;
+                printf("- Using embedded LKM: %s\n", kmi_lkm_name.c_str());
             } else {
-                LOGE("ksuinit not found in embedded assets or %s", ksuinit_path.c_str());
-                LOGE("Please install KernelSU Manager or rebuild ksud with ksuinit embedded");
+                // Fallback: try to find LKM from known locations
+                const std::vector<std::string> search_paths = {
+                    std::string(BINARY_DIR) + kmi_lkm_name,
+                    std::string(BINARY_DIR) + "kernelsu.ko",
+                    std::string(WORKING_DIR) + kmi_lkm_name,
+                    std::string(WORKING_DIR) + "kernelsu.ko",
+                    "/data/local/tmp/" + kmi_lkm_name,
+                    "/data/local/tmp/kernelsu.ko",
+                };
+
+                bool found = false;
+                for (const auto& path : search_paths) {
+                    if (access(path.c_str(), R_OK) == 0) {
+                        printf("- Found LKM at %s\n", path.c_str());
+                        if (copy_file_data(path, kmod_file)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!found) {
+                    // List available KMIs from embedded assets
+                    auto supported = list_supported_kmi();
+
+                    printf("\n");
+                    printf("! No LKM module found for KMI: %s\n", kmi.c_str());
+                    printf("!\n");
+                    if (!supported.empty()) {
+                        printf("! Supported KMIs in this build:\n");
+                        for (const auto& k : supported) {
+                            printf("!   - %s\n", k.c_str());
+                        }
+                        printf("!\n");
+                    }
+                    printf("! Please select an LKM file in Manager, or place it at:\n");
+                    printf("!   %s%s\n", BINARY_DIR, kmi_lkm_name.c_str());
+                    printf("!\n");
+                    printf("! You can download LKM from:\n");
+                    printf("!   https://github.com/Anatdx/YukiSU/releases\n");
+                    printf("\n");
+                    cleanup();
+                    return 1;
+                }
+            }
+        }
+
+        if (have_boot_uts_config) {
+            const auto supports_uts_boot = lkm_supports_uts_boot_params(kmod_file);
+            if (!supports_uts_boot.has_value()) {
+                LOGE("Failed to inspect selected LKM for UTS boot parameter support");
                 cleanup();
                 return 1;
             }
+            if (!*supports_uts_boot) {
+                LOGE("Selected LKM does not support boot-global UTS configuration");
+                LOGE("Missing required module parameter marker: parmtype=uts_boot_global:bool");
+                LOGE("Select a UTS-capable YukiSU LKM or remove --uts-config");
+                cleanup();
+                return 1;
+            }
+            printf("- Selected LKM supports UTS boot-global parameters\n");
         }
+
+        // Always inject verification mode (and SuperKey hash if set).
+        // Pure signature mode (no superkey) still needs flags=0 to be explicitly written,
+        // otherwise the LKM may have stale/wrong values and signature verification fails.
+        if (!parsed.superkey.empty()) {
+            printf("- Injecting SuperKey into LKM\n");
+        } else if (parsed.signature_bypass) {
+            printf("- Warning: signature_bypass requires superkey to be set, ignoring\n");
+        }
+        inject_superkey_to_lkm(kmod_file, parsed.superkey, parsed.signature_bypass);
+
+        // Prepare init if specified
+        const std::string init_file = workdir + "/init";
+        if (!parsed.init.empty()) {
+            if (!copy_file_data(parsed.init, init_file, 0755)) {
+                LOGE("Failed to copy init from %s", parsed.init.c_str());
+                cleanup();
+                return 1;
+            }
+        } else {
+            // Try to extract ksuinit from embedded assets first.
+            if (copy_asset_to_file("ksuinit", init_file)) {
+                printf("- Using embedded ksuinit\n");
+            } else {
+                // Fallback: check standard location
+                const std::string ksuinit_path = std::string(BINARY_DIR) + "ksuinit";
+                if (access(ksuinit_path.c_str(), R_OK) == 0 &&
+                    copy_file_data(ksuinit_path, init_file, 0755)) {
+                    printf("- Using ksuinit from %s\n", ksuinit_path.c_str());
+                } else {
+                    LOGE("ksuinit not found in embedded assets or %s", ksuinit_path.c_str());
+                    LOGE("Please install KernelSU Manager or rebuild ksud with ksuinit embedded");
+                    cleanup();
+                    return 1;
+                }
+            }
+        }
+        chmod(init_file.c_str(), 0755);
     }
-    chmod(init_file.c_str(), 0755);
 
     // Unpack boot image (must run in workdir so output files go there)
     printf("- Unpacking boot image\n");
@@ -1125,7 +1175,8 @@ int boot_patch_impl(const std::vector<std::string>& args) {
             return 1;
         }
 
-    const auto direct_lkm_status = restore_direct_lkm_kernel(workdir);
+    const auto direct_lkm_status = parsed.no_install ? DirectLkmRestoreStatus::kNotPresent
+                                                     : restore_direct_lkm_kernel(workdir);
     if (direct_lkm_status == DirectLkmRestoreStatus::kFailed) {
         cleanup();
         return 1;
@@ -1181,33 +1232,57 @@ int boot_patch_impl(const std::vector<std::string>& args) {
     }
 
     // Check for Magisk
-    if (is_magisk_patched(magiskboot, workdir, ramdisk)) {
+    if (!parsed.no_install && is_magisk_patched(magiskboot, workdir, ramdisk)) {
         LOGE("Cannot work with Magisk patched image");
         cleanup();
         return 1;
     }
 
-    printf("- Adding KernelSU LKM\n");
     const bool already_patched = is_kernelsu_patched(magiskboot, workdir, ramdisk);
-
-    if (!already_patched) {
-        // Backup init if it exists
-        if (magiskboot_query({"cpio", ramdisk, "exists init"}) == 0) {
-            do_cpio_cmd(magiskboot, workdir, ramdisk, "mv init init.real");
+    if (!parsed.no_install) {
+        printf("- Adding KernelSU LKM\n");
+        if (!already_patched && magiskboot_query({"cpio", ramdisk, "exists init"}) == 0 &&
+            !do_cpio_cmd(magiskboot, workdir, ramdisk, "mv init init.real")) {
+            cleanup();
+            return 1;
+        }
+        if (!do_cpio_cmd(magiskboot, workdir, ramdisk, "add 0755 init init") ||
+            !do_cpio_cmd(magiskboot, workdir, ramdisk, "add 0755 kernelsu.ko kernelsu.ko")) {
+            cleanup();
+            return 1;
+        }
+    } else if (have_boot_uts_config) {
+        if (!already_patched ||
+            !do_cpio_cmd(magiskboot, workdir, ramdisk, "extract kernelsu.ko kernelsu.ko") ||
+            !lkm_supports_uts_boot_params(kmod_file, true).value_or(false)) {
+            LOGE("Existing ramdisk LKM does not support boot-global UTS configuration");
+            cleanup();
+            return 1;
         }
     }
 
-    // Add init and kernelsu.ko (use workdir for relative paths in cpio add)
-    if (!do_cpio_cmd(magiskboot, workdir, ramdisk, "add 0755 init init")) {
-        cleanup();
-        return 1;
-    }
-    if (!do_cpio_cmd(magiskboot, workdir, ramdisk, "add 0755 kernelsu.ko kernelsu.ko")) {
-        cleanup();
-        return 1;
-    }
-
     std::vector<std::string> ksu_config;
+    if (parsed.no_install && magiskboot_query({"cpio", ramdisk, "exists ksu_config"}) == 0) {
+        if (!do_cpio_cmd(magiskboot, workdir, ramdisk, "extract ksu_config ksu_config")) {
+            cleanup();
+            return 1;
+        }
+        const auto existing = read_extracted_regular_file(workdir + "/ksu_config");
+        if (!existing) {
+            LOGE("Existing ksu_config must be a readable regular file");
+            cleanup();
+            return 1;
+        }
+        std::istringstream entries(*existing);
+        for (std::string entry; entries >> entry;) {
+            const auto key = entry.substr(0, entry.find('='));
+            if (key == "allow_shell" || key == "norc" || key == "preinit" ||
+                key == "force_feature" || key == "block_modules" ||
+                (have_boot_uts_config && key.compare(0, 9, "uts_boot_") == 0))
+                continue;
+            ksu_config.push_back(std::move(entry));
+        }
+    }
     if (bundled_lkm)
         ksu_config.emplace_back("bundled=1");
     const auto boot_params = parsed.config.module_params();
@@ -1226,22 +1301,27 @@ int boot_patch_impl(const std::vector<std::string>& args) {
                 config_text += ' ';
             config_text += ksu_config[i];
         }
-        if (!write_file(workdir + "/ksu_config", config_text)) {
+        if (!write_file_atomic(workdir + "/ksu_config.generated", config_text)) {
             LOGE("Failed to create ksu_config");
             cleanup();
             return 1;
         }
-        if (!do_cpio_cmd(magiskboot, workdir, ramdisk, "add 0644 ksu_config ksu_config")) {
+        if (!do_cpio_cmd(magiskboot, workdir, ramdisk,
+                         "add 0644 ksu_config ksu_config.generated")) {
             cleanup();
             return 1;
         }
-    } else {
-        do_cpio_cmd(magiskboot, workdir, ramdisk, "rm ksu_config");
+    } else if (!do_cpio_cmd(magiskboot, workdir, ramdisk, "rm ksu_config")) {
+        cleanup();
+        return 1;
     }
 
     if (magiskboot_query({"cpio", ramdisk, "exists ksu_allow_shell"}) == 0) {
         printf("- Removing legacy allow shell config\n");
-        do_cpio_cmd(magiskboot, workdir, ramdisk, "rm ksu_allow_shell");
+        if (!do_cpio_cmd(magiskboot, workdir, ramdisk, "rm ksu_allow_shell")) {
+            cleanup();
+            return 1;
+        }
     }
 
     if (parsed.enable_adbd || !parsed.adb_debug_prop.empty()) {
@@ -1280,23 +1360,29 @@ int boot_patch_impl(const std::vector<std::string>& args) {
     } else {
         if (magiskboot_query({"cpio", ramdisk, "exists force_debuggable"}) == 0) {
             printf("- Removing /force_debuggable\n");
-            do_cpio_cmd(magiskboot, workdir, ramdisk, "rm force_debuggable");
+            if (!do_cpio_cmd(magiskboot, workdir, ramdisk, "rm force_debuggable")) {
+                cleanup();
+                return 1;
+            }
         }
 
         if (magiskboot_query({"cpio", ramdisk, "exists adb_debug.prop"}) == 0) {
             printf("- Removing /adb_debug.prop\n");
-            do_cpio_cmd(magiskboot, workdir, ramdisk, "rm adb_debug.prop");
+            if (!do_cpio_cmd(magiskboot, workdir, ramdisk, "rm adb_debug.prop")) {
+                cleanup();
+                return 1;
+            }
         }
     }
 
     // Remove the legacy embedded module when repatching an image created by an older manager.
-    if (magiskboot_query({"cpio", ramdisk, "exists kasumi.ko"}) == 0) {
+    if (!parsed.no_install && magiskboot_query({"cpio", ramdisk, "exists kasumi.ko"}) == 0) {
         do_cpio_cmd(magiskboot, workdir, ramdisk, "rm kasumi.ko");
     }
 
     // Direct flashing automatically backs up stock images. --backup also allows an explicitly
     // selected file to be treated as stock, even when it appears to have been patched already.
-    if (parsed.backup || (!already_patched && parsed.flash)) {
+    if (!parsed.no_install && (parsed.backup || (!already_patched && parsed.flash))) {
         if (!do_backup(magiskboot, workdir, ramdisk, backup_source)) {
             printf("- Warning: Backup stock image failed\n");
         }
@@ -1342,7 +1428,7 @@ int boot_patch_impl(const std::vector<std::string>& args) {
     }
 
     std::optional<DirectLkmBootRestore> companion_boot_restore;
-    if (parsed.flash && !bootdevice.empty()) {
+    if (!parsed.no_install && parsed.flash && !bootdevice.empty()) {
         const std::string companion_bootdevice =
             "/dev/block/by-name/boot" + get_slot_suffix(parsed.ota);
         if (companion_bootdevice != bootdevice) {
