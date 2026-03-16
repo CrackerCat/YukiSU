@@ -510,7 +510,7 @@ void print_boot_patch_usage() {
            "      --force-feature <FEATURE=VALUE> force a feature at boot (repeatable)\n"
            "      --block-module <NAME> block kernel modules (comma-separated or repeated)\n"
            "      --enable-adbd      run adbd as root\n"
-           "      --adb-debug-prop <file>  adb debug properties to embed\n"
+           "      --adb-debug-prop <text>  adb debug properties to embed\n"
            "      --uts-config <file>      UTS template to embed (at most once)\n"
            "      --magiskboot <path>      accepted for compatibility; ignored\n"
            "  -h, --help             show this message\n");

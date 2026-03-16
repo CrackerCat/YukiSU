@@ -265,7 +265,7 @@ const std::vector<Command>& commands() {
           {"--force-feature", "", "FEATURE=VALUE", "", "Force a feature at boot", true},
           {"--block-module", "", "NAME", "", "Block kernel modules at boot", true},
           {"--enable-adbd", "", "", "", "Run adbd as root"},
-          {"--adb-debug-prop", "", "FILE", "", "Embed adb debug properties from this file"},
+          {"--adb-debug-prop", "", "PROPERTIES", "", "Embed these adb debug properties"},
           {"--uts-config", "", "FILE", "", "Embed a UTS template"},
           kMagiskboot},
          true},

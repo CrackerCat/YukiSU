@@ -94,8 +94,7 @@ int check_input_files(const CliArguments& cli) {
     }
     if (cli.command == "boot-patch" || cli.command == "boot-patch-v2" ||
         cli.command == "boot-restore" || path == "boot-info target-kmi") {
-        for (const auto* option :
-             {"--boot", "--module", "--kernel", "--init", "--uts-config", "--adb-debug-prop"}) {
+        for (const auto* option : {"--boot", "--module", "--kernel", "--init", "--uts-config"}) {
             if (!cli.has(option))
                 continue;
             const int result =
