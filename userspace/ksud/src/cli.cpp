@@ -30,6 +30,7 @@
 #include "sulog.hpp"
 #include "terminal.hpp"
 #include "umount.hpp"
+#include "unload.hpp"
 #include "utils.hpp"
 #include "yzctl.hpp"
 
@@ -706,6 +707,8 @@ int cli_run(int argc, char** argv) {
         return 0;
     } else if (cmd == "soft-reboot") {
         return soft_reboot();
+    } else if (cmd == "unload") {
+        return unload();
     } else if (cmd == "module") {
         return cmd_module(cli);
     } else if (cmd == "plugin") {

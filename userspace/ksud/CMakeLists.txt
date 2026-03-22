@@ -409,6 +409,7 @@ set(KSUD_OUR_SOURCES
     src/umount.cpp
     src/debug.cpp
     src/sulog.cpp
+    src/unload.cpp
     src/magisk_compat/msud.cpp
     src/magisk_compat/su_transition.cpp
     src/magica/adb_client.cpp
