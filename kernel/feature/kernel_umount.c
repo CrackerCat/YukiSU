@@ -96,11 +96,11 @@ static const struct ksu_feature_handler unshare_mnt_handler = {
 
 extern int path_umount(struct path *path, int flags);
 
-static int ksu_umount_mnt(struct path *path, int flags)
+static int ksu_umount_mnt(const char *mnt, struct path *path, int flags)
 {
 	int err = path_umount(path, flags);
 	if (err) {
-		pr_info("umount %s failed: %d\n", path->dentry->d_iname, err);
+		pr_info("umount %s failed: %d\n", mnt, err);
 	}
 	return err;
 }
@@ -119,7 +119,7 @@ void try_umount(const char *mnt, int flags)
 		return;
 	}
 
-	ksu_umount_mnt(&path, flags);
+	ksu_umount_mnt(mnt, &path, flags);
 }
 
 /* ── robust per-app module umount ──────────────────────────────────────────
@@ -218,7 +218,7 @@ static bool ksu_try_umount_verified(const struct ksu_umount_target *target,
 		return false;
 	}
 
-	return !ksu_umount_mnt(&path, MNT_DETACH);
+	return !ksu_umount_mnt(target->path, &path, MNT_DETACH);
 }
 
 static int ksu_umount_target_cmp(const void *lhs, const void *rhs)
