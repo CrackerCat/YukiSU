@@ -464,7 +464,10 @@ int get_wrapped_fd(int fd) {
 
 int get_sulog_fd() {
     GetSulogFdCmd cmd = {0};
-    return ksuctl(KSU_IOCTL_GET_SULOG_FD, &cmd);
+    const int fd = ksuctl(KSU_IOCTL_GET_SULOG_FD, &cmd);
+    if (fd < 0 && errno == ENOTTY)
+        return ksuctl(KSU_IOCTL_GET_SULOG_FD_LEGACY, &cmd);
+    return fd;
 }
 
 int get_su_prompt_fd() {
