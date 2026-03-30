@@ -15,7 +15,7 @@ import com.anatdx.yukisu.update.CiUpdateManager
 import coil.Coil
 import coil.ImageLoader
 import com.dergoogler.mmrl.platform.PlatformManager
-import me.zhanghai.android.appiconloader.coil.AppIconFetcher
+import com.anatdx.yukisu.ui.util.AppIconFetcherFactory
 import me.zhanghai.android.appiconloader.coil.AppIconKeyer
 import okhttp3.Cache
 import okhttp3.OkHttpClient
@@ -60,7 +60,7 @@ class KernelSUApplication : Application(), ViewModelStoreOwner {
             ImageLoader.Builder(context)
                 .components {
                     add(AppIconKeyer())
-                    add(AppIconFetcher.Factory(iconSize, false, context))
+                    add(AppIconFetcherFactory(iconSize, context))
                 }
                 .build()
         )
