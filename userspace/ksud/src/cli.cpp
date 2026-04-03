@@ -605,7 +605,7 @@ int cmd_late_load(const CliArguments& cli) {
                                          "ksud late-load --magica [PORT] [--allow-shell]");
         return magica::run(static_cast<uint16_t>(port), cli.has("--allow-shell"));
     }
-    return late_load::run(cli.has("--post-magica"), cli.has("--allow-shell"));
+    return late_load::run(cli.has("--post-magica"), cli.has("--allow-shell"), cli.value("--kmi"));
 }
 
 }  // namespace

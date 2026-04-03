@@ -135,6 +135,7 @@ const std::vector<Command>& commands() {
          0,
          {{"--magica", "", "PORT", "5555"},
           {"--post-magica", "", "", ""},
+          {"--kmi", "", "KMI", "", "Select an embedded module instead of detecting the KMI"},
           {"--allow-shell", "", "", ""}}},
         {"post-fs-data", "Trigger post-fs-data", ""},
         {"services", "Trigger service scripts", ""},

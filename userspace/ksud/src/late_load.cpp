@@ -65,11 +65,11 @@ std::string get_kernelsu_load_params(bool allow_shell) {
     return "";
 }
 
-bool extract_and_load_kernelsu(bool allow_shell) {
+bool extract_and_load_kernelsu(bool allow_shell, const std::string& selected_kmi) {
     // The driver and its UTS extension do not exist yet. Probing the private
     // status ioctl here would both fail closed and poison the process-wide
     // driver-fd cache before the module can be loaded.
-    const std::string kmi = get_bootstrap_kmi();
+    const std::string kmi = selected_kmi.empty() ? get_bootstrap_kmi() : selected_kmi;
     if (kmi.empty()) {
         LOGE("late-load: failed to detect current KMI");
         return false;
@@ -159,7 +159,7 @@ void run_post_magica_cleanup() {
 
 }  // namespace
 
-int run(bool post_magica, bool allow_shell) {
+int run(bool post_magica, bool allow_shell, const std::string& kmi) {
     switch (daemonize_process(false)) {
     case ProcessDaemonizeResult::Parent:
         return 0;
@@ -170,8 +170,8 @@ int run(bool post_magica, bool allow_shell) {
     }
 
     LOGI("late-load command triggered");
-    const auto execute = [allow_shell]() -> int {
-        if (!is_kernelsu_loaded() && !extract_and_load_kernelsu(allow_shell)) {
+    const auto execute = [allow_shell, &kmi]() -> int {
+        if (!is_kernelsu_loaded() && !extract_and_load_kernelsu(allow_shell, kmi)) {
             return 1;
         }
 
