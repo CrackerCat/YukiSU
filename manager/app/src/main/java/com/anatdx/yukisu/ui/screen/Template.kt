@@ -152,7 +152,7 @@ fun AppProfileTemplateScreen(
             modifier = Modifier.padding(innerPadding),
             isRefreshing = viewModel.isRefreshing,
             onRefresh = {
-                scope.launch { viewModel.fetchTemplates() }
+                scope.launch { viewModel.fetchTemplates(sync = true) }
             }
         ) {
             LazyColumn(
