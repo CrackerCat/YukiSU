@@ -28,7 +28,7 @@ static bool remove_avtab_node(struct policydb *db, struct avtab_node *node);
 static bool add_rule(struct policydb *db, const char *s, const char *t,
 		     const char *c, const char *p, int effect, bool invert);
 
-static void add_rule_raw(struct policydb *db, struct type_datum *src,
+static bool add_rule_raw(struct policydb *db, struct type_datum *src,
 			 struct type_datum *tgt, struct class_datum *cls,
 			 struct perm_datum *perm, int effect, bool invert);
 
@@ -203,7 +203,8 @@ static bool remove_avtab_node(struct policydb *db, struct avtab_node *node)
 			removed.htable[0] = n;
 			removed.nel = 1;
 			avtab_destroy(&removed);
-			db->len -= shrink_size;
+			if (db->len >= shrink_size)
+				db->len -= shrink_size;
 			return true;
 		}
 	}
@@ -260,22 +261,23 @@ static bool add_rule(struct policydb *db, const char *s, const char *t,
 			return false;
 		}
 	}
-	add_rule_raw(db, src, tgt, cls, perm, effect, invert);
-	return true;
+	return add_rule_raw(db, src, tgt, cls, perm, effect, invert);
 }
 
-static void add_rule_raw(struct policydb *db, struct type_datum *src,
+static bool add_rule_raw(struct policydb *db, struct type_datum *src,
 			 struct type_datum *tgt, struct class_datum *cls,
 			 struct perm_datum *perm, int effect, bool invert)
 {
+	bool success = true;
+
 	if (src == NULL) {
 		struct hashtab_node *node;
 		if (strip_av(effect, invert)) {
 			ksu_hashtab_for_each(db->p_types.table, node)
 			{
-				add_rule_raw(db,
-					     (struct type_datum *)node->datum,
-					     tgt, cls, perm, effect, invert);
+				success &= add_rule_raw(
+				    db, (struct type_datum *)node->datum, tgt,
+				    cls, perm, effect, invert);
 			};
 		} else {
 			ksu_hashtab_for_each(db->p_types.table, node)
@@ -283,8 +285,9 @@ static void add_rule_raw(struct policydb *db, struct type_datum *src,
 				struct type_datum *type =
 				    (struct type_datum *)(node->datum);
 				if (type->attribute) {
-					add_rule_raw(db, type, tgt, cls, perm,
-						     effect, invert);
+					success &=
+					    add_rule_raw(db, type, tgt, cls,
+							 perm, effect, invert);
 				}
 			};
 		}
@@ -293,9 +296,9 @@ static void add_rule_raw(struct policydb *db, struct type_datum *src,
 		if (strip_av(effect, invert)) {
 			ksu_hashtab_for_each(db->p_types.table, node)
 			{
-				add_rule_raw(db, src,
-					     (struct type_datum *)node->datum,
-					     cls, perm, effect, invert);
+				success &= add_rule_raw(
+				    db, src, (struct type_datum *)node->datum,
+				    cls, perm, effect, invert);
 			};
 		} else {
 			ksu_hashtab_for_each(db->p_types.table, node)
@@ -303,8 +306,9 @@ static void add_rule_raw(struct policydb *db, struct type_datum *src,
 				struct type_datum *type =
 				    (struct type_datum *)(node->datum);
 				if (type->attribute) {
-					add_rule_raw(db, src, type, cls, perm,
-						     effect, invert);
+					success &=
+					    add_rule_raw(db, src, type, cls,
+							 perm, effect, invert);
 				}
 			};
 		}
@@ -312,9 +316,9 @@ static void add_rule_raw(struct policydb *db, struct type_datum *src,
 		struct hashtab_node *node;
 		ksu_hashtab_for_each(db->p_classes.table, node)
 		{
-			add_rule_raw(db, src, tgt,
-				     (struct class_datum *)node->datum, perm,
-				     effect, invert);
+			success &= add_rule_raw(
+			    db, src, tgt, (struct class_datum *)node->datum,
+			    perm, effect, invert);
 		}
 	} else {
 		struct avtab_key key;
@@ -325,14 +329,14 @@ static void add_rule_raw(struct policydb *db, struct type_datum *src,
 		key.target_class = cls->value;
 		key.specified = effect;
 
-		if (invert) {
+		if (invert && effect != AVTAB_AUDITDENY) {
 			node = avtab_search_node(&db->te_avtab, &key);
 			if (!node)
-				return;
+				return true;
 		} else {
 			node = get_avtab_node(db, &key, NULL);
 			if (!node)
-				return;
+				return false;
 		}
 
 		if (invert) {
@@ -348,8 +352,10 @@ static void add_rule_raw(struct policydb *db, struct type_datum *src,
 				node->datum.u.data = ~0U;
 		}
 		if (is_redundant_avtab_node(node))
-			remove_avtab_node(db, node);
+			return remove_avtab_node(db, node);
 	}
+
+	return success;
 }
 
 #define ioctl_driver(x) (x >> 8 & 0xFF)
@@ -553,6 +559,8 @@ static bool add_type_rule(struct policydb *db, const char *s, const char *t,
 	key.specified = effect;
 
 	struct avtab_node *node = get_avtab_node(db, &key, NULL);
+	if (!node)
+		return false;
 	node->datum.u.data = def->value;
 
 	return true;
