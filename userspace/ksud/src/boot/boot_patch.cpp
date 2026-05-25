@@ -1199,6 +1199,12 @@ int boot_patch_impl(const std::vector<std::string>& args) {
         }
     }
 
+    if (!parsed.kernel.empty() && !copy_file_data(parsed.kernel, workdir + "/kernel")) {
+        LOGE("Failed to replace kernel from %s", parsed.kernel.c_str());
+        cleanup();
+        return 1;
+    }
+
     // Find ramdisk
     std::string ramdisk;
     const std::vector<std::string> ramdisk_candidates_do_patch = {
