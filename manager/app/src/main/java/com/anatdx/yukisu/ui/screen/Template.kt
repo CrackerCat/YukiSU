@@ -37,6 +37,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.result.ResultRecipient
 import com.ramcosta.composedestinations.result.getOr
 import com.anatdx.yukisu.R
+import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.component.YukiPullToRefreshBox
 import com.anatdx.yukisu.ui.component.clickHapticFeedback
@@ -133,7 +134,9 @@ fun AppProfileTemplateScreen(
                 onClick = {
                     navigator.navigate(
                         TemplateEditorScreenDestination(
-                            TemplateViewModel.TemplateInfo(),
+                            TemplateViewModel.TemplateInfo(
+                                flags = if (Natives.isDefaultNoNewPrivsEnabled()) Natives.FLAG_KSU_NO_NEW_PRIVS else 0L,
+                            ),
                             false
                         )
                     )

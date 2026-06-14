@@ -88,6 +88,7 @@ fun TemplateConfig(
                                         capabilities = templateInfo.capabilities,
                                         context = templateInfo.context,
                                         namespace = templateInfo.namespace,
+                                        flags = templateInfo.flags,
                                     )
                                 )
                             }

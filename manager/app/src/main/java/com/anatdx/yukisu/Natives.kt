@@ -312,6 +312,10 @@ object Natives {
         val umountModules: Boolean = false,
         var rules: String = "", // this field is save in ksud!!
     ) : Parcelable {
+        enum class RootProfileFlag(val mask: Long) {
+            NO_NEW_PRIVS(FLAG_KSU_NO_NEW_PRIVS),
+        }
+
         enum class Namespace {
             INHERITED,
             GLOBAL,
@@ -321,3 +325,9 @@ object Natives {
         constructor() : this("")
     }
 }
+
+fun List<Natives.Profile.RootProfileFlag>.toRawFlags(): Long =
+    fold(0L) { flags, flag -> flags or flag.mask }
+
+fun Long.toRootProfileFlags(): List<Natives.Profile.RootProfileFlag> =
+    Natives.Profile.RootProfileFlag.entries.filter { this and it.mask != 0L }

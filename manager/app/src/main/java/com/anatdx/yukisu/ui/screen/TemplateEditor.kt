@@ -208,6 +208,7 @@ fun TemplateEditorScreen(
                         capabilities = it.capabilities,
                         context = it.context,
                         namespace = it.namespace,
+                        flags = it.flags,
                         rules = it.rules.split("\n")
                     ).run {
                         if (autoSave) {
@@ -226,12 +227,14 @@ fun TemplateEditorScreen(
 
 fun toNativeProfile(templateInfo: TemplateViewModel.TemplateInfo): Natives.Profile {
     return Natives.Profile().copy(rootTemplate = templateInfo.id,
+        rootUseDefault = false,
         uid = templateInfo.uid,
         gid = templateInfo.gid,
         groups = templateInfo.groups,
         capabilities = templateInfo.capabilities,
         context = templateInfo.context,
         namespace = templateInfo.namespace,
+        flags = templateInfo.flags,
         rules = templateInfo.rules.joinToString("\n").ifBlank { "" })
 }
 

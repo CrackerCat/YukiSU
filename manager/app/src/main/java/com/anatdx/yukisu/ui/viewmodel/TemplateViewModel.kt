@@ -8,6 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.anatdx.yukisu.Natives
+import com.anatdx.yukisu.toRawFlags
+import com.anatdx.yukisu.toRootProfileFlags
 import com.anatdx.yukisu.profile.Capabilities
 import com.anatdx.yukisu.profile.Groups
 import com.anatdx.yukisu.ui.util.getAppProfileTemplate
@@ -55,6 +57,7 @@ class TemplateViewModel : ViewModel() {
         val capabilities: List<Int> = mutableListOf(),
         val context: String = Natives.KERNEL_SU_DOMAIN,
         val rules: List<String> = mutableListOf(),
+        val flags: Long = 0L,
     ) : Parcelable
 
     var isRefreshing by mutableStateOf(false)
@@ -234,6 +237,7 @@ private fun fromJSON(templateJson: JSONObject): TemplateViewModel.TemplateInfo? 
     return runCatching {
         val groupsJsonArray = templateJson.optJSONArray("groups")
         val capabilitiesJsonArray = templateJson.optJSONArray("capabilities")
+        val flagsJsonArray = templateJson.optJSONArray("flags")
         val context = templateJson.optString("context").takeIf { it.isNotEmpty() }
             ?: Natives.KERNEL_SU_DOMAIN
         val namespace = templateJson.optString("namespace").takeIf { it.isNotEmpty() }
@@ -256,6 +260,7 @@ private fun fromJSON(templateJson: JSONObject): TemplateViewModel.TemplateInfo? 
                 capabilitiesJsonArray, Capabilities::class.java
             ).map { it.cap },
             context = context,
+            flags = getEnumOrdinals(flagsJsonArray, Natives.Profile.RootProfileFlag::class.java).toRawFlags(),
             rules = rulesJsonArray?.mapCatching<String, String>({ it }, {
                 Log.e(TAG, "ignore invalid rule: $it", it)
             }).orEmpty()
@@ -279,6 +284,7 @@ fun TemplateViewModel.TemplateInfo.toJSON(): JSONObject {
         put("namespace", Natives.Profile.Namespace.entries[template.namespace].name)
         put("uid", template.uid)
         put("gid", template.gid)
+        put("flags", JSONArray(template.flags.toRootProfileFlags().map { it.name }))
 
         if (template.groups.isNotEmpty()) {
             put("groups", JSONArray(
@@ -320,6 +326,7 @@ fun generateTemplates() {
     templateJson.put("namespace", Natives.Profile.Namespace.INHERITED.name)
     templateJson.put("uid", 0)
     templateJson.put("gid", 0)
+    templateJson.put("flags", JSONArray().apply { put(Natives.Profile.RootProfileFlag.NO_NEW_PRIVS.name) })
 
     templateJson.put("groups", JSONArray().apply { put(Groups.INET.name) })
     templateJson.put("capabilities", JSONArray().apply { put(Capabilities.CAP_NET_RAW.name) })
