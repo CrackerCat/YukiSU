@@ -10,6 +10,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -20,13 +21,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -44,6 +42,7 @@ import com.anatdx.yukisu.integrity.KsudIntegrity
 import com.anatdx.yukisu.ui.activity.component.BottomBar
 import com.anatdx.yukisu.ui.activity.util.AnimatedBottomBar
 import com.anatdx.yukisu.ui.activity.util.DataRefreshUtils
+import com.anatdx.yukisu.ui.activity.util.IntentDispatcher
 import com.anatdx.yukisu.ui.activity.util.DisplayUtils
 import com.anatdx.yukisu.ui.activity.util.LocalPredictiveBackEnabled
 import com.anatdx.yukisu.ui.activity.util.predictiveBackSurfaces
@@ -54,7 +53,6 @@ import com.anatdx.yukisu.ui.activity.util.ThemeUtils
 import com.anatdx.yukisu.ui.activity.util.UltraActivityUtils
 import com.anatdx.yukisu.ui.component.InstallConfirmationDialog
 import com.anatdx.yukisu.ui.component.ZipFileDetector
-import com.anatdx.yukisu.ui.component.ZipFileInfo
 import com.anatdx.yukisu.ui.screen.BottomBarDestination
 import com.anatdx.yukisu.ui.theme.KernelSUTheme
 import com.anatdx.yukisu.ui.theme.ThemeManager
@@ -70,6 +68,10 @@ import com.anatdx.yukisu.ui.viewmodel.SuperUserViewModel
 import com.anatdx.yukisu.ui.webui.WebUIActivity
 import com.anatdx.yukisu.ui.webui.initPlatform
 import kotlinx.coroutines.flow.MutableStateFlow
+import com.anatdx.yukisu.ui.util.module.ModuleLink
+import com.anatdx.yukisu.ui.util.module.Shortcut
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -81,14 +83,12 @@ class MainActivity : ComponentActivity() {
     private lateinit var superUserViewModel: SuperUserViewModel
     private lateinit var homeViewModel: HomeViewModel
     internal val settingsStateFlow = MutableStateFlow(SettingsState())
-    private val intentState = MutableStateFlow(0)
+    private val intentDispatcher by viewModels<IntentDispatcher>()
+    private var pendingZipDecision: CompletableDeferred<Unit>? = null
 
     data class SettingsState(
         val isHideOtherInfo: Boolean = false
     )
-
-    private var showConfirmationDialog = mutableStateOf(false)
-    private var pendingZipFiles = mutableStateOf<List<ZipFileInfo>>(emptyList())
 
     private lateinit var themeChangeObserver: ThemeChangeContentObserver
     private var isInitialized = false
@@ -107,6 +107,7 @@ class MainActivity : ComponentActivity() {
             window.isNavigationBarContrastEnforced = false
 
             super.onCreate(savedInstanceState)
+            if (savedInstanceState == null) intent?.let(intentDispatcher::submit)
             lifecycleScope.launch(Dispatchers.IO) {
                 RamdiskExternalFiles(File(cacheDir, "ramdisk_external")).cleanExpired()
             }
@@ -137,13 +138,6 @@ class MainActivity : ComponentActivity() {
                     }
 
                     val navigator = navController.rememberDestinationsNavigator()
-                    val intentStateValue by intentState.collectAsState()
-
-                    ShortcutIntentHandler(
-                        intentState = intentState,
-                        navigator = navigator
-                    )
-
                     BackHandler(currentDestination != null && currentDestination.route != HomeScreenDestination.route) {
                         navigationLeaveGuard.navigateOrIntercept(currentDestination?.route) {
                             navigator.navigate(HomeScreenDestination) {
@@ -154,11 +148,13 @@ class MainActivity : ComponentActivity() {
                     }
 
                     InstallConfirmationDialog(
-                        show = showConfirmationDialog.value,
-                        zipFiles = pendingZipFiles.value,
+                        show = intentDispatcher.showConfirmation,
+                        zipFiles = intentDispatcher.zipFiles,
                         onConfirm = { confirmedFiles, ak3Options ->
-                            showConfirmationDialog.value = false
-                            pendingZipFiles.value = emptyList()
+                            intentDispatcher.showConfirmation = false
+                            intentDispatcher.zipFiles = emptyList()
+                            intentDispatcher.queue.complete()
+                            pendingZipDecision?.complete(Unit)
                             UltraActivityUtils.navigateToFlashScreen(
                                 this,
                                 confirmedFiles,
@@ -167,51 +163,82 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         onDismiss = {
-                            showConfirmationDialog.value = false
-                            ZipFileDetector.cleanupStagedFiles(pendingZipFiles.value)
-                            pendingZipFiles.value = emptyList()
+                            intentDispatcher.showConfirmation = false
+                            ZipFileDetector.cleanupStagedFiles(intentDispatcher.zipFiles)
+                            intentDispatcher.zipFiles = emptyList()
+                            intentDispatcher.queue.complete()
+                            pendingZipDecision?.complete(Unit)
                             finish()
                         }
                     )
 
-                    LaunchedEffect(intentStateValue) {
-                        val zipUri = extractZipUris(intent)
-                        if (!zipUri.isNullOrEmpty()) {
-                            ZipFileDetector.cleanupStagedFiles(pendingZipFiles.value)
-                            pendingZipFiles.value = emptyList()
-                            showConfirmationDialog.value = false
-                            lifecycleScope.launch {
-                                val singleUri = zipUri.singleOrNull()
+                    LaunchedEffect(intentDispatcher) {
+                        while (true) {
+                            val snapshot = intentDispatcher.queue.next()
+                            try {
+                                if (snapshot.data?.scheme == "ksu" || snapshot.hasExtra("shortcut_type")) {
+                                    val link = resolveModuleIntent(snapshot)
+                                    intentDispatcher.queue.complete()
+                                    when (link?.type) {
+                                        ModuleLink.Type.Action -> navigator.navigate(
+                                            ExecuteModuleActionScreenDestination(link.moduleId, fromShortcut = true)
+                                        )
+                                        ModuleLink.Type.WebUI -> {
+                                            val webIntent = Intent(this@MainActivity, WebUIActivity::class.java)
+                                                .setData("kernelsu://webui/${link.moduleId}".toUri())
+                                                .putExtra("id", link.moduleId)
+                                                .putExtra("name", snapshot.getStringExtra("module_name") ?: link.moduleId)
+                                                .putExtra("from_webui_shortcut", true)
+                                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                            startActivity(webIntent)
+                                        }
+                                        null -> Unit
+                                    }
+                                    continue
+                                }
+
+                                val zipUris = extractZipUris(snapshot)
+                                if (zipUris.isNullOrEmpty()) {
+                                    intentDispatcher.queue.complete()
+                                    continue
+                                }
+                                ZipFileDetector.cleanupStagedFiles(intentDispatcher.zipFiles)
+                                intentDispatcher.zipFiles = emptyList()
+                                intentDispatcher.showConfirmation = false
+                                val singleUri = zipUris.singleOrNull()
                                 val script = singleUri?.let { ScriptRepository.peekOneshot(it) }
-                                if (intentState.value != intentStateValue) return@launch
                                 if (script != null) {
+                                    intentDispatcher.queue.complete()
                                     navigator.navigate(
                                         ScriptRunScreenDestination(
-                                            ScriptRunArg(
-                                                checkNotNull(singleUri), offerInstall = true, displayName = script.name,
-                                            )
+                                            ScriptRunArg(checkNotNull(singleUri), offerInstall = true, displayName = script.name)
                                         )
                                     )
-                                    return@launch
+                                    continue
                                 }
-                                UltraActivityUtils.detectZipTypeAndShowConfirmation(this@MainActivity, zipUri) { infos ->
-                                    if (intentState.value != intentStateValue) {
-                                        ZipFileDetector.cleanupStagedFiles(infos)
-                                        return@detectZipTypeAndShowConfirmation
-                                    }
+                                val decision = CompletableDeferred<Unit>()
+                                pendingZipDecision = decision
+                                UltraActivityUtils.detectZipTypeAndShowConfirmation(this@MainActivity, zipUris) { infos ->
                                     if (infos.isNotEmpty()) {
-                                        pendingZipFiles.value = infos
-                                        showConfirmationDialog.value = true
-                                    } else {
-                                        lifecycleScope.launch {
-                                            snackBarHostState.showSnackbar(
-                                                getString(R.string.unsupported_file_format),
-                                                withDismissAction = true
-                                            )
-                                        }
-                                        // 停留在当前 Activity，让用户看到提示
+                                        intentDispatcher.zipFiles = infos
+                                        intentDispatcher.showConfirmation = true
                                     }
                                 }
+                                if (intentDispatcher.showConfirmation) {
+                                    decision.await()
+                                } else {
+                                    snackBarHostState.showSnackbar(
+                                        getString(R.string.unsupported_file_format),
+                                        withDismissAction = true
+                                    )
+                                }
+                                pendingZipDecision = null
+                                intentDispatcher.queue.complete()
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                intentDispatcher.queue.complete()
+                                android.util.Log.e("MainActivity", "Failed to handle incoming intent", e)
                             }
                         }
                     }
@@ -348,7 +375,7 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         try {
             if (isFinishing) {
-                ZipFileDetector.cleanupStagedFiles(pendingZipFiles.value)
+                ZipFileDetector.cleanupStagedFiles(intentDispatcher.zipFiles)
             }
             ThemeUtils.unregisterThemeChangeObserver(this, themeChangeObserver)
             super.onDestroy()
@@ -360,7 +387,21 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intentState.value++
+        intentDispatcher.submit(intent)
+    }
+
+    private fun resolveModuleIntent(intent: Intent): ModuleLink? {
+        if (intent.data?.scheme == "ksu") {
+            if (intent.action != Intent.ACTION_VIEW || !Natives.isManager) return null
+            return ModuleLink.parse(intent.data?.toString(), Shortcut.intentToken(this))
+        }
+        val type = when (intent.getStringExtra("shortcut_type")) {
+            "module_action" -> ModuleLink.Type.Action
+            "module_webui" -> ModuleLink.Type.WebUI
+            else -> return null
+        }
+        val moduleId = intent.getStringExtra("module_id") ?: return null
+        return ModuleLink(moduleId, type).takeIf { ModuleLink.isValidModuleId(moduleId) }
     }
 
     private fun extractZipUris(intent: Intent?): ArrayList<Uri>? {
@@ -395,45 +436,6 @@ class MainActivity : ComponentActivity() {
                     intent?.getParcelableArrayListExtra("uris")
                 }
             }
-        }
-    }
-}
-
-@androidx.compose.runtime.Composable
-private fun ShortcutIntentHandler(
-    intentState: MutableStateFlow<Int>,
-    navigator: com.ramcosta.composedestinations.navigation.DestinationsNavigator
-) {
-    val activity = androidx.activity.compose.LocalActivity.current ?: return
-    val context = LocalContext.current
-    val intentStateValue by intentState.collectAsState()
-    LaunchedEffect(intentStateValue) {
-        val intent = activity.intent
-        val type = intent?.getStringExtra("shortcut_type") ?: return@LaunchedEffect
-        when (type) {
-            "module_action" -> {
-                val moduleId = intent.getStringExtra("module_id") ?: return@LaunchedEffect
-                navigator.navigate(ExecuteModuleActionScreenDestination(moduleId)) {
-                    launchSingleTop = true
-                }
-            }
-
-            "module_webui" -> {
-                val moduleId = intent.getStringExtra("module_id") ?: return@LaunchedEffect
-                val moduleName = intent.getStringExtra("module_name") ?: moduleId
-                val webIntent = Intent(context, WebUIActivity::class.java)
-                    .setData("kernelsu://webui/$moduleId".toUri())
-                    .putExtra("id", moduleId)
-                    .putExtra("name", moduleName)
-                    .putExtra("from_webui_shortcut", true)
-                    .addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK or
-                                Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    )
-                context.startActivity(webIntent)
-            }
-
-            else -> return@LaunchedEffect
         }
     }
 }

@@ -10,6 +10,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.PersistableBundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -98,6 +99,7 @@ import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.util.*
 import com.anatdx.yukisu.ui.util.module.ModuleUtils
 import com.anatdx.yukisu.ui.util.module.Shortcut
+import com.anatdx.yukisu.ui.util.module.ModuleLink
 import com.anatdx.yukisu.ui.viewmodel.ModuleRuntimeKind
 import com.anatdx.yukisu.ui.viewmodel.ModuleViewModel
 import com.anatdx.yukisu.ui.webui.WebUIActivity
@@ -693,7 +695,6 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
         )
     }
 
-    // 快捷方式创建/编辑对话框
     if (showShortcutDialog) {
         YukiAlertDialog(
             onDismissRequest = { showShortcutDialog = false },
@@ -770,6 +771,29 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+
+                    FilledTonalButton(
+                        onClick = {
+                            val moduleId = shortcutModuleId ?: return@FilledTonalButton
+                            val type = when (selectedShortcutType) {
+                                ShortcutType.Action -> ModuleLink.Type.Action
+                                ShortcutType.WebUI -> ModuleLink.Type.WebUI
+                                null -> return@FilledTonalButton
+                            }
+                            val uri = Shortcut.buildShortcutUri(context, moduleId, type)
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("", uri.toString()).apply {
+                                description.extras = PersistableBundle().apply {
+                                    putBoolean("android.content.extra.IS_SENSITIVE", true)
+                                }
+                            }
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(context, R.string.module_shortcut_scheme_copied, Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(R.string.module_shortcut_copy_scheme))
+                    }
 
                     if (hasExistingShortcut) {
                         FilledTonalButton(

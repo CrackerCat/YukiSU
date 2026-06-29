@@ -42,17 +42,12 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Destination<RootGraph>
-fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String) {
+fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String, fromShortcut: Boolean = false) {
     var text by rememberSaveable { mutableStateOf("") }
     var tempText : String
     val logContent = remember { StringBuilder() }
     val activity = LocalActivity.current
     var isActionRunning by rememberSaveable { mutableStateOf(true) }
-
-    val fromShortcut = remember(activity) {
-        val intent = activity?.intent
-        intent?.getStringExtra("shortcut_type") == "module_action"
-    }
 
     BackHandler(enabled = isActionRunning) {
         // Disable back button if action is running

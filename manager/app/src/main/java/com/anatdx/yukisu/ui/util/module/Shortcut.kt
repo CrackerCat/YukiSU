@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.edit
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.graphics.scale
@@ -21,10 +22,24 @@ import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.MainActivity
 import com.anatdx.yukisu.ui.util.getRootShell
 import java.util.Locale
+import java.security.SecureRandom
 
 object Shortcut {
 
     private const val TAG = "ModuleShortcut"
+
+    @Synchronized
+    fun intentToken(context: Context): String {
+        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+        prefs.getString("intent_token", null)?.takeIf { it.isNotBlank() }?.let { return it }
+        val token = ByteArray(32).also(SecureRandom()::nextBytes)
+            .joinToString("") { "%02x".format(it) }
+        prefs.edit { putString("intent_token", token) }
+        return token
+    }
+
+    fun buildShortcutUri(context: Context, moduleId: String, type: ModuleLink.Type): Uri =
+        ModuleLink(moduleId, type).toUriString(intentToken(context)).toUri()
 
     fun createModuleActionShortcut(
         context: Context,
@@ -35,8 +50,7 @@ object Shortcut {
         val shortcutId = "module_action_$moduleId"
         val shortcutIntent = Intent(context, MainActivity::class.java).apply {
             action = Intent.ACTION_VIEW
-            putExtra("shortcut_type", "module_action")
-            putExtra("module_id", moduleId)
+            data = buildShortcutUri(context, moduleId, ModuleLink.Type.Action)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         createModuleShortcut(
@@ -57,13 +71,11 @@ object Shortcut {
         iconUri: String?
     ) {
         val shortcutId = "module_webui_$moduleId"
-        val shortcutIntent = Intent(context, com.anatdx.yukisu.ui.webui.WebUIActivity::class.java).apply {
+        val shortcutIntent = Intent(context, MainActivity::class.java).apply {
             action = Intent.ACTION_VIEW
-            data = "kernelsu://webui/$moduleId".toUri()
-            putExtra("id", moduleId)
-            putExtra("name", name)
-            putExtra("from_webui_shortcut", true)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            data = buildShortcutUri(context, moduleId, ModuleLink.Type.WebUI)
+            putExtra("module_name", name)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         createModuleShortcut(
             context = context,

@@ -1093,4 +1093,6 @@
     <string name="module_preinit_command_failed" tools:ignore="MissingTranslation">Module preinit command failed (exit code %1$d).</string>
     <string name="module_preinit_status_empty" tools:ignore="MissingTranslation">ksud returned no preinit status.</string>
     <string name="module_preinit_status_invalid" tools:ignore="MissingTranslation">ksud returned an invalid preinit status: %1$s</string>
+    <string name="module_shortcut_copy_scheme" tools:ignore="MissingTranslation">Copy URL scheme</string>
+    <string name="module_shortcut_scheme_copied" tools:ignore="MissingTranslation">URL scheme copied</string>
 </resources>
