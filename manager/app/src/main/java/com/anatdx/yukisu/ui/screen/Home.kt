@@ -471,6 +471,7 @@ private fun RebootDropdownItem(
     index: Int,
     count: Int,
     onSelected: () -> Unit,
+    onReboot: (String) -> Unit,
 ) {
     if (isExpressiveUi) {
         val shape = MenuDefaults.itemShape(index, count).shape
@@ -487,7 +488,7 @@ private fun RebootDropdownItem(
                 )
                 .clickable {
                     onSelected()
-                    reboot(option.reason)
+                    onReboot(option.reason)
                 }
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -503,7 +504,7 @@ private fun RebootDropdownItem(
             text = { Text(stringResource(option.label)) },
             onClick = {
                 onSelected()
-                reboot(option.reason)
+                onReboot(option.reason)
             },
         )
     }
@@ -517,6 +518,16 @@ private fun TopBar(
     isDataLoaded: Boolean = false
 ) {
     val context = LocalContext.current
+    val rebootTitle = stringResource(R.string.reboot)
+    val rebootWarning = stringResource(R.string.jailbreak_reboot_warning)
+    val rebootDialog = rememberConfirmDialog(onConfirm = { reboot() })
+    val onReboot: (String) -> Unit = { reason ->
+        if (Natives.isLateLoadMode && reason.isEmpty()) {
+            rebootDialog.showConfirm(title = rebootTitle, content = rebootWarning)
+        } else {
+            reboot(reason)
+        }
+    }
     val colorScheme = MaterialTheme.colorScheme
     val snowflakeRotation = remember { Animatable(0f) }
     val cardColor = if (CardConfig.isCustomBackgroundEnabled) {
@@ -598,6 +609,7 @@ private fun TopBar(
                                     index = index,
                                     count = rebootOptions.size,
                                     onSelected = { showDropdown = false },
+                                    onReboot = onReboot,
                                 )
                             }
                         }

@@ -112,6 +112,7 @@
     <string name="send_log">Send logs</string>
     <string name="safe_mode">Safe mode</string>
     <string name="safe_mode_module_disabled" tools:ignore="MissingTranslation">Module installation is disabled in safe mode</string>
+    <string name="jailbreak_reboot_warning" tools:ignore="MissingTranslation">Rebooting will lose root access in Jailbreak mode. You will need to jailbreak again after startup. Reboot anyway?</string>
     <string name="home_jailbreak">Jailbreak</string>
     <string name="home_jailbreak_failed">Failed to start jailbreak service</string>
     <string name="jailbreak_timeout">Jailbreak may have failed, please check logs</string>
