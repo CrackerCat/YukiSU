@@ -675,8 +675,6 @@
     <string name="uts_boot_repatch_changed">Pakeista</string>
     <string name="install_force_backup">Kurti atsarginę kopiją kaip gamyklinio atvaizdo</string>
     <string name="install_force_backup_summary">Įsitikinkite, kad pasirinktas boot atvaizdas yra nepakeistas gamyklinis atvaizdas.</string>
-    <string name="settings_webview_zygote_umount">Atjungti WebView modulius</string>
-    <string name="settings_webview_zygote_umount_summary">Atjungti modulius nuo WebView zygote, kad nenutekėtų prijungimų informacija. Tai gali sutrikdyti WebView išteklius keičiančių modulių veikimą. Įsigalios paleidus iš naujo.</string>
     <string name="hide_seccomp_status">Slėpti Seccomp būseną</string>
     <string name="hide_seccomp_status_summary">Slėpti Seccomp būseną pradžios puslapyje</string>
     <string name="ui_style">Sąsajos stilius</string>

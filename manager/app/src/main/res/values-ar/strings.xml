@@ -677,8 +677,6 @@
     <string name="uts_boot_repatch_changed">عُدّل</string>
     <string name="install_force_backup">حفظ نسخة احتياطية كصورة مصنع</string>
     <string name="install_force_backup_summary">تأكد من أن صورة boot المختارة هي صورة المصنع غير المعدّلة.</string>
-    <string name="settings_webview_zygote_umount">إلغاء تركيب الوحدات لـ WebView</string>
-    <string name="settings_webview_zygote_umount_summary">إلغاء تركيب الوحدات من WebView zygote لمنع تسريب معلومات التركيب. قد تتوقف الوحدات التي تعدّل موارد WebView عن العمل. يسري بعد إعادة التشغيل.</string>
     <string name="hide_seccomp_status">إخفاء حالة Seccomp</string>
     <string name="hide_seccomp_status_summary">إخفاء معلومات حالة Seccomp في الصفحة الرئيسية</string>
     <string name="ui_style">نمط الواجهة</string>

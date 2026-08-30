@@ -65,6 +65,8 @@ class SuperUserViewModel : ViewModel() {
     companion object {
         private const val TAG = "SuperUserViewModel"
         const val SHELL_UID = 2000
+        const val WEBVIEW_ZYGOTE_UID = 1053
+        const val WEBVIEW_ZYGOTE_PROFILE_KEY = "webview_zygote"
         private val appsLock = Any()
         var apps by mutableStateOf<List<AppInfo>>(emptyList())
         private val _isAppListLoaded = MutableStateFlow(false)
@@ -155,13 +157,19 @@ class SuperUserViewModel : ViewModel() {
         val label: String,
         val packageInfo: PackageInfo,
         val profile: Natives.Profile?,
+        val special: Boolean = false,
     ) : Parcelable {
         @IgnoredOnParcel
         val packageName: String = packageInfo.packageName
         @IgnoredOnParcel
         val uid: Int = packageInfo.applicationInfo!!.uid
         @IgnoredOnParcel
-        val profileKey: String = profile?.name?.takeIf { it.isNotBlank() } ?: packageName
+        val isWebViewZygote: Boolean = special && uid == WEBVIEW_ZYGOTE_UID
+        @IgnoredOnParcel
+        val profileKey: String = if (isWebViewZygote) WEBVIEW_ZYGOTE_PROFILE_KEY
+            else profile?.name?.takeIf { it.isNotBlank() } ?: packageName
+        @IgnoredOnParcel
+        val displayIdentifier: String = if (special) profileKey else packageName
     }
 
     @Immutable
@@ -175,11 +183,11 @@ class SuperUserViewModel : ViewModel() {
         @IgnoredOnParcel
         val mainApp: AppInfo = apps.first()
         @IgnoredOnParcel
-        val packageNames: List<String> = apps.map { it.packageName }
+        val displayIdentifiers: List<String> = apps.map { it.displayIdentifier }
         @IgnoredOnParcel
         val profileKey: String = mainApp.profileKey
         @IgnoredOnParcel
-        val allowSu: Boolean = profile?.allowSu == true
+        val allowSu: Boolean = !mainApp.special && profile?.allowSu == true
         @IgnoredOnParcel
         val isPresetManager: Boolean =
             dynamicManagerFlags and Natives.DYNAMIC_MANAGER_FLAG_PRESET != 0
@@ -189,7 +197,7 @@ class SuperUserViewModel : ViewModel() {
         @IgnoredOnParcel
         val userName: String? = Natives.getUserName(uid)
         @IgnoredOnParcel
-        val hasCustomProfile : Boolean = profile?.let { if (it.allowSu) !it.rootUseDefault else !it.nonRootUseDefault } ?: false
+        val hasCustomProfile : Boolean = profile?.let { if (allowSu) !it.rootUseDefault else !it.nonRootUseDefault } ?: false
     }
 
     private val appProcessingThreadPool = ThreadPoolExecutor(
@@ -275,7 +283,7 @@ class SuperUserViewModel : ViewModel() {
 
     suspend fun updateBatchPermissions(allowSu: Boolean, umountModules: Boolean? = null) {
         val selectedUids = apps.asSequence()
-            .filter { it.packageName in selectedApps }
+            .filter { it.displayIdentifier in selectedApps && (!allowSu || !it.special) }
             .map { it.uid }
             .toSet()
 
@@ -303,12 +311,13 @@ class SuperUserViewModel : ViewModel() {
         allowSu: Boolean,
         umountModules: Boolean? = null
     ): Boolean {
+        if (appGroup.mainApp.special && allowSu) return false
         val profile = Natives.getAppProfile(appGroup.profileKey, appGroup.uid)
         val updatedProfile = profile.copy(
             allowSu = allowSu,
             umountModules = umountModules ?: profile.umountModules,
             nonRootUseDefault = if (!allowSu && umountModules != null) {
-                !umountModules
+                if (appGroup.mainApp.special) false else !umountModules
             } else {
                 profile.nonRootUseDefault
             }
@@ -554,7 +563,8 @@ class SuperUserViewModel : ViewModel() {
     }
 
     private fun protectedProfileAppIds(): Set<Int> =
-        Natives.getProtectedProfileAppIds().toSet() + (ksuApp.applicationInfo.uid % PER_USER_RANGE)
+        Natives.getProtectedProfileAppIds().toSet() + (ksuApp.applicationInfo.uid % PER_USER_RANGE) +
+            WEBVIEW_ZYGOTE_UID
 
     private fun readAllowlistSnapshot(): Map<Int, Natives.Profile> {
         val uids = (Natives.getProfileUids(true).toList() + Natives.getProfileUids(false).toList()).sorted()
@@ -597,7 +607,7 @@ class SuperUserViewModel : ViewModel() {
                 if (page.isEmpty()) break
 
                 result += page.mapNotNull { packageInfo ->
-                    packageInfo.applicationInfo?.let { appInfo ->
+                    packageInfo.applicationInfo?.takeIf { it.uid != WEBVIEW_ZYGOTE_UID }?.let { appInfo ->
                         AppInfo(
                             label = appInfo.loadLabel(pm).toString(),
                             packageInfo = packageInfo,
@@ -608,6 +618,19 @@ class SuperUserViewModel : ViewModel() {
                 start += page.size
                 loadingProgress = start.toFloat() / total
             }
+
+            val systemInfo = ApplicationInfo(pm.getApplicationInfo("android", 0)).apply {
+                uid = WEBVIEW_ZYGOTE_UID
+            }
+            result += AppInfo(
+                label = "WebView Zygote",
+                packageInfo = PackageInfo().apply {
+                    packageName = ""
+                    applicationInfo = systemInfo
+                },
+                profile = null,
+                special = true,
+            )
 
             synchronized(appsLock) {
                 _isAppListLoaded.value = true
@@ -630,11 +653,11 @@ class SuperUserViewModel : ViewModel() {
         appGroups.filter { group ->
             group.apps.any { app ->
                 app.label.contains(search, true) ||
-                        app.packageName.contains(search, true) ||
+                        app.displayIdentifier.contains(search, true) ||
                         HanziToPinyin.getInstance().toPinyinString(app.label)?.contains(search, true) == true
             }
         }.filter { group ->
-            group.uid == SHELL_UID || showSystemApps ||
+            group.mainApp.isWebViewZygote || group.uid == SHELL_UID || showSystemApps ||
                     group.apps.any { it.packageInfo.applicationInfo!!.flags.and(ApplicationInfo.FLAG_SYSTEM) == 0 }
         }
     }
@@ -686,6 +709,10 @@ class SuperUserViewModel : ViewModel() {
 
     private fun loadUidProfile(uidApps: Collection<AppInfo>): Natives.Profile {
         val first = uidApps.first()
+        if (first.isWebViewZygote) {
+            return Natives.getAppProfile(WEBVIEW_ZYGOTE_PROFILE_KEY, WEBVIEW_ZYGOTE_UID)
+                .copy(name = WEBVIEW_ZYGOTE_PROFILE_KEY, allowSu = false)
+        }
         val packageNames = uidApps.mapTo(mutableSetOf()) { it.packageName }
         val fallbackKey = packageNames.min()
         val profile = Natives.getAppProfile(fallbackKey, first.uid)

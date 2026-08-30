@@ -675,8 +675,6 @@
     <string name="uts_boot_repatch_changed">Değiştirildi</string>
     <string name="install_force_backup">Fabrika görüntüsü olarak yedekle</string>
     <string name="install_force_backup_summary">Seçilen boot görüntüsünün değiştirilmemiş fabrika görüntüsü olduğundan emin olun.</string>
-    <string name="settings_webview_zygote_umount">WebView için modüllerin bağlamasını kaldır</string>
-    <string name="settings_webview_zygote_umount_summary">Bağlama bilgilerinin sızmasını önlemek için WebView zygote içindeki modüllerin bağlamasını kaldırır. WebView kaynaklarını değiştiren modüller çalışmayabilir. Yeniden başlatınca uygulanır.</string>
     <string name="hide_seccomp_status">Seccomp durumunu gizle</string>
     <string name="hide_seccomp_status_summary">Ana sayfadaki Seccomp durum bilgisini gizler</string>
     <string name="ui_style">Arayüz stili</string>

@@ -696,8 +696,6 @@
     <string name="uts_boot_repatch_changed">変更済み</string>
     <string name="install_force_backup">純正イメージとしてバックアップ</string>
     <string name="install_force_backup_summary">選択した boot イメージが未変更の純正イメージであることを確認してください。</string>
-    <string name="settings_webview_zygote_umount">WebView のモジュールをアンマウント</string>
-    <string name="settings_webview_zygote_umount_summary">WebView zygote からモジュールをアンマウントし、マウント情報の漏洩を防ぎます。WebView のリソースを変更するモジュールが動作しなくなる可能性があります。再起動後に反映されます。</string>
     <string name="hide_seccomp_status">Seccomp の状態を隠す</string>
     <string name="hide_seccomp_status_summary">ホーム画面の Seccomp の状態情報を隠す</string>
     <string name="ui_style">UI スタイル</string>

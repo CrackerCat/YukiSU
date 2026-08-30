@@ -382,16 +382,16 @@ private fun SuperUserContent(
             }
         ) {
             filteredAndSortedAppGroups.forEach { appGroup ->
-                item(key = "${appGroup.uid}-${appGroup.mainApp.packageName}") {
+                item(key = "${appGroup.uid}-${appGroup.mainApp.displayIdentifier}") {
                     AppGroupItem(
                         appGroup = appGroup,
-                        isSelected = appGroup.packageNames.any { viewModel.selectedApps.contains(it) },
+                        isSelected = appGroup.displayIdentifiers.any { viewModel.selectedApps.contains(it) },
                         onToggleSelection = {
-                            appGroup.packageNames.forEach { viewModel.toggleAppSelection(it) }
+                            appGroup.displayIdentifiers.forEach { viewModel.toggleAppSelection(it) }
                         },
                         onClick = {
                             if (viewModel.showBatchActions) {
-                                appGroup.packageNames.forEach { viewModel.toggleAppSelection(it) }
+                                appGroup.displayIdentifiers.forEach { viewModel.toggleAppSelection(it) }
                             } else {
                                 navigator.navigate(AppProfileScreenDestination(appGroup.mainApp))
                             }
@@ -399,7 +399,7 @@ private fun SuperUserContent(
                         onLongClick = {
                             if (!viewModel.showBatchActions) {
                                 viewModel.toggleBatchMode()
-                                appGroup.packageNames.forEach { viewModel.toggleAppSelection(it) }
+                                appGroup.displayIdentifiers.forEach { viewModel.toggleAppSelection(it) }
                             }
                         },
                         viewModel = viewModel
@@ -1057,7 +1057,7 @@ private fun AppGroupItem(
     }
 
     SwipeActionContainer(
-        enabled = !viewModel.showBatchActions,
+        enabled = !viewModel.showBatchActions && !mainApp.special,
         onSwipeLeft = {
             viewModel.updateGroupPermission(
                 appGroup = appGroup,
@@ -1112,7 +1112,7 @@ private fun AppGroupItem(
                     val summaryText = if (appGroup.apps.size > 1) {
                         stringResource(R.string.group_contains_apps, appGroup.apps.size)
                     } else {
-                        mainApp.packageName
+                        mainApp.displayIdentifier
                     }
 
                     Text(summaryText)

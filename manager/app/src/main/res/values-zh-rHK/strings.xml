@@ -687,8 +687,6 @@
     <string name="install_force_backup_summary">請確認所選 boot 鏡像是未經修改的原廠鏡像。</string>
     <string name="settings_unshare_mnt">掛載視圖整理</string>
     <string name="settings_unshare_mnt_summary">卸載後重建命名空間並整理可見編號，重新啟動應用後生效。</string>
-    <string name="settings_webview_zygote_umount">為 WebView 卸載模組</string>
-    <string name="settings_webview_zygote_umount_summary">從 WebView zygote 卸載模組以防止掛載信息泄露。這可能導致修改 WebView 資源的模組失效；重新啟動後生效。</string>
     <string name="hide_seccomp_status">隱藏 Seccomp 狀態</string>
     <string name="hide_seccomp_status_summary">隱藏主頁的 Seccomp 狀態信息</string>
     <string name="ui_style">界面風格</string>

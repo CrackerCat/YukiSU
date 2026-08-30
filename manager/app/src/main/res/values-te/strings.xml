@@ -694,8 +694,6 @@
     <string name="uts_boot_repatch_changed">మార్చబడింది</string>
     <string name="install_force_backup">అసలు ఫ్యాక్టరీ ఇమేజ్‌గా బ్యాకప్ చేయండి</string>
     <string name="install_force_backup_summary">ఎంచుకున్న boot ఇమేజ్ మార్పులు చేయని అసలు ఫ్యాక్టరీ ఇమేజ్ అని నిర్ధారించండి.</string>
-    <string name="settings_webview_zygote_umount">WebView కోసం మాడ్యూల్‌లను అన్‌మౌంట్ చేయండి</string>
-    <string name="settings_webview_zygote_umount_summary">మౌంట్ సమాచారం లీక్ కాకుండా WebView zygote నుండి మాడ్యూల్‌లను అన్‌మౌంట్ చేయండి. WebView వనరులను మార్చే మాడ్యూల్‌లు పనిచేయకపోవచ్చు. పునఃప్రారంభం తర్వాత అమలవుతుంది.</string>
     <string name="hide_seccomp_status">Seccomp స్థితిని దాచండి</string>
     <string name="hide_seccomp_status_summary">హోమ్ పేజీలో Seccomp స్థితి సమాచారాన్ని దాచండి</string>
     <string name="ui_style">ఇంటర్‌ఫేస్ శైలి</string>

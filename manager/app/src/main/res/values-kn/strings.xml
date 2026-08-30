@@ -694,8 +694,6 @@
     <string name="uts_boot_repatch_changed">ಬದಲಾಯಿಸಲಾಗಿದೆ</string>
     <string name="install_force_backup">ಮೂಲ ಕಾರ್ಖಾನೆ ಇಮೇಜ್ ಆಗಿ ಬ್ಯಾಕಪ್ ಮಾಡಿ</string>
     <string name="install_force_backup_summary">ಆಯ್ಕೆಮಾಡಿದ boot ಇಮೇಜ್ ಬದಲಾಯಿಸದ ಮೂಲ ಕಾರ್ಖಾನೆ ಇಮೇಜ್ ಎಂದು ಖಚಿತಪಡಿಸಿ.</string>
-    <string name="settings_webview_zygote_umount">WebView ಗಾಗಿ ಮಾಡ್ಯೂಲ್ ಅನ್‌ಮೌಂಟ್ ಮಾಡಿ</string>
-    <string name="settings_webview_zygote_umount_summary">ಮೌಂಟ್ ಮಾಹಿತಿ ಸೋರಿಕೆ ತಡೆಯಲು WebView zygote ನಿಂದ ಮಾಡ್ಯೂಲ್‌ಗಳನ್ನು ಅನ್‌ಮೌಂಟ್ ಮಾಡಿ. WebView ಸಂಪನ್ಮೂಲ ಬದಲಿಸುವ ಮಾಡ್ಯೂಲ್‌ಗಳು ಕಾರ್ಯನಿರ್ವಹಿಸದಿರಬಹುದು. ಮರುಪ್ರಾರಂಭದ ನಂತರ ಜಾರಿಗೆ ಬರುತ್ತದೆ.</string>
     <string name="hide_seccomp_status">Seccomp ಸ್ಥಿತಿ ಮರೆಮಾಡಿ</string>
     <string name="hide_seccomp_status_summary">ಮುಖಪುಟದಲ್ಲಿ Seccomp ಸ್ಥಿತಿ ಮಾಹಿತಿ ಮರೆಮಾಡಿ</string>
     <string name="ui_style">ಇಂಟರ್ಫೇಸ್ ಶೈಲಿ</string>

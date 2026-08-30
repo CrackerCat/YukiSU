@@ -694,8 +694,6 @@
     <string name="uts_boot_repatch_changed">Diubah</string>
     <string name="install_force_backup">Sandarkan sebagai imej asal kilang</string>
     <string name="install_force_backup_summary">Pastikan imej boot yang dipilih ialah imej asal kilang yang belum diubah suai.</string>
-    <string name="settings_webview_zygote_umount">Nyahlekap modul untuk WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Nyahlekap modul daripada WebView zygote untuk mengelakkan kebocoran maklumat lekapan. Modul yang mengubah sumber WebView mungkin tidak berfungsi. Berkuat kuasa selepas but semula.</string>
     <string name="hide_seccomp_status">Sembunyikan status Seccomp</string>
     <string name="hide_seccomp_status_summary">Sembunyikan maklumat status Seccomp pada halaman utama</string>
     <string name="ui_style">Gaya antara muka</string>

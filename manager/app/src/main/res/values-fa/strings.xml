@@ -675,8 +675,6 @@
     <string name="uts_boot_repatch_changed">تغییر یافته</string>
     <string name="install_force_backup">پشتیبان‌گیری به‌عنوان تصویر کارخانه</string>
     <string name="install_force_backup_summary">مطمئن شوید تصویر boot انتخاب‌شده، تصویر کارخانه بدون تغییر است.</string>
-    <string name="settings_webview_zygote_umount">جدا کردن اتصال ماژول‌ها برای WebView</string>
-    <string name="settings_webview_zygote_umount_summary">برای جلوگیری از افشای اطلاعات اتصال، اتصال ماژول‌ها را از WebView zygote جدا می‌کند. ممکن است ماژول‌هایی که منابع WebView را تغییر می‌دهند از کار بیفتند. پس از راه‌اندازی مجدد اعمال می‌شود.</string>
     <string name="hide_seccomp_status">پنهان کردن وضعیت Seccomp</string>
     <string name="hide_seccomp_status_summary">پنهان کردن اطلاعات وضعیت Seccomp در صفحه اصلی</string>
     <string name="ui_style">سبک رابط</string>

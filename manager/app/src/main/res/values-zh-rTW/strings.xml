@@ -688,8 +688,6 @@
     <string name="uts_boot_repatch_changed">已變更</string>
     <string name="install_force_backup">作為原廠映像檔備份</string>
     <string name="install_force_backup_summary">請確認所選 boot 映像檔是未經修改的原廠映像檔。</string>
-    <string name="settings_webview_zygote_umount">為 WebView 卸載模組</string>
-    <string name="settings_webview_zygote_umount_summary">從 WebView zygote 卸載模組以防止掛載資訊洩漏。這可能導致修改 WebView 資源的模組失效；重新啟動後生效。</string>
     <string name="hide_seccomp_status">隱藏 Seccomp 狀態</string>
     <string name="hide_seccomp_status_summary">隱藏主頁的 Seccomp 狀態資訊</string>
     <string name="ui_style">介面風格</string>

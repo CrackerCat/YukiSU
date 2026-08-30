@@ -694,8 +694,6 @@
     <string name="uts_boot_repatch_changed">बदलले</string>
     <string name="install_force_backup">फॅक्टरी इमेज म्हणून बॅकअप घ्या</string>
     <string name="install_force_backup_summary">निवडलेली boot इमेज बदल न केलेली फॅक्टरी इमेज असल्याची खात्री करा.</string>
-    <string name="settings_webview_zygote_umount">WebView साठी मॉड्यूल अनमाउंट करा</string>
-    <string name="settings_webview_zygote_umount_summary">माउंट माहिती उघड होण्यापासून रोखण्यासाठी WebView zygote मधून मॉड्यूल अनमाउंट करा. त्यामुळे WebView संसाधने बदलणारे मॉड्यूल काम करेनासे होऊ शकतात. रीस्टार्टनंतर लागू होईल.</string>
     <string name="hide_seccomp_status">Seccomp स्थिती लपवा</string>
     <string name="hide_seccomp_status_summary">मुख्यपृष्ठावरील Seccomp स्थितीची माहिती लपवा</string>
     <string name="ui_style">इंटरफेस शैली</string>

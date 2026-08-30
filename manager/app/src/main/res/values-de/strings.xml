@@ -677,8 +677,6 @@
     <string name="uts_boot_repatch_changed">Geändert</string>
     <string name="install_force_backup">Als Werks-Image sichern</string>
     <string name="install_force_backup_summary">Stelle sicher, dass das ausgewählte boot-Image ein unverändertes Werks-Image ist.</string>
-    <string name="settings_webview_zygote_umount">Module für WebView aushängen</string>
-    <string name="settings_webview_zygote_umount_summary">Module aus WebView zygote aushängen, um das Offenlegen von Mount-Informationen zu verhindern. Dadurch können Module, die WebView-Ressourcen ändern, unwirksam werden. Wird nach einem Neustart wirksam.</string>
     <string name="hide_seccomp_status">Seccomp-Status verbergen</string>
     <string name="hide_seccomp_status_summary">Seccomp-Status auf der Startseite verbergen</string>
     <string name="ui_style">Oberflächenstil</string>

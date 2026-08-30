@@ -694,8 +694,6 @@
     <string name="uts_boot_repatch_changed">Nabago</string>
     <string name="install_force_backup">I-backup bilang orihinal na factory image</string>
     <string name="install_force_backup_summary">Tiyaking hindi nabagong orihinal na factory image ang napiling boot image.</string>
-    <string name="settings_webview_zygote_umount">I-unmount ang mga module para sa WebView</string>
-    <string name="settings_webview_zygote_umount_summary">I-unmount ang mga module mula sa WebView zygote upang maiwasan ang pagtagas ng impormasyon ng mount. Maaaring hindi gumana ang mga module na bumabago sa mga resource ng WebView. Magkakabisa pagkatapos mag-restart.</string>
     <string name="hide_seccomp_status">Itago ang katayuan ng Seccomp</string>
     <string name="hide_seccomp_status_summary">Itago ang impormasyon ng katayuan ng Seccomp sa home page</string>
     <string name="ui_style">Estilo ng interface</string>

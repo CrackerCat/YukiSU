@@ -694,8 +694,6 @@
     <string name="uts_boot_repatch_changed">পরিবর্তিত</string>
     <string name="install_force_backup">মূল ফ্যাক্টরি ইমেজ হিসেবে ব্যাকআপ নিন</string>
     <string name="install_force_backup_summary">নির্বাচিত boot ইমেজটি অপরিবর্তিত মূল ফ্যাক্টরি ইমেজ কিনা নিশ্চিত করুন।</string>
-    <string name="settings_webview_zygote_umount">WebView-এর জন্য মডিউল আনমাউন্ট করুন</string>
-    <string name="settings_webview_zygote_umount_summary">মাউন্টের তথ্য ফাঁস রোধে WebView zygote থেকে মডিউল আনমাউন্ট করুন। WebView-এর রিসোর্স বদলানো মডিউল অকার্যকর হতে পারে। পুনরায় চালুর পর কার্যকর হবে।</string>
     <string name="hide_seccomp_status">Seccomp-এর অবস্থা লুকান</string>
     <string name="hide_seccomp_status_summary">হোম পৃষ্ঠায় Seccomp-এর অবস্থার তথ্য লুকান</string>
     <string name="ui_style">ইন্টারফেসের ধরন</string>

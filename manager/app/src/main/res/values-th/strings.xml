@@ -696,8 +696,6 @@
     <string name="uts_boot_repatch_changed">เปลี่ยนแล้ว</string>
     <string name="install_force_backup">สำรองเป็นอิมเมจเดิมจากโรงงาน</string>
     <string name="install_force_backup_summary">โปรดยืนยันว่าอิมเมจ boot ที่เลือกเป็นอิมเมจเดิมจากโรงงานที่ยังไม่ถูกแก้ไข</string>
-    <string name="settings_webview_zygote_umount">ถอนเมานต์โมดูลสำหรับ WebView</string>
-    <string name="settings_webview_zygote_umount_summary">ถอนเมานต์โมดูลจาก WebView zygote เพื่อป้องกันข้อมูลการเมานต์รั่วไหล อาจทำให้โมดูลที่แก้ไขทรัพยากร WebView ใช้งานไม่ได้ มีผลหลังรีสตาร์ต</string>
     <string name="hide_seccomp_status">ซ่อนสถานะ Seccomp</string>
     <string name="hide_seccomp_status_summary">ซ่อนข้อมูลสถานะ Seccomp บนหน้าหลัก</string>
     <string name="ui_style">รูปแบบอินเทอร์เฟซ</string>

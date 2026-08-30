@@ -675,8 +675,6 @@
     <string name="uts_boot_repatch_changed">Dəyişdirildi</string>
     <string name="install_force_backup">Zavod obrazı kimi ehtiyat nüsxə yarat</string>
     <string name="install_force_backup_summary">Seçilmiş boot obrazının dəyişdirilməmiş zavod obrazı olduğuna əmin olun.</string>
-    <string name="settings_webview_zygote_umount">WebView üçün modulları ayır</string>
-    <string name="settings_webview_zygote_umount_summary">Qoşma məlumatlarının sızmasının qarşısını almaq üçün modulları WebView zygote-dan ayırır. WebView resurslarını dəyişən modullar işləməyə bilər. Yenidən başladıqdan sonra qüvvəyə minir.</string>
     <string name="hide_seccomp_status">Seccomp vəziyyətini gizlət</string>
     <string name="hide_seccomp_status_summary">Ana səhifədəki Seccomp vəziyyət məlumatını gizlədir</string>
     <string name="ui_style">İnterfeys üslubu</string>

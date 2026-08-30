@@ -675,8 +675,6 @@
     <string name="install_force_backup_summary">Confirme que a imagem boot selecionada é uma imagem de fábrica sem modificações.</string>
     <string name="settings_unshare_mnt">Organizar vista de montagens</string>
     <string name="settings_unshare_mnt_summary">Recriar o espaço de nomes e organizar os IDs visíveis após desmontar. Reinicie o aplicativo para aplicar.</string>
-    <string name="settings_webview_zygote_umount">Desmontar módulos para WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Desmontar módulos do WebView zygote para evitar vazamentos de informações de montagem. Isso pode impedir o funcionamento de módulos que modificam recursos do WebView. Entra em vigor após reiniciar.</string>
     <string name="hide_seccomp_status">Ocultar estado do Seccomp</string>
     <string name="hide_seccomp_status_summary">Ocultar informações de estado do Seccomp na página inicial</string>
     <string name="ui_style">Estilo da interface</string>

@@ -675,8 +675,6 @@
     <string name="uts_boot_repatch_changed">Spremenjeno</string>
     <string name="install_force_backup">Varnostno kopiraj kot tovarniško sliko</string>
     <string name="install_force_backup_summary">Prepričajte se, da je izbrana slika boot nespremenjena tovarniška slika.</string>
-    <string name="settings_webview_zygote_umount">Odklopi module za WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Odklopi module iz WebView zygote, da preprečiš uhajanje podatkov o priklopih. To lahko onemogoči module, ki spreminjajo vire WebView. Začne veljati po ponovnem zagonu.</string>
     <string name="hide_seccomp_status">Skrij stanje Seccomp</string>
     <string name="hide_seccomp_status_summary">Skrij stanje Seccomp na domači strani</string>
     <string name="ui_style">Slog vmesnika</string>

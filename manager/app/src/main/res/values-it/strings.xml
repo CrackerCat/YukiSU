@@ -677,8 +677,6 @@
     <string name="uts_boot_repatch_changed">Modificato</string>
     <string name="install_force_backup">Salva come backup dell’immagine di fabbrica</string>
     <string name="install_force_backup_summary">Verifica che l’immagine boot selezionata sia un’immagine di fabbrica non modificata.</string>
-    <string name="settings_webview_zygote_umount">Smonta i moduli per WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Smonta i moduli da WebView zygote per evitare la divulgazione delle informazioni di montaggio. I moduli che modificano le risorse WebView potrebbero non funzionare più. Ha effetto dopo il riavvio.</string>
     <string name="hide_seccomp_status">Nascondi stato di Seccomp</string>
     <string name="hide_seccomp_status_summary">Nascondi le informazioni sullo stato di Seccomp nella pagina iniziale</string>
     <string name="ui_style">Stile dell’interfaccia</string>

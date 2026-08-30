@@ -676,8 +676,6 @@ A</string>
     <string name="uts_boot_repatch_changed">Módosítva</string>
     <string name="install_force_backup">Mentés gyári lemezkép biztonsági másolataként</string>
     <string name="install_force_backup_summary">Győződjön meg róla, hogy a kiválasztott boot lemezkép módosítatlan gyári lemezkép.</string>
-    <string name="settings_webview_zygote_umount">Modulok leválasztása a WebView számára</string>
-    <string name="settings_webview_zygote_umount_summary">Leválasztja a modulokat a WebView zygote-ból a csatolási adatok kiszivárgásának megakadályozására. A WebView erőforrásait módosító modulok működésképtelenné válhatnak. Újraindítás után lép életbe.</string>
     <string name="hide_seccomp_status">Seccomp állapotának elrejtése</string>
     <string name="hide_seccomp_status_summary">A Seccomp állapotadatainak elrejtése a kezdőlapon</string>
     <string name="ui_style">Felület stílusa</string>

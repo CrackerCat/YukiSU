@@ -677,8 +677,6 @@
     <string name="uts_boot_repatch_changed">Modificat</string>
     <string name="install_force_backup">Salvează ca imagine din fabrică</string>
     <string name="install_force_backup_summary">Confirmați că imaginea boot selectată este o imagine din fabrică nemodificată.</string>
-    <string name="settings_webview_zygote_umount">Demontează modulele pentru WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Demontează modulele din WebView zygote pentru a preveni divulgarea informațiilor de montare. Modulele care modifică resursele WebView pot înceta să funcționeze. Se aplică după repornire.</string>
     <string name="hide_seccomp_status">Ascunde starea Seccomp</string>
     <string name="hide_seccomp_status_summary">Ascunde informațiile de stare Seccomp de pe pagina principală</string>
     <string name="ui_style">Stilul interfeței</string>

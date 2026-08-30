@@ -677,8 +677,6 @@
     <string name="uts_boot_repatch_changed">Zmieniono</string>
     <string name="install_force_backup">Zapisz kopię jako obraz fabryczny</string>
     <string name="install_force_backup_summary">Upewnij się, że wybrany obraz boot jest niezmodyfikowanym obrazem fabrycznym.</string>
-    <string name="settings_webview_zygote_umount">Odmontowuj moduły dla WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Odmontowuj moduły z WebView zygote, aby zapobiegać wyciekom informacji o montowaniach. Może to uniemożliwić działanie modułom modyfikującym zasoby WebView. Wymaga ponownego uruchomienia.</string>
     <string name="hide_seccomp_status">Ukryj stan Seccomp</string>
     <string name="hide_seccomp_status_summary">Ukryj stan Seccomp na stronie głównej</string>
     <string name="ui_style">Styl interfejsu</string>

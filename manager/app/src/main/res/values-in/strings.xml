@@ -698,8 +698,6 @@
     <string name="uts_boot_repatch_changed">Diubah</string>
     <string name="install_force_backup">Cadangkan sebagai citra bawaan pabrik</string>
     <string name="install_force_backup_summary">Pastikan citra boot yang dipilih adalah citra bawaan pabrik yang belum dimodifikasi.</string>
-    <string name="settings_webview_zygote_umount">Lepaskan mount modul untuk WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Lepaskan mount modul dari WebView zygote untuk mencegah kebocoran informasi mount. Modul yang mengubah sumber daya WebView mungkin tidak berfungsi. Berlaku setelah mulai ulang.</string>
     <string name="hide_seccomp_status">Sembunyikan status Seccomp</string>
     <string name="hide_seccomp_status_summary">Sembunyikan informasi status Seccomp di beranda</string>
     <string name="ui_style">Gaya antarmuka</string>

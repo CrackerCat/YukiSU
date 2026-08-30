@@ -678,8 +678,6 @@
     <string name="uts_boot_repatch_changed">Изменено</string>
     <string name="install_force_backup">Сохранить как резервную копию заводского образа</string>
     <string name="install_force_backup_summary">Убедитесь, что выбранный образ boot является неизменённым заводским образом.</string>
-    <string name="settings_webview_zygote_umount">Отмонтировать модули для WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Отмонтировать модули из WebView zygote, чтобы предотвратить утечку сведений о монтированиях. Модули, изменяющие ресурсы WebView, могут перестать работать. Вступит в силу после перезагрузки.</string>
     <string name="hide_seccomp_status">Скрыть состояние Seccomp</string>
     <string name="hide_seccomp_status_summary">Скрыть сведения о состоянии Seccomp на главной странице</string>
     <string name="ui_style">Стиль интерфейса</string>

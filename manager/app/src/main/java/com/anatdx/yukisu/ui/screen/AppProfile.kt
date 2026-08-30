@@ -127,7 +127,9 @@ fun AppProfileScreen(
     val isSharedUid = uidApps.size > 1
     // Both calls cross JNI/shell, so keep them out of recomposition.
     val initialProfile = remember(profileKey, appInfo.uid) {
-        Natives.getAppProfile(profileKey, appInfo.uid).also { p ->
+        Natives.getAppProfile(profileKey, appInfo.uid).let {
+            if (appInfo.special) it.copy(allowSu = false) else it
+        }.also { p ->
             if (p.allowSu) p.rules = getSepolicy(profileKey)
         }
     }
@@ -193,6 +195,7 @@ fun AppProfileScreen(
     }
 
     LaunchedEffect(packageName, appInfo.uid) {
+        if (appInfo.special) return@LaunchedEffect
         val flags = KsuCli.getDynamicManagerFlagsForUid(appInfo.uid)
         dynamicManagerFlags = flags
         val trusted = flags and Natives.DYNAMIC_MANAGER_FLAG_TRUSTED != 0
@@ -204,10 +207,10 @@ fun AppProfileScreen(
         }
     }
 
-    val showDynamicManagerSwitch = remember(context, dynamicManagerFlags, dynamicManagerChecked) {
-        DynamicManagerSettings.allowAnyApp(context) ||
+    val showDynamicManagerSwitch = remember(context, appInfo.special, dynamicManagerFlags, dynamicManagerChecked) {
+        !appInfo.special && (DynamicManagerSettings.allowAnyApp(context) ||
             dynamicManagerChecked ||
-            dynamicManagerFlags and Natives.DYNAMIC_MANAGER_FLAG_PRESET != 0
+            dynamicManagerFlags and Natives.DYNAMIC_MANAGER_FLAG_PRESET != 0)
     }
 
     val colorScheme = MaterialTheme.colorScheme
@@ -235,7 +238,8 @@ fun AppProfileScreen(
                 .padding(paddingValues)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState()),
-            packageName = appInfo.packageName,
+            packageName = appInfo.displayIdentifier,
+            isSpecialApp = appInfo.special,
             appLabel = appInfo.label,
             uid = appInfo.uid,
             uidApps = uidApps,
@@ -262,24 +266,25 @@ fun AppProfileScreen(
             onManageTemplate = {
                 navigator.navigate(AppProfileTemplateScreenDestination())
             },
-            onProfileChange = {
+            onProfileChange = { updatedProfile ->
                 scope.launch {
-                    if (it.allowSu) {
+                    val profileToSave = if (appInfo.special) updatedProfile.copy(allowSu = false) else updatedProfile
+                    if (profileToSave.allowSu) {
                         // sync with allowlist.c - forbid_system_uid
                         if (appInfo.uid < 2000 && appInfo.uid != 1000) {
                             snackBarHost.showSnackbar(suNotAllowed)
                             return@launch
                         }
-                        if (!it.rootUseDefault && it.rules.isNotEmpty() && !setSepolicy(profileKey, it.rules)) {
+                        if (!profileToSave.rootUseDefault && profileToSave.rules.isNotEmpty() && !setSepolicy(profileKey, profileToSave.rules)) {
                             snackBarHost.showSnackbar(failToUpdateSepolicy)
                             return@launch
                         }
                     }
-                    if (!Natives.setAppProfile(it)) {
+                    if (!Natives.setAppProfile(profileToSave)) {
                         snackBarHost.showSnackbar(failToUpdateAppProfile.format(appInfo.uid))
                     } else {
-                        profile = it
-                        superUserViewModel.updateUidProfileLocally(appInfo.uid, it)
+                        profile = profileToSave
+                        superUserViewModel.updateUidProfileLocally(appInfo.uid, profileToSave)
                         scope.launch {
                             superUserViewModel.refreshAppConfigurations()
                         }
@@ -354,6 +359,7 @@ private fun AppProfileInner(
     uidApps: List<SuperUserViewModel.AppInfo>,
     appIcon: @Composable () -> Unit,
     profile: Natives.Profile,
+    isSpecialApp: Boolean = false,
     showDynamicManagerSwitch: Boolean = false,
     isDynamicManager: Boolean = false,
     dynamicManagerEnabled: Boolean = true,
@@ -363,7 +369,7 @@ private fun AppProfileInner(
     onDynamicManagerChange: (Boolean) -> Unit = {},
     onDynamicManagerCompat: () -> Unit = {},
 ) {
-    val isRootGranted = profile.allowSu
+    val isRootGranted = !isSpecialApp && profile.allowSu
     val cardColors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh)
 
     MaterialTheme(
@@ -408,7 +414,7 @@ private fun AppProfileInner(
                         },
                     )
                 } else {
-                    AppMenuBox(packageName) {
+                    AppMenuBox(packageName, enabled = !isSpecialApp) {
                         ListItem(
                             content = {
                                 Text(
@@ -429,7 +435,7 @@ private fun AppProfileInner(
                 }
             }
 
-            ProfileSurface(
+            if (!isSpecialApp) ProfileSurface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -896,6 +902,7 @@ private fun ProfileBox(
 @Composable
 private fun AppMenuBox(
     packageName: String,
+    enabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -905,7 +912,8 @@ private fun AppMenuBox(
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
-            .pointerInput(Unit) {
+            .pointerInput(enabled) {
+                if (!enabled) return@pointerInput
                 detectTapGestures(
                     onLongPress = {
                         touchPoint = it

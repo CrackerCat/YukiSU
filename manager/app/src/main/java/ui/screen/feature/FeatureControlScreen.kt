@@ -155,9 +155,6 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
         Natives.FEATURE_KERNEL_UMOUNT,
         displayInverted = true
     )
-    val webViewZygoteUmount = rememberFeatureToggleState(
-        Natives.FEATURE_WEBVIEW_ZYGOTE_UMOUNT
-    )
     val unshareMnt = rememberFeatureToggleState(Natives.FEATURE_UNSHARE_MNT)
     val suLog = rememberFeatureToggleState(Natives.FEATURE_SULOG)
     val adbRoot = rememberFeatureToggleState(Natives.FEATURE_ADB_ROOT)
@@ -251,24 +248,6 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
                                 featureName = "kernel_umount",
                                 kernelEnabled = !disabled,
                                 displayInverted = true
-                            )
-                        }
-                    )
-
-                    FeatureSwitchItem(
-                        featureId = Natives.FEATURE_WEBVIEW_ZYGOTE_UMOUNT,
-                        icon = Icons.Filled.Language,
-                        title = stringResource(R.string.settings_webview_zygote_umount),
-                        summary = stringResource(R.string.settings_webview_zygote_umount_summary),
-                        state = webViewZygoteUmount,
-                        onChange = { enabled ->
-                            scope.persistFeature(
-                                state = webViewZygoteUmount,
-                                featureId = Natives.FEATURE_WEBVIEW_ZYGOTE_UMOUNT,
-                                featureName = "webview_zygote_umount",
-                                kernelEnabled = enabled,
-                                onSuccess = { snackbarHost.showSnackbar(savedRebootMessage) },
-                                onFailure = { snackbarHost.showSnackbar(failedMessage) }
                             )
                         }
                     )

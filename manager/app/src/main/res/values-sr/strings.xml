@@ -675,8 +675,6 @@
     <string name="uts_boot_repatch_changed">Измењено</string>
     <string name="install_force_backup">Сачувај као резервну копију фабричке слике</string>
     <string name="install_force_backup_summary">Проверите је ли одабрана boot слика неизмењена фабричка слика.</string>
-    <string name="settings_webview_zygote_umount">Одмонтирај модуле за WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Одмонтира модуле из WebView zygote ради спречавања откривања података о монтирању. Модули који мењају WebView ресурсе можда неће радити. Примењује се након поновног покретања.</string>
     <string name="hide_seccomp_status">Сакриј стање Seccomp-а</string>
     <string name="hide_seccomp_status_summary">Скрива податке о стању Seccomp-а на почетној страници</string>
     <string name="ui_style">Стил интерфејса</string>

@@ -18,7 +18,6 @@
 #include "policy/allowlist.h"
 #include "feature/shell_su_adb_only.h"
 #include "policy/feature.h"
-#include "feature/kernel_umount.h"
 #include "klog.h" // IWYU pragma: keep
 #include "ksu.h"
 #include "runtime/ksud_boot.h"
@@ -174,7 +173,8 @@ static bool profile_valid(struct app_profile *profile)
 		return false;
 	}
 
-	if (forbid_system_uid(profile->curr_uid)) {
+	if (forbid_system_uid(profile->curr_uid) &&
+	    (profile->curr_uid != WEBVIEW_ZYGOTE_UID || profile->allow_su)) {
 		pr_err("forbid system uid: %d\n", profile->curr_uid);
 		return false;
 	}
@@ -380,8 +380,6 @@ bool ksu_uid_should_umount(uid_t uid)
 		// we should not umount on manager (any signature slot)
 		return false;
 	}
-	if (unlikely(uid == WEBVIEW_ZYGOTE_UID))
-		return ksu_is_webview_zygote_umount_enabled();
 #ifdef CONFIG_KSU_DISABLE_POLICY
 	return !__ksu_is_allow_uid(uid);
 #endif // #ifdef CONFIG_KSU_DISABLE_POLICY
@@ -757,8 +755,9 @@ void ksu_prune_allowlist(bool (*is_uid_valid)(uid_t, char *, void *),
 	{
 		uid_t uid = np->profile.curr_uid;
 		char *package = np->profile.key;
-		// we use this uid for special cases, don't prune it!
-		bool is_preserved_uid = uid == KSU_APP_PROFILE_PRESERVE_UID;
+		// These profiles have no installed package to validate.
+		bool is_preserved_uid = uid == KSU_APP_PROFILE_PRESERVE_UID ||
+					uid == WEBVIEW_ZYGOTE_UID;
 		if (!is_preserved_uid && !is_uid_valid(uid, package, data)) {
 			modified = true;
 			pr_info("prune uid: %d, package: %s\n", uid, package);

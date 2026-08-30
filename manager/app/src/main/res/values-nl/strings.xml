@@ -677,8 +677,6 @@
     <string name="uts_boot_repatch_changed">Gewijzigd</string>
     <string name="install_force_backup">Als fabrieksimage bewaren</string>
     <string name="install_force_backup_summary">Controleer of het geselecteerde boot-image een ongewijzigd fabrieksimage is.</string>
-    <string name="settings_webview_zygote_umount">Modules ontkoppelen voor WebView</string>
-    <string name="settings_webview_zygote_umount_summary">Modules van WebView zygote ontkoppelen om lekken van koppelgegevens te voorkomen. Hierdoor werken modules die WebView-bronnen wijzigen mogelijk niet meer. Wordt actief na opnieuw opstarten.</string>
     <string name="hide_seccomp_status">Seccomp-status verbergen</string>
     <string name="hide_seccomp_status_summary">Seccomp-status op de startpagina verbergen</string>
     <string name="ui_style">Interfacestijl</string>

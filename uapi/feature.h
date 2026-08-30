@@ -11,7 +11,8 @@ enum ksu_feature_id {
   KSU_FEATURE_SULOG = 2,
   KSU_FEATURE_ADB_ROOT = 3,
   KSU_FEATURE_SELINUX_HIDE = 4,
-  KSU_FEATURE_WEBVIEW_ZYGOTE_UMOUNT = 5,
+  // Keep former webview_zygote_umount ID 5 unused so stale configs cannot
+  // apply.
   KSU_FEATURE_SHELL_SU_ADB_ONLY = 6,
   KSU_FEATURE_ENHANCED_SECURITY = 100,
   KSU_FEATURE_MAGISK_COMPAT = 101,
