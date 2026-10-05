@@ -921,7 +921,7 @@ int boot_patch_impl(const std::vector<std::string>& args) {
 
     // Get or detect KMI
     std::string kmi = parsed.kmi;
-    const bool needs_automatic_lkm = parsed.module.empty();
+    const bool needs_automatic_lkm = !parsed.no_install && parsed.module.empty();
     const bool needs_automatic_partition = parsed.boot_image.empty() && parsed.partition.empty();
     if (kmi.empty() && parsed.ota && (needs_automatic_lkm || needs_automatic_partition)) {
         const std::string target_boot = "/dev/block/by-name/boot" + ota_slot;
@@ -934,7 +934,7 @@ int boot_patch_impl(const std::vector<std::string>& args) {
             return 1;
         }
     }
-    if (kmi.empty()) {
+    if (kmi.empty() && (needs_automatic_lkm || needs_automatic_partition)) {
         kmi = get_current_kmi();
         if (kmi.empty() && (needs_automatic_lkm || needs_automatic_partition)) {
             printf("- Failed to obtain trusted KMI for automatic LKM/partition selection\n");
