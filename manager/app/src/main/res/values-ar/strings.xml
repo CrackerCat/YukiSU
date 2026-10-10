@@ -913,4 +913,5 @@
     <string name="repository_retry">إعادة المحاولة</string>
     <string name="uts_view_unpatched_boot_title">لم يُرقّع إعداد الإقلاع المبكر بعد</string>
     <string name="uts_view_unpatched_boot_message">عدّلت الإعداد العام للإقلاع المبكر، لكنك لم تُرقّع LKM بعد. هل تريد ترقيعه الآن؟</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

@@ -624,6 +624,10 @@ NativeBridge(setHideBootloaderEnabled, jboolean, jboolean enabled) {
   return set_hide_bootloader_enabled(enabled);
 }
 
+NativeBridge(getFeatureFlags, jint, jint id) {
+  return (jint)query_feature_flags((uint32_t)id);
+}
+
 NativeBridge(getFeature, jlong, jint id) {
   return (jlong)query_feature((uint32_t)id);
 }

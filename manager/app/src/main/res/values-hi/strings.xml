@@ -907,4 +907,5 @@
     <string name="repository_retry">फिर प्रयास करें</string>
     <string name="uts_view_unpatched_boot_title">शुरुआती बूट कॉन्फ़िगरेशन अभी पैच नहीं हुआ है</string>
     <string name="uts_view_unpatched_boot_message">आपने शुरुआती बूट का वैश्विक कॉन्फ़िगरेशन बदला है, लेकिन अभी LKM पैच नहीं किया है। क्या अभी पैच करना चाहते हैं?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

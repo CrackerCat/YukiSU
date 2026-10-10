@@ -337,14 +337,17 @@ public:
 
         text_index_ = find_section(kTextSection);
         rodata_index_ = find_section(kRodataSection);
-        if (text_index_ == npos() || rodata_index_ == npos())
+        if (text_index_ == npos())
             return set_error(error, "embedded bootstrap loadable sections are missing");
         const Section& text = sections_[text_index_];
-        const Section& rodata = sections_[rodata_index_];
+        const bool has_rodata = rodata_index_ != npos();
+        const Section empty_rodata{};
+        const Section& rodata = has_rodata ? sections_[rodata_index_] : empty_rodata;
         if (text.type != kShtProgbits ||
             (text.flags & (kShfAlloc | kShfExecInstr)) != (kShfAlloc | kShfExecInstr) ||
-            (text.flags & kShfWrite) != 0 || rodata.type != kShtProgbits ||
-            (rodata.flags & kShfAlloc) == 0 || (rodata.flags & (kShfWrite | kShfExecInstr)) != 0)
+            (text.flags & kShfWrite) != 0 ||
+            (has_rodata && (rodata.type != kShtProgbits || (rodata.flags & kShfAlloc) == 0 ||
+                            (rodata.flags & (kShfWrite | kShfExecInstr)) != 0)))
             return set_error(error, "embedded bootstrap section flags are unsafe");
         for (std::size_t index = 0; index < sections_.size(); ++index) {
             const Section& section = sections_[index];
@@ -361,7 +364,8 @@ public:
         if (image_size_ == 0)
             return set_error(error, "embedded bootstrap has no loadable bytes");
         sections_[text_index_].output_offset = 0;
-        sections_[rodata_index_].output_offset = rodata_output_offset_;
+        if (has_rodata)
+            sections_[rodata_index_].output_offset = rodata_output_offset_;
 
         std::vector<std::size_t> symbol_tables;
         for (std::size_t index = 0; index < sections_.size(); ++index) {

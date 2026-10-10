@@ -910,4 +910,5 @@
     <string name="repository_retry">Reîncearcă</string>
     <string name="uts_view_unpatched_boot_title">Configurația de pornire timpurie nu este încă modificată</string>
     <string name="uts_view_unpatched_boot_message">Ați schimbat configurația globală de pornire timpurie, dar încă nu ați aplicat modificarea LKM. Doriți să o aplicați acum?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

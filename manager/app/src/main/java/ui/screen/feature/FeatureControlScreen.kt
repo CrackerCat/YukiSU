@@ -144,6 +144,7 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
     var requestedSuCompat by remember { mutableStateOf<SuCompatMode?>(null) }
     var suPathSaving by remember { mutableStateOf(false) }
     var suPathRevision by remember { mutableIntStateOf(0) }
+    val suCompatForced = remember { getFeatureStatus(Natives.FEATURE_SU_COMPAT) == "forced" }
     val suCompatSupported = remember { getFeatureStatus(Natives.FEATURE_SU_COMPAT) == "supported" }
     val ksmSupported = remember { getFeatureStatus(Natives.FEATURE_KASUMI_SUCOMPAT) == "supported" }
     val kasumi = rememberFeatureToggleState(Natives.FEATURE_KASUMI)
@@ -377,6 +378,7 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
 
                     SuCompatSelector(
                         selected = requestedSuCompat ?: suCompat.mode,
+                        forced = suCompatForced,
                         enabled = suCompatSupported && !magiskCompat.saving && !kasumi.saving && !suPathSaving,
                         ksmSupported = ksmSupported && kasumiAvailable,
                         onSelect = { mode ->
@@ -386,7 +388,7 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
 
                     if (ksmSupported) {
                         SuPathSetting(
-                            enabled = kasumiAvailable && suCompat.mode == SuCompatMode.KSM &&
+                            enabled = !suCompatForced && kasumiAvailable && suCompat.mode == SuCompatMode.KSM &&
                                 !magiskCompat.saving && !kasumi.saving,
                             refreshKey = suPathRevision,
                             onSavingChange = { suPathSaving = it },
@@ -399,7 +401,7 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
                         title = stringResource(R.string.su_compat_magisk_title),
                         summary = stringResource(R.string.su_compat_magisk_summary),
                         state = magiskCompat,
-                        enabled = kasumiAvailable && suCompat.mode == SuCompatMode.KSM &&
+                        enabled = !suCompatForced && kasumiAvailable && suCompat.mode == SuCompatMode.KSM &&
                             !kasumi.saving && !suPathSaving,
                         onChange = { enabled -> updateSuCompat(magisk = enabled) },
                     )
@@ -510,6 +512,7 @@ private fun FeatureSwitchItem(
     val renderedSummary = when (status) {
         "unsupported" -> stringResource(R.string.feature_status_unsupported_summary)
         "managed" -> stringResource(R.string.feature_status_managed_summary)
+        "forced" -> stringResource(R.string.feature_status_forced_summary)
         else -> summary
     }
 

@@ -909,4 +909,5 @@
     <string name="repository_retry">Poskusi znova</string>
     <string name="uts_view_unpatched_boot_title">Konfiguracija zgodnjega zagona še ni popravljena</string>
     <string name="uts_view_unpatched_boot_message">Spremenili ste globalno konfiguracijo zgodnjega zagona, vendar LKM še ni popravljen. Ali ga želite popraviti zdaj?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

@@ -98,6 +98,7 @@ bool is_hide_bootloader_enabled();
 // Returns the feature's value, or -1 when the ioctl fails or the kernel reports
 // the feature unsupported -- the caller cannot tell those apart, and neither
 // case means "off". Feature ids come from uapi/feature.h.
+uint8_t query_feature_flags(uint32_t feature_id);
 int64_t query_feature(uint32_t feature_id);
 
 // ksu_get_full_version_cmd, ksu_hook_type_cmd, ksu_superkey_auth_cmd,

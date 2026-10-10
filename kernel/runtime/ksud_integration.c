@@ -30,6 +30,7 @@
 #include "ksu.h"
 #include "runtime/ksud_boot.h"
 #include "runtime/ksud.h"
+#include "policy/feature.h"
 #include "selinux/selinux.h"
 #include "manager/throne_tracker.h"
 
@@ -69,6 +70,7 @@ static void ksu_initialize_selinux(void)
 	apply_kernelsu_rules();
 	cache_sid();
 	setup_ksu_cred();
+	ksu_feature_apply_forced();
 }
 
 static const char __user *get_user_arg_ptr(struct user_arg_ptr argv, int nr)

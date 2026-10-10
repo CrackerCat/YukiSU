@@ -5,6 +5,7 @@
 #include "../core/uts_view.hpp"
 #include "../log.hpp"
 #include "../utils.hpp"
+#include "boot_config.hpp"
 #include "boot_patch.hpp"
 #include "lkm_image.hpp"
 #include "tools.hpp"
@@ -40,7 +41,7 @@ struct BootPatchV2Args {
     bool force = false;
     bool flash = false;
     bool ota = false;
-    bool allow_shell = false;
+    KsuConfigArgs config;
     bool enable_adbd = false;
     bool signature_bypass = false;
     bool no_reuse = false;
@@ -80,8 +81,15 @@ BootPatchV2Args parse_args(const std::vector<std::string>& args) {
             result.ota = true;
         } else if (argument == "--signature-bypass") {
             result.signature_bypass = true;
+        } else if (argument == "--force-feature") {
+            std::string value;
+            take_value(value);
+            if (!result.config.add_forced_feature(value))
+                result.valid = false;
         } else if (argument == "--allow-shell") {
-            result.allow_shell = true;
+            result.config.allow_shell = true;
+        } else if (argument == "--no-custom-rc") {
+            result.config.no_custom_rc = true;
         } else if (argument == "--enable-adbd") {
             result.enable_adbd = true;
         } else if (argument == "--no-reuse") {
@@ -455,9 +463,11 @@ int boot_patch_v2(const std::vector<std::string>& args) {
         (device_mode && (!parsed.boot.empty() || !parsed.output.empty()))) {
         LOGE("Usage: ksud boot-patch-v2 --boot <boot.img> [--module <kernelsu.ko>] "
              "--output <patched.img> [--superkey <key>] [--signature-bypass] "
-             "[--allow-shell] [--enable-adbd] [--uts-config <file>] [--force]\n"
+             "[--no-custom-rc] [--force-feature <FEATURE=VALUE>] [--allow-shell] [--enable-adbd] "
+             "[--uts-config <file>] [--force]\n"
              "       ksud boot-patch-v2 --flash [--ota] [--module <kernelsu.ko>] "
              "[--superkey <key>] [--signature-bypass] [--allow-shell] "
+             "[--no-custom-rc] [--force-feature <FEATURE=VALUE>] "
              "[--enable-adbd] [--uts-config <file>]");
         return 1;
     }
@@ -722,7 +732,7 @@ int boot_patch_v2(const std::vector<std::string>& args) {
         return 1;
     }
     if (!inject_imgpatch_config_into_lkm(
-            module_for_injection.string(), parsed.allow_shell, parsed.enable_adbd,
+            module_for_injection.string(), parsed.config.allow_shell, parsed.enable_adbd,
             have_boot_uts_config ? &boot_uts_config : nullptr, bundled_lkm)) {
         LOGE("boot-patch-v2: failed to inject ImgPatch configuration into LKM");
         cleanup();
@@ -745,9 +755,14 @@ int boot_patch_v2(const std::vector<std::string>& args) {
         printf("- Existing direct-LKM bootstrap found; replacing its module capsule\n");
     else
         printf("- Recovering kallsyms/BTF and injecting LKM\n");
-    auto injected = already_patched ? boot::lkm_image::replace_capsule_module(*kernel, *module,
-                                                                              !parsed.no_reuse)
-                                    : boot::lkm_image::inject_image(*kernel, *module);
+    std::string module_params = "imgpatch=1";
+    const auto boot_params = parsed.config.module_params();
+    if (!boot_params.empty())
+        module_params += " " + boot_params;
+    auto injected = already_patched
+                        ? boot::lkm_image::replace_capsule_module(*kernel, *module,
+                                                                  !parsed.no_reuse, module_params)
+                        : boot::lkm_image::inject_image(*kernel, *module, module_params);
     if (!injected) {
         LOGE("boot-patch-v2: injection failed: %s", injected.error().message.c_str());
         cleanup();

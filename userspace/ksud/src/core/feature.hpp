@@ -23,6 +23,7 @@ void apply_config(std::map<uint32_t, uint64_t>& features);
 int refresh_sucompat_vfs();
 
 // Initialize features at boot, respecting module-managed features
+void init_forced_features();
 int init_features();
 
 }  // namespace ksud

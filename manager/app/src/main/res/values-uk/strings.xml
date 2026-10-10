@@ -911,4 +911,5 @@
     <string name="repository_retry">Повторити</string>
     <string name="uts_view_unpatched_boot_title">Конфігурацію раннього завантаження ще не застосовано до образу</string>
     <string name="uts_view_unpatched_boot_message">Ви змінили глобальну конфігурацію раннього завантаження, але ще не виконали виправлення LKM. Виправити зараз?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

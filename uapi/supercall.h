@@ -163,6 +163,11 @@ struct ksu_get_feature_cmd {
   __u8 supported;
 };
 
+#define KSU_FEATURE_FLAG_SUPPORTED (1 << 0)
+/* Value is forced by boot config (force_feature param), SET_FEATURE is refused
+ */
+#define KSU_FEATURE_FLAG_FORCED (1 << 1)
+
 struct ksu_set_feature_cmd {
   __u32 feature_id;
   __u64 value;

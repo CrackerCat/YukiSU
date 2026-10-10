@@ -907,4 +907,5 @@
     <string name="repository_retry">Yenidən sına</string>
     <string name="uts_view_unpatched_boot_title">Erkən yüklənmə konfiqurasiyasına hələ yama tətbiq edilməyib</string>
     <string name="uts_view_unpatched_boot_message">Erkən yüklənmənin qlobal konfiqurasiyasını dəyişmisiniz, lakin LKM-yə hələ yama tətbiq edilməyib. İndi tətbiq etmək istəyirsiniz?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

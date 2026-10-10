@@ -907,4 +907,5 @@
     <string name="repository_retry">మళ్లీ ప్రయత్నించండి</string>
     <string name="uts_view_unpatched_boot_title">ప్రారంభ బూట్ కాన్ఫిగరేషన్ ఇంకా ప్యాచ్ చేయలేదు</string>
     <string name="uts_view_unpatched_boot_message">మీరు ప్రారంభ బూట్ గ్లోబల్ కాన్ఫిగరేషన్ మార్చారు, కానీ ఇంకా LKM ప్యాచ్ చేయలేదు. ఇప్పుడే ప్యాచ్ చేయాలా?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

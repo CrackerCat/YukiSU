@@ -910,4 +910,5 @@
     <string name="repository_retry">Réessayer</string>
     <string name="uts_view_unpatched_boot_title">Configuration de démarrage précoce non corrigée</string>
     <string name="uts_view_unpatched_boot_message">Vous avez modifié la configuration globale de démarrage précoce sans appliquer de correctif LKM. Voulez-vous le faire maintenant ?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

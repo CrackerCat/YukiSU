@@ -212,6 +212,8 @@ object Natives {
      */
     external fun getFeature(id: Int): Long
 
+    external fun getFeatureFlags(id: Int): Int
+
     /** Whether the running kernel knows about this feature at all. */
     fun isFeatureSupported(id: Int): Boolean = getFeature(id) >= 0
 

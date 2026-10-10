@@ -5,6 +5,7 @@
 #include <linux/string.h>
 
 #include "feature/selinux_hide.h"
+#include "policy/feature.h"
 #include "klog.h" // IWYU pragma: keep
 #include "manager/manager_observer.h"
 #include "manager/throne_tracker.h"
@@ -34,6 +35,8 @@ void on_post_fs_data(void)
 	ksu_file_sid = ksu_get_ksu_file_sid();
 	pr_info("ksu_file sid: %u\n", ksu_file_sid);
 	ksu_selinux_hide_handle_post_fs_data();
+	// retry forced features which failed at second stage
+	ksu_feature_apply_forced();
 }
 
 extern void ext4_unregister_sysfs(struct super_block *sb);

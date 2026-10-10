@@ -906,4 +906,5 @@
     <string name="repository_retry">Thử lại</string>
     <string name="uts_view_unpatched_boot_title">Cấu hình khởi động sớm chưa được vá</string>
     <string name="uts_view_unpatched_boot_message">Bạn đã sửa cấu hình toàn cục khi khởi động sớm nhưng chưa vá LKM. Bạn muốn vá ngay không?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

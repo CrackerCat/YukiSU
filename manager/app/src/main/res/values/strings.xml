@@ -996,4 +996,5 @@
     <string name="allowlist_match_protected" tools:ignore="MissingTranslation">Manager configuration is protected</string>
     <string name="allowlist_match_duplicate" tools:ignore="MissingTranslation">Multiple entries target the same UID</string>
     <string name="allowlist_match_rules" tools:ignore="MissingTranslation">Rules conflict with another entry or settings that must be preserved</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

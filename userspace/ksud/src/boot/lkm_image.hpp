@@ -47,7 +47,8 @@ struct InjectionResult {
 Result<void> mark_module_image_patch(std::vector<std::uint8_t>* module, bool require_marker = true);
 
 Result<InjectionResult> inject_image(const std::vector<std::uint8_t>& original_image,
-                                     const std::vector<std::uint8_t>& module);
+                                     const std::vector<std::uint8_t>& module,
+                                     const std::string& module_params = "imgpatch=1");
 
 // Replace the module capsule in an image that already contains the direct-LKM
 // bootstrap. The existing bootstrap and kernel call-site patches are retained.
@@ -56,7 +57,8 @@ Result<InjectionResult> inject_image(const std::vector<std::uint8_t>& original_i
 // capsule cannot answer falls back to a full re-analysis.
 Result<InjectionResult> replace_capsule_module(const std::vector<std::uint8_t>& patched_image,
                                                const std::vector<std::uint8_t>& module,
-                                               bool allow_reuse = true);
+                                               bool allow_reuse = true,
+                                               const std::string& module_params = "imgpatch=1");
 
 // True only when the Image already carries a direct-LKM capsule. An unpatched
 // raw Image stops before the BSS that its image_size covers, so it is never

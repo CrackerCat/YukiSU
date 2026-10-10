@@ -907,4 +907,5 @@
     <string name="repository_retry">Yeniden dene</string>
     <string name="uts_view_unpatched_boot_title">Erken açılış yapılandırması henüz yamalanmadı</string>
     <string name="uts_view_unpatched_boot_message">Erken açılış genel yapılandırmasını değiştirdiniz ancak LKM henüz yamalanmadı. Şimdi yamalamak ister misiniz?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

@@ -537,11 +537,14 @@ suspend fun getYukiZygiskStatusJson(): String? = withContext(Dispatchers.IO) {
         ?.takeIf { it.startsWith('{') && it.endsWith('}') }
 }
 
-/** Feature state as the settings screens want to render it. The kernel only
- *  reports supported/unsupported; "managed" is reserved for the day ksud can
- *  tell us a module owns the feature. */
-fun getFeatureStatus(feature: Int): String =
-    if (Natives.isFeatureSupported(feature)) "supported" else "unsupported"
+fun getFeatureStatus(feature: Int): String {
+    val flags = Natives.getFeatureFlags(feature)
+    return when {
+        flags and 1 == 0 -> "unsupported"
+        flags and 2 != 0 -> "forced"
+        else -> "supported"
+    }
+}
 
 /** A feature's on/off state. Unsupported reads as off. */
 fun getFeatureValue(feature: Int): Boolean = Natives.isFeatureEnabled(feature)

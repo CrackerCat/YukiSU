@@ -908,4 +908,5 @@
     <string name="repository_retry">Reintentar</string>
     <string name="uts_view_unpatched_boot_title">La configuración de arranque temprano aún no está parcheada</string>
     <string name="uts_view_unpatched_boot_message">Has cambiado la configuración global de arranque temprano, pero aún no has aplicado el parche LKM. ¿Quieres parchear ahora?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

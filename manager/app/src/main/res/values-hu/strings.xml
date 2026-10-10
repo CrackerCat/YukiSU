@@ -908,4 +908,5 @@ A</string>
     <string name="repository_retry">Újrapróbálás</string>
     <string name="uts_view_unpatched_boot_title">A korai indítási konfiguráció még nincs a lemezképbe javítva</string>
     <string name="uts_view_unpatched_boot_message">Módosította a korai indítás globális konfigurációját, de még nem javította az LKM-et. Javítja most?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

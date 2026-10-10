@@ -255,6 +255,8 @@ int __init kernelsu_init(void)
 
 		ksu_boot_completed = true;
 		track_throne(false);
+
+		ksu_feature_apply_forced();
 	} else {
 		ksu_throne_tracker_init();
 		ksu_ksud_init();

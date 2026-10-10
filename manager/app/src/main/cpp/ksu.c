@@ -304,7 +304,7 @@ static inline bool get_feature(uint32_t feature_id, uint64_t *out_value,
   if (out_value)
     *out_value = cmd.value;
   if (out_supported)
-    *out_supported = cmd.supported;
+    *out_supported = (cmd.supported & KSU_FEATURE_FLAG_SUPPORTED) != 0;
   return true;
 }
 
@@ -313,6 +313,11 @@ static inline bool set_feature(uint32_t feature_id, uint64_t value) {
   cmd.feature_id = feature_id;
   cmd.value = value;
   return ksuctl(KSU_IOCTL_SET_FEATURE, &cmd) == 0;
+}
+
+uint8_t query_feature_flags(uint32_t feature_id) {
+  struct ksu_get_feature_cmd cmd = {.feature_id = feature_id};
+  return ksuctl(KSU_IOCTL_GET_FEATURE, &cmd) == 0 ? cmd.supported : 0;
 }
 
 int64_t query_feature(uint32_t feature_id) {

@@ -5,6 +5,7 @@
 #include "../log.hpp"
 #include "../utils.hpp"
 #include "boot_backup.hpp"
+#include "boot_config.hpp"
 #include "lkm_image.hpp"
 #include "tools.hpp"
 #include "uapi/imgpatch_config.h"
@@ -431,11 +432,10 @@ struct BootPatchArgs {
     std::string kmi;                // --kmi
     std::string partition;          // --partition
     std::string out_name;           // --out-name
-    bool allow_shell = false;       // --allow-shell
-    bool no_custom_rc = false;      // --no-custom-rc
-    bool enable_adbd = false;       // --enable-adbd
-    std::string adb_debug_prop;     // --adb-debug-prop
-    std::string uts_config;         // --uts-config
+    KsuConfigArgs config;
+    bool enable_adbd = false;    // --enable-adbd
+    std::string adb_debug_prop;  // --adb-debug-prop
+    std::string uts_config;      // --uts-config
     bool uts_config_seen = false;
     bool help = false;  // -h, --help
     bool valid = true;
@@ -470,6 +470,7 @@ void print_boot_patch_usage() {
            "      --signature-bypass relax LKM signature checking\n"
            "      --allow-shell      keep a root shell available\n"
            "      --no-custom-rc     skip the custom init.rc injection\n"
+           "      --force-feature <FEATURE=VALUE> force a feature at boot (repeatable)\n"
            "      --enable-adbd      run adbd as root\n"
            "      --adb-debug-prop <file>  adb debug properties to embed\n"
            "      --uts-config <file>      UTS template to embed (at most once)\n"
@@ -534,10 +535,15 @@ BootPatchArgs parse_boot_patch_args(const std::vector<std::string>& args) {
             take_value(result.partition);
         } else if (arg == "--out-name") {
             take_value(result.out_name);
+        } else if (arg == "--force-feature") {
+            std::string value;
+            take_value(value);
+            if (!result.config.add_forced_feature(value))
+                reject("--force-feature requires a supported FEATURE=VALUE");
         } else if (arg == "--allow-shell") {
-            result.allow_shell = true;
+            result.config.allow_shell = true;
         } else if (arg == "--no-custom-rc") {
-            result.no_custom_rc = true;
+            result.config.no_custom_rc = true;
         } else if (arg == "--enable-adbd") {
             result.enable_adbd = true;
         } else if (arg == "--adb-debug-prop") {
@@ -1198,14 +1204,9 @@ int boot_patch_impl(const std::vector<std::string>& args) {
     std::vector<std::string> ksu_config;
     if (bundled_lkm)
         ksu_config.emplace_back("bundled=1");
-    if (parsed.allow_shell) {
-        printf("- Adding allow shell config\n");
-        ksu_config.emplace_back("allow_shell=1");
-    }
-    if (parsed.no_custom_rc) {
-        printf("- Adding no custom rc config\n");
-        ksu_config.emplace_back("norc=1");
-    }
+    const auto boot_params = parsed.config.module_params();
+    if (!boot_params.empty())
+        ksu_config.push_back(boot_params);
     if (have_boot_uts_config) {
         auto uts_params = encode_uts_boot_module_params(boot_uts_config);
         ksu_config.insert(ksu_config.end(), uts_params.begin(), uts_params.end());

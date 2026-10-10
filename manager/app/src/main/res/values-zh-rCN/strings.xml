@@ -990,4 +990,5 @@
     <string name="allowlist_match_protected">管理器配置受保护</string>
     <string name="allowlist_match_duplicate">多个条目指向同一个 UID</string>
     <string name="allowlist_match_rules">规则与其他条目或需要保留的配置冲突</string>
+    <string name="feature_status_forced_summary">由启动配置强制设置</string>
 </resources>

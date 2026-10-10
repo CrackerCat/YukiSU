@@ -908,4 +908,5 @@
     <string name="repository_retry">Tentar novamente</string>
     <string name="uts_view_unpatched_boot_title">Configuração de inicialização antecipada ainda não modificada</string>
     <string name="uts_view_unpatched_boot_message">Você alterou a configuração global de inicialização antecipada, mas ainda não aplicou a modificação LKM. Deseja modificar agora?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

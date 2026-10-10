@@ -908,4 +908,5 @@
     <string name="repository_retry">再試行</string>
     <string name="uts_view_unpatched_boot_title">起動初期の設定はまだパッチに反映されていません</string>
     <string name="uts_view_unpatched_boot_message">起動初期のグローバル設定を変更しましたが、LKM へのパッチはまだ適用していません。今すぐ適用しますか？</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

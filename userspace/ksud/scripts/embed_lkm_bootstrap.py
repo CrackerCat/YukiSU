@@ -44,6 +44,8 @@ REQUIRED_DEFINITIONS = {
     "ksu_module_size",
     "ksu_fixup_capsule_offset",
     "ksu_fixup_count",
+    "ksu_args_capsule_offset",
+    "ksu_args_size",
     "ksu_load_info_size",
     "ksu_load_info_hdr_offset",
     "ksu_load_info_len_offset",
@@ -127,9 +129,12 @@ def validate_object(data: bytes) -> None:
         if section["type"] != 8:
             checked_slice(data, section["offset"], section["size"], section["name"])
 
-    for required_section in (".text.ksu_bootstrap", ".rodata.ksu_bootstrap"):
+    for required_section in (".text.ksu_bootstrap",):
         if sum(section["name"] == required_section for section in sections) != 1:
             raise ValueError(f"bootstrap must contain exactly one {required_section} section")
+
+    if sum(section["name"] == ".rodata.ksu_bootstrap" for section in sections) > 1:
+        raise ValueError("bootstrap has duplicate rodata sections")
 
     symbol_tables = [section for section in sections if section["type"] == SHT_SYMTAB]
     if len(symbol_tables) != 1:

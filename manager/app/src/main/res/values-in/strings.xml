@@ -910,4 +910,5 @@
     <string name="repository_retry">Coba lagi</string>
     <string name="uts_view_unpatched_boot_title">Konfigurasi boot awal belum di-patch</string>
     <string name="uts_view_unpatched_boot_message">Anda mengubah konfigurasi global boot awal, tetapi belum mem-patch LKM. Patch sekarang?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

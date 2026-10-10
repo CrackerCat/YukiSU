@@ -262,6 +262,7 @@ int on_post_data_fs() {
 
     // Report to kernel first
     report_post_fs_data();
+    init_forced_features();
     load_and_apply_dynamic_managers();
 
     if (!start_ksud_integrity_monitor()) {

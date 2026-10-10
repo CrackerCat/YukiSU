@@ -906,4 +906,5 @@
     <string name="repository_retry">Cuba lagi</string>
     <string name="uts_view_unpatched_boot_title">Konfigurasi but awal belum ditampal</string>
     <string name="uts_view_unpatched_boot_message">Anda mengubah konfigurasi global but awal, tetapi belum menampal LKM. Mahu menampal sekarang?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

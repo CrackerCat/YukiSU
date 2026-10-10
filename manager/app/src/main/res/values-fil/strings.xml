@@ -907,4 +907,5 @@
     <string name="repository_retry">Subukang muli</string>
     <string name="uts_view_unpatched_boot_title">Hindi pa na-patch ang configuration ng maagang boot</string>
     <string name="uts_view_unpatched_boot_message">Binago mo ang pangkalahatang configuration ng maagang boot ngunit hindi mo pa na-patch ang LKM. I-patch na ngayon?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

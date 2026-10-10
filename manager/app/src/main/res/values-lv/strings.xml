@@ -910,4 +910,5 @@
     <string name="repository_retry">Mēģināt vēlreiz</string>
     <string name="uts_view_unpatched_boot_title">Agrīnās palaišanas konfigurācija vēl nav ielāpota</string>
     <string name="uts_view_unpatched_boot_message">Jūs mainījāt agrīnās palaišanas globālo konfigurāciju, taču LKM vēl nav ielāpots. Vai ielāpot tagad?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

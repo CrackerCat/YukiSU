@@ -908,4 +908,5 @@
     <string name="repository_retry">ניסיון נוסף</string>
     <string name="uts_view_unpatched_boot_title">תצורת האתחול המוקדם עדיין לא תוקנה</string>
     <string name="uts_view_unpatched_boot_message">שינית את התצורה הכללית לאתחול מוקדם, אך עדיין לא תיקנת את LKM. לתקן כעת?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

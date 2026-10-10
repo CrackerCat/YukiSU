@@ -908,4 +908,5 @@
     <string name="repository_retry">Покушај поновно</string>
     <string name="uts_view_unpatched_boot_title">Конфигурација раног покретања још није закрпана</string>
     <string name="uts_view_unpatched_boot_message">Изменили сте глобалну конфигурацију раног покретања, али још нисте закрпали LKM. Желите ли га закрпати сада?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

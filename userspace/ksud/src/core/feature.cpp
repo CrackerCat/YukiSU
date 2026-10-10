@@ -182,6 +182,10 @@ int disable_kasumi_sucompat() {
 }
 
 int apply_sucompat_config(std::map<uint32_t, uint64_t>& features) {
+    if (is_feature_forced(KSU_FEATURE_SU_COMPAT)) {
+        LOGI("Skipping sucompat configuration: forced by boot config");
+        return 0;
+    }
     const auto [kasumi_enabled, kasumi_supported] = get_feature(KSU_FEATURE_KASUMI);
     if (kasumi_supported && kasumi_enabled == 0 &&
         (features.count(KSU_FEATURE_SU_COMPAT) || features.count(KSU_FEATURE_KASUMI_SUCOMPAT) ||
@@ -431,11 +435,25 @@ bool is_sucompat_feature_id(uint32_t feature_id) {
            feature_id == KSU_FEATURE_KASUMI_SUCOMPAT;
 }
 
+std::map<uint32_t, uint64_t> parse_text_feature_config(const std::string& content);
+
 int feature_save_config_locked() {
-    return save_feature_config_files(get_current_feature_values());
+    auto saved = load_binary_config().value_or(
+        parse_text_feature_config(read_file(FEATURE_CONFIG_PATH).value_or("")));
+    const bool su_forced = is_feature_forced(KSU_FEATURE_SU_COMPAT);
+    for (const auto& [id, value] : get_current_feature_values()) {
+        if (!is_feature_forced(id) && !(su_forced && is_sucompat_feature_id(id)))
+            saved[id] = value;
+    }
+    return save_feature_config_files(saved);
 }
 
 int feature_set_impl(const std::string& id, uint32_t feature_id, uint64_t value) {
+    if (is_feature_forced(feature_id) ||
+        (is_sucompat_feature_id(feature_id) && is_feature_forced(KSU_FEATURE_SU_COMPAT))) {
+        LOGE("Feature %s is forced by boot config", id.c_str());
+        return 1;
+    }
     const auto [kasumi_enabled, kasumi_supported] = get_feature(KSU_FEATURE_KASUMI);
     if (value != 0 &&
         (feature_id == KSU_FEATURE_MAGISK_COMPAT || feature_id == KSU_FEATURE_KASUMI_SUCOMPAT) &&
@@ -631,7 +649,7 @@ void feature_list() {
 
         printf("[");
         terminal::status(stdout, status, supported && value != 0);
-        printf("] %s (ID=%u)\n", name.c_str(), id);
+        printf("] %s (ID=%u)%s\n", name.c_str(), id, is_feature_forced(id) ? " [FORCED]" : "");
         printf("    %s\n", feature_id_to_description(id));
     }
 }
@@ -643,8 +661,10 @@ int feature_check(const std::string& id) {
         return 1;
     }
 
-    // TODO: Check if this feature is managed by any module
-    // For now, just check kernel support
+    if (is_feature_forced(feature_id)) {
+        printf("forced\n");
+        return 0;
+    }
 
     auto [value, supported] = get_feature(feature_id);
     if (supported) {
@@ -685,6 +705,7 @@ std::map<uint32_t, uint64_t> parse_text_feature_config(const std::string& conten
 }  // namespace
 
 int feature_load_config() {
+    init_forced_features();
     const SucompatTransitionLock transition;
     if (!transition.locked()) {
         return 1;
@@ -715,7 +736,7 @@ int feature_load_config() {
             uint64_t value = 0;
             if (parse_uint64(val, &value)) {
                 loaded_features[feature_id] = value;
-                if (feature_id != KSU_FEATURE_SU_COMPAT &&
+                if (!is_feature_forced(feature_id) && feature_id != KSU_FEATURE_SU_COMPAT &&
                     feature_id != KSU_FEATURE_MAGISK_COMPAT &&
                     feature_id != KSU_FEATURE_KASUMI_SUCOMPAT) {
                     set_feature(feature_id, value);
@@ -884,6 +905,8 @@ int apply_config_locked(std::map<uint32_t, uint64_t>& features) {
 
     int applied = 0;
     for (const auto& [id, value] : features) {
+        if (is_feature_forced(id))
+            continue;
         if (id == KSU_FEATURE_SU_COMPAT || id == KSU_FEATURE_MAGISK_COMPAT ||
             id == KSU_FEATURE_KASUMI_SUCOMPAT) {
             continue;
@@ -919,7 +942,15 @@ void apply_config(std::map<uint32_t, uint64_t>& features) {
     apply_config_locked(features);
 }
 
+void init_forced_features() {
+    const auto [value, supported] = get_feature(KSU_FEATURE_SULOG);
+    if (supported && value != 0 && is_feature_forced(KSU_FEATURE_SULOG) &&
+        ensure_sulogd_running() != 0)
+        LOGW("Failed to start sulogd for forced sulog");
+}
+
 int init_features() {
+    init_forced_features();
     const SucompatTransitionLock transition;
     if (!transition.locked()) {
         return 1;
@@ -985,6 +1016,9 @@ int init_features() {
             for (const auto& feature_name : feature_list) {
                 auto [feature_id, valid] = parse_feature_id(feature_name);
                 if (valid) {
+                    if (is_feature_forced(feature_id) || (is_sucompat_feature_id(feature_id) &&
+                                                          is_feature_forced(KSU_FEATURE_SU_COMPAT)))
+                        continue;
                     if (feature_id == KSU_FEATURE_SU_COMPAT ||
                         feature_id == KSU_FEATURE_MAGISK_COMPAT ||
                         feature_id == KSU_FEATURE_KASUMI_SUCOMPAT) {

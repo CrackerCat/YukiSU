@@ -909,4 +909,5 @@
     <string name="repository_retry">Bandyti dar kartą</string>
     <string name="uts_view_unpatched_boot_title">Ankstyvojo paleidimo konfigūracija dar nepritaikyta</string>
     <string name="uts_view_unpatched_boot_message">Pakeitėte ankstyvojo paleidimo visuotinę konfigūraciją, bet LKM dar netaisytas. Ar taisyti dabar?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

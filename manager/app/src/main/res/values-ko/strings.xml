@@ -906,4 +906,5 @@
     <string name="repository_retry">재시도</string>
     <string name="uts_view_unpatched_boot_title">초기 부팅 설정이 아직 패치되지 않았습니다</string>
     <string name="uts_view_unpatched_boot_message">초기 부팅 전역 설정을 변경했지만 아직 LKM을 패치하지 않았습니다. 지금 패치할까요?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

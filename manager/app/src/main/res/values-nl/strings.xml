@@ -909,4 +909,5 @@
     <string name="repository_retry">Opnieuw proberen</string>
     <string name="uts_view_unpatched_boot_title">Configuratie voor vroeg opstarten nog niet gepatcht</string>
     <string name="uts_view_unpatched_boot_message">Je hebt de globale configuratie voor vroeg opstarten gewijzigd, maar nog geen LKM-patch uitgevoerd. Nu patchen?</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>

@@ -910,4 +910,5 @@
     <string name="uts_view_unpatched_boot_message">Você alterou a configuração global de inicialização antecipada, mas ainda não aplicou a modificação LKM. Deseja modificar agora?</string>
     <string name="no_such_module">O módulo %1$s não existe</string>
     <string name="module_unavailable">O módulo %1$s está desativado, aguardando atualização ou remoção</string>
+    <string name="feature_status_forced_summary">Forced by boot config</string>
 </resources>
