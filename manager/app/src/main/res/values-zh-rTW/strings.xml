@@ -186,7 +186,6 @@
     <string name="allowlist_backup_success">應用程式清單備份成功</string>
     <string name="allowlist_backup_failed">應用程式清單備份失敗：%1$s</string>
     <string name="allowlist_restore_confirm_title">確定還原應用程式清單</string>
-    <string name="allowlist_restore_confirm_message">此操作將覆蓋目前的應用程式清單，是否繼續？</string>
     <string name="allowlist_restore_success">應用程式清單還原成功</string>
     <string name="allowlist_restore_failed">應用程式清單還原失敗：%1$s</string>
     <string name="backup_allowlist">備份應用程式清單</string>

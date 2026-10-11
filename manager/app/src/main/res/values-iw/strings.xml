@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">הגיבוי הושלם</string>
     <string name="allowlist_backup_failed">גיבוי רשימת ההיתר נכשל: %1$s</string>
     <string name="allowlist_restore_confirm_title">אשר שחזור רשימת היתר</string>
-    <string name="allowlist_restore_confirm_message">פעולה זו תדרוס את רשימת ההיתר הנוכחית. להמשיך?</string>
     <string name="allowlist_restore_success">רשימת ההיתר שוחזרה בהצלחה</string>
     <string name="allowlist_restore_failed">שחזור רשימת ההיתר נכשל: %1$s</string>
     <string name="backup_allowlist">גבה רשימת היתר</string>

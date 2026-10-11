@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Matagumpay na na-back up ang Allowlist</string>
     <string name="allowlist_backup_failed">Nabigong i-backup ang allowlist: %1$s</string>
     <string name="allowlist_restore_confirm_title">Kumpirmahin ang Pag-restore ng Allowlist</string>
-    <string name="allowlist_restore_confirm_message">Mao-overwrite ng operasyong ito ang kasalukuyang allowlist. Magpatuloy?</string>
     <string name="allowlist_restore_success">Matagumpay na na-restore ang allowlist</string>
     <string name="allowlist_restore_failed">Nabigo ang pag-restore ng allowlist: %1$s</string>
     <string name="backup_allowlist">I-backup ang Allowlist</string>

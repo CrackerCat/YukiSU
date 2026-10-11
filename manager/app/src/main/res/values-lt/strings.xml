@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Leidžiamų sąrašo atsarginė kopija sėkmingai sukurta</string>
     <string name="allowlist_backup_failed">Nepavyko sukurti atsarginės leidimų sąrašo kopijos: %1$s</string>
     <string name="allowlist_restore_confirm_title">Patvirtinti leidžiamųjų sąrašo atkūrimą</string>
-    <string name="allowlist_restore_confirm_message">Šis veiksmas perrašys dabartinį leidžiamųjų sąrašą. Tęsti?</string>
     <string name="allowlist_restore_success">Leidžiamųjų sąrašas sėkmingai atkurtas</string>
     <string name="allowlist_restore_failed">Leidžiamųjų sąrašo atkūrimas nepavyko: %1$s</string>
     <string name="backup_allowlist">Sukurti leidžiamųjų sąrašo atsarginę kopiją</string>

@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">許可リストのバックアップが成功しました</string>
     <string name="allowlist_backup_failed">許可リストのバックアップに失敗: %1$s</string>
     <string name="allowlist_restore_confirm_title">許可リストの復元を確認</string>
-    <string name="allowlist_restore_confirm_message">この操作により許可リストが上書きされます。続行しますか？</string>
     <string name="allowlist_restore_success">許可リストの復元が成功しました</string>
     <string name="allowlist_restore_failed">許可リストの復元に失敗: %1$s</string>
     <string name="backup_allowlist">許可リストをバックアップ</string>

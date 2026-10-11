@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">Pomyślnie utworzono kopię zapasową listy dozwolonych</string>
     <string name="allowlist_backup_failed">Nie udało się utworzyć kopii zapasowej listy dozwolonych: %1$s</string>
     <string name="allowlist_restore_confirm_title">Potwierdź przywracanie listy dozwolonych</string>
-    <string name="allowlist_restore_confirm_message">Ta operacja nadpisze bieżącą listę dozwolonych. Kontynuować?</string>
     <string name="allowlist_restore_success">Lista dozwolonych przywrócona pomyślnie</string>
     <string name="allowlist_restore_failed">Przywracanie listy dozwolonych nie powiodło się: %1$s</string>
     <string name="backup_allowlist">Kopia zapasowa listy dozwolonych</string>

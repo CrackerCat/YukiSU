@@ -11,6 +11,7 @@ internal object AllowlistRestore {
         fun write(profile: Natives.Profile): Boolean
         fun readRules(key: String): String
         fun writeRules(key: String, rules: String): Boolean
+        fun identitiesMatch(uids: Set<Int>): Boolean
     }
 
     class Failure(val rollbackFailed: Boolean, cause: Exception) : Exception(
@@ -18,51 +19,51 @@ internal object AllowlistRestore {
     )
 
     fun apply(
-        document: AllowlistBackup.Document,
-        before: Map<Int, Natives.Profile>,
-        protectedAppIds: Set<Int>,
+        plan: AllowlistPlan.Plan,
         store: Store
     ) {
-        val desired = document.apps.associate { it.profile.currentUid to it.profile }.toMutableMap()
-        before.filterKeys {
-            it != DEFAULT_UID && it !in desired && it % 100000 !in protectedAppIds
-        }.forEach { (uid, profile) ->
-            desired[uid] = Natives.Profile(name = profile.name, currentUid = uid)
-        }
-        desired[DEFAULT_UID] = Natives.Profile(
-            name = DEFAULT_KEY, currentUid = DEFAULT_UID, nonRootUseDefault = false,
-            umountModules = document.defaultUmountModules
-        )
-        require(desired.keys.none { it % 100000 in protectedAppIds }) {
+        require(!plan.options.replace || plan.replaceAvailable) { "Incomplete replacement plan" }
+        val before = plan.context.before
+        val desired = plan.profiles
+        require(desired.keys.none { it % 100000 in plan.context.protected }) {
             "Protected manager profile cannot be restored"
         }
-        val targetRules = document.apps.associate { it.profile.name to it.profile.rules }
-        val ruleKeys = before.values
-            .filter { it.currentUid != DEFAULT_UID && it.currentUid % 100000 !in protectedAppIds }
-            .map { it.name }
-            .toSet() + targetRules.keys
-        val oldRules = ruleKeys.associateWith(store::readRules)
-        val rules = ruleKeys.associateWith { key ->
-            targetRules[key].orEmpty()
+        val rules = plan.rules
+        val oldRules = plan.context.oldRules
+        fun identityMatches(uid: Int) = store.identitiesMatch(if (uid == DEFAULT_UID) emptySet() else setOf(uid))
+        val profileOwners = before.values.groupBy { it.name }
+        val packageOwners = plan.context.installed.packages.groupBy { it.packageName }
+        fun ruleUids(key: String): Set<Int> =
+            (profileOwners[key].orEmpty().map { it.currentUid } + packageOwners[key].orEmpty().map { it.uid }).toSet()
+        val ruleIdentities = rules.keys.associateWith(::ruleUids)
+        check(store.identitiesMatch(plan.guardedUids - DEFAULT_UID)) { "Package identity changed before restore" }
+        desired.keys.forEach { uid ->
+            check(store.read(uid)?.copy(rules = "") == before[uid]?.copy(rules = "")) { "Profile changed before restore: $uid" }
         }
+        rules.keys.forEach { check(store.readRules(it) == oldRules.getValue(it)) { "Rules changed before restore: $it" } }
         val attemptedProfiles = mutableListOf<Int>()
         val attemptedRules = mutableListOf<String>()
         try {
             rules.forEach { (key, value) ->
-                if (value != oldRules.getValue(key)) {
-                    attemptedRules += key
-                    check(store.writeRules(key, value)) { "Cannot write SELinux rules for $key" }
-                    check(store.readRules(key) == value) { "SELinux rules verification failed for $key" }
-                }
+                check(store.identitiesMatch(ruleIdentities.getValue(key))) { "Package identity changed: $key" }
+                check(store.readRules(key) == oldRules.getValue(key)) { "Rules changed during restore: $key" }
+                attemptedRules += key
+                check(store.writeRules(key, value)) { "Cannot write SELinux rules for $key" }
+                check(store.readRules(key) == value) { "SELinux rules verification failed for $key" }
+                check(store.identitiesMatch(ruleIdentities.getValue(key))) { "Package identity changed: $key" }
             }
             desired.forEach { (uid, profile) ->
                 val target = profile.copy(rules = "")
                 if (before[uid]?.copy(rules = "") != target) {
+                    check(identityMatches(uid)) { "Package identity changed: $uid" }
+                    check(store.read(uid)?.copy(rules = "") == before[uid]?.copy(rules = "")) { "Profile changed during restore: $uid" }
                     attemptedProfiles += uid
                     check(store.write(target)) { "Cannot update UID $uid" }
                     check(store.read(uid)?.copy(rules = "") == target) { "Profile verification failed for UID $uid" }
+                    check(identityMatches(uid)) { "Package identity changed: $uid" }
                 }
             }
+            check(store.identitiesMatch(plan.guardedUids - DEFAULT_UID)) { "Package identity changed during restore" }
         } catch (failure: Exception) {
             var rollbackFailed = false
             attemptedProfiles.asReversed().forEach { uid ->
@@ -72,14 +73,27 @@ internal object AllowlistRestore {
                     nonRootUseDefault = uid != DEFAULT_UID
                 )
                 val restored = runCatching {
-                    store.write(previous) && store.read(uid)?.copy(rules = "") == previous
+                    identityMatches(uid) && (uid == DEFAULT_UID ||
+                        plan.context.installed.byUid[uid].orEmpty().any { it.packageName == previous.name }) &&
+                        when (store.read(uid)?.copy(rules = "")) {
+                            before[uid]?.copy(rules = "") -> true
+                            desired.getValue(uid).copy(rules = "") ->
+                                store.write(previous) && store.read(uid)?.copy(rules = "") == previous && identityMatches(uid)
+                            else -> false
+                        }
                 }.getOrDefault(false)
                 if (!restored) rollbackFailed = true
             }
             attemptedRules.asReversed().forEach { key ->
                 val previous = oldRules.getValue(key)
                 val restored = runCatching {
-                    store.writeRules(key, previous) && store.readRules(key) == previous
+                    store.identitiesMatch(ruleIdentities.getValue(key)) &&
+                        when (store.readRules(key)) {
+                            previous -> true
+                            rules.getValue(key) -> store.writeRules(key, previous) && store.readRules(key) == previous &&
+                                store.identitiesMatch(ruleIdentities.getValue(key))
+                            else -> false
+                        }
                 }.getOrDefault(false)
                 if (!restored) rollbackFailed = true
             }

@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Sao lưu danh sách cho phép thành công</string>
     <string name="allowlist_backup_failed">Sao lưu danh sách cho phép thất bại: %1$s</string>
     <string name="allowlist_restore_confirm_title">Xác nhận khôi phục danh sách cho phép</string>
-    <string name="allowlist_restore_confirm_message">Hành động này sẽ ghi đè lên danh sách cho phép hiện tại. Tiếp tục?</string>
     <string name="allowlist_restore_success">Khôi phục danh sách cho phép thành công</string>
     <string name="allowlist_restore_failed">Khôi phục danh sách cho phép thất bại: %1$s</string>
     <string name="backup_allowlist">Sao lưu danh sách cho phép</string>

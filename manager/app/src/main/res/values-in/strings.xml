@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">Cadangan daftar izin berhasil</string>
     <string name="allowlist_backup_failed">Gagal mencadangkan daftar izin: %1$s</string>
     <string name="allowlist_restore_confirm_title">Konfirmasi Pemulihan Daftar Izin</string>
-    <string name="allowlist_restore_confirm_message">Operasi ini akan menimpa daftar izin saat ini. Lanjutkan?</string>
     <string name="allowlist_restore_success">Daftar izin berhasil dipulihkan</string>
     <string name="allowlist_restore_failed">Gagal memulihkan daftar izin: %1$s</string>
     <string name="backup_allowlist">Cadangkan Daftar Izin</string>

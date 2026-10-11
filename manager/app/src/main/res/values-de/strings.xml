@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">Sicherung erfolgreich erlaubt</string>
     <string name="allowlist_backup_failed">Sicherung der erlaubten Liste fehlgeschlagen: %1$s</string>
     <string name="allowlist_restore_confirm_title">Allowlist-Wiederherstellung bestätigen</string>
-    <string name="allowlist_restore_confirm_message">Dieser Vorgang wird die aktuelle Berechtigungsliste überschreiben. Fortfahren?</string>
     <string name="allowlist_restore_success">Liste erfolgreich wiederhergestellt</string>
     <string name="allowlist_restore_failed">Wiederherstellung der erlaubten Liste fehlgeschlagen: %1$s</string>
     <string name="backup_allowlist">Sicherungsliste</string>

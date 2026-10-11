@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">Backup della lista consentita eseguito correttamente</string>
     <string name="allowlist_backup_failed">Impossibile eseguire il backup della lista consentita: %1$s</string>
     <string name="allowlist_restore_confirm_title">Conferma ripristino lista consentiti</string>
-    <string name="allowlist_restore_confirm_message">Questa operazione sovrascriverà la lista consentiti attuale. Continuare?</string>
     <string name="allowlist_restore_success">Lista consentiti ripristinata correttamente</string>
     <string name="allowlist_restore_failed">Ripristino della lista consentiti non riuscito: %1$s</string>
     <string name="backup_allowlist">Backup lista consentiti</string>

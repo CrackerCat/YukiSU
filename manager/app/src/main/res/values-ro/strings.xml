@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">S-a făcut o copie de rezervă a listei de permise</string>
     <string name="allowlist_backup_failed">Nu s-a făcut backup listei permise: %1$s</string>
     <string name="allowlist_restore_confirm_title">Confirmă restaurarea listei de permisiuni</string>
-    <string name="allowlist_restore_confirm_message">Această operațiune va suprascrie lista de permisiuni curentă. Continuați?</string>
     <string name="allowlist_restore_success">Listă de permisiuni restaurată cu succes</string>
     <string name="allowlist_restore_failed">Restaurarea listei de permisiuni a eșuat: %1$s</string>
     <string name="backup_allowlist">Copie de rezervă a listei de permisiuni</string>

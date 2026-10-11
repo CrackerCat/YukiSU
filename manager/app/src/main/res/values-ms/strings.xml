@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Senarai Benar disandarkan dengan jayanya</string>
     <string name="allowlist_backup_failed">Gagal membuat sandaran senarai dibenarkan: %1$s</string>
     <string name="allowlist_restore_confirm_title">Sahkan Pemulihan Senarai Dibenarkan</string>
-    <string name="allowlist_restore_confirm_message">Operasi ini akan menulis ganti senarai dibenarkan semasa. Teruskan?</string>
     <string name="allowlist_restore_success">Senarai dibenarkan berjaya dipulihkan</string>
     <string name="allowlist_restore_failed">Gagal memulihkan senarai dibenarkan: %1$s</string>
     <string name="backup_allowlist">Sandarkan Senarai Dibenarkan</string>

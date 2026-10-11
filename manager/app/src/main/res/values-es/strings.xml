@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Copia de seguridad correcta</string>
     <string name="allowlist_backup_failed">Copia de seguridad de lista fallida: %1$s</string>
     <string name="allowlist_restore_confirm_title">Confirmar restauración de lista de permisos</string>
-    <string name="allowlist_restore_confirm_message">Esta operación sobrescribirá la lista permitida actual. ¿Continuar?</string>
     <string name="allowlist_restore_success">Lista restaurada correctamente</string>
     <string name="allowlist_restore_failed">Restauración de lista de permisos falló: %1$s</string>
     <string name="backup_allowlist">Copia de seguridad lista</string>

@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Успешно је направљена резервна копија листе дозвољених</string>
     <string name="allowlist_backup_failed">Прављење резервне копије листе дозвољених није успело: %1$s</string>
     <string name="allowlist_restore_confirm_title">Потврди враћање листе дозвољених</string>
-    <string name="allowlist_restore_confirm_message">Ова операција ће заменити тренутну листу дозвољених. Наставити?</string>
     <string name="allowlist_restore_success">Листа дозвољених је успешно враћена</string>
     <string name="allowlist_restore_failed">Враћање листе дозвољених није успело: %1$s</string>
     <string name="backup_allowlist">Листа дозвољених резервних копија</string>

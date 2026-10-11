@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Tilladelseslisten blev sikkerhedskopieret</string>
     <string name="allowlist_backup_failed">Kunne ikke sikkerhedskopiere tilladelseslisten: %1$s</string>
     <string name="allowlist_restore_confirm_title">Bekræft gendannelse af tilladelsesliste</string>
-    <string name="allowlist_restore_confirm_message">Denne handling overskriver den nuværende tilladelsesliste. Fortsæt?</string>
     <string name="allowlist_restore_success">Tilladelsesliste gendannet</string>
     <string name="allowlist_restore_failed">Gendannelse af tilladelsesliste mislykkedes: %1$s</string>
     <string name="backup_allowlist">Sikkerhedskopiér tilladelsesliste</string>

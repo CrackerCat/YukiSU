@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Резервне копіювання білого списку успішне</string>
     <string name="allowlist_backup_failed">Не вдалося створити резервну копію білого списку: %1$s</string>
     <string name="allowlist_restore_confirm_title">Підтвердити відновлення білого списку</string>
-    <string name="allowlist_restore_confirm_message">Ця операція перезапише поточний білий список. Продовжити?</string>
     <string name="allowlist_restore_success">Білий список успішно відновлено</string>
     <string name="allowlist_restore_failed">Не вдалося відновити білий список: %1$s</string>
     <string name="backup_allowlist">Резервна копія білого списку</string>

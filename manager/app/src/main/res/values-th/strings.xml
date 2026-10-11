@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">สำรองข้อมูลรายการที่อนุญาตเรียบร้อยแล้ว</string>
     <string name="allowlist_backup_failed">ไม่สามารถสำรองข้อมูลรายการที่อนุญาต: %1$s</string>
     <string name="allowlist_restore_confirm_title">ยืนยันการกู้คืนรายการที่อนุญาต</string>
-    <string name="allowlist_restore_confirm_message">การดำเนินการนี้จะเขียนทับรายการที่อนุญาตปัจจุบัน ดำเนินการต่อหรือไม่?</string>
     <string name="allowlist_restore_success">กู้คืนรายการที่อนุญาตสำเร็จ</string>
     <string name="allowlist_restore_failed">กู้คืนรายการที่อนุญาตไม่สำเร็จ: %1$s</string>
     <string name="backup_allowlist">สำรองรายการที่อนุญาต</string>

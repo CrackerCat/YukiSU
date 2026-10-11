@@ -12,11 +12,14 @@ import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anatdx.yukisu.Natives
+import com.anatdx.yukisu.BackupPackage
 import com.anatdx.yukisu.ksuApp
 import com.anatdx.yukisu.ui.KsuService
 import com.anatdx.yukisu.ui.util.*
 import com.anatdx.yukisu.ui.util.module.AllowlistBackup
 import com.anatdx.yukisu.ui.util.module.AllowlistRestore
+import com.anatdx.yukisu.ui.util.module.AllowlistPlan
+import com.anatdx.yukisu.ui.util.module.AllowlistPackageReader
 import com.topjohnwu.superuser.Shell
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -435,15 +438,21 @@ class SuperUserViewModel : ViewModel() {
     internal suspend fun exportAllowlist(): String = withContext(Dispatchers.IO) {
         allowlistBackupMutex.withLock {
             val service = backupService()
-            service.refreshPackages()
             val profiles = readAllowlistSnapshot()
             val protected = protectedProfileAppIds()
-            val entries = profiles.values.filter {
+            val ordinary = profiles.values.filter {
                 it.currentUid != AllowlistRestore.DEFAULT_UID &&
                     it.currentUid % PER_USER_RANGE !in protected
-            }.map { profile ->
-                val packages = service.getUidPackagesForBackup(profile.currentUid).toList()
-                AllowlistBackup.Entry(packages, profile.copy(rules = service.readProfileRulesForBackup(profile.name)))
+            }
+            val inventory = AllowlistPackageReader.read(service) { ordinary.map { it.currentUid }.toSet() }
+            val rules = AllowlistPackageReader.rules(service, ordinary.map { it.name }.toSet())
+            val entries = ordinary.map { profile ->
+                check(inventory.identifies(profile)) { "Cannot read package identity: ${profile.name} (${profile.currentUid})" }
+                val packages = inventory.byUid.getValue(profile.currentUid)
+                AllowlistBackup.Entry(
+                    packages.map { it.packageName }, profile.copy(rules = rules.getValue(profile.name)),
+                    packages.associate { it.packageName to it.currentSigners }
+                )
             }
             val document = AllowlistBackup.Document(
                 profiles[AllowlistRestore.DEFAULT_UID]?.umountModules ?: false, entries
@@ -454,40 +463,77 @@ class SuperUserViewModel : ViewModel() {
                 protected
             )
             check(readAllowlistSnapshot() == profiles) { "Profiles changed during backup; retry" }
+            check(protectedProfileAppIds() == protected) { "Manager identities changed during backup; retry" }
+            ordinary.forEach { profile ->
+                check(service.getBackupUidIdentity(profile.currentUid) == inventory.byUid[profile.currentUid]) {
+                    "Package changed during backup: ${profile.name}"
+                }
+            }
             AllowlistBackup.encode(document)
         }
     }
 
-    internal suspend fun validateAllowlist(document: AllowlistBackup.Document) = withContext(Dispatchers.IO) {
+    internal suspend fun prepareAllowlist(
+        document: AllowlistBackup.Document,
+        candidateUsers: Set<Int> = emptySet()
+    ): AllowlistPlan.Context = withContext(Dispatchers.IO) {
         allowlistBackupMutex.withLock {
-            validateBackup(document, backupService())
+            prepareAllowlist(document, candidateUsers, backupService())
         }
     }
 
-    internal suspend fun restoreAllowlist(document: AllowlistBackup.Document) = withContext(Dispatchers.IO) {
+    private suspend fun prepareAllowlist(
+        document: AllowlistBackup.Document,
+        candidateUsers: Set<Int>,
+        service: IKsuInterface
+    ): AllowlistPlan.Context {
+        val started = android.os.SystemClock.elapsedRealtime()
+        val before = readAllowlistSnapshot()
+        val protected = protectedProfileAppIds()
+        val inventory = AllowlistPackageReader.read(service) { installed ->
+            val exact = document.apps.flatMap { entry ->
+                entry.packages.mapNotNull { installed.byName[entry.profile.currentUid / PER_USER_RANGE to it]?.uid }
+            }
+            val required = before.keys + exact + installed.packages.filter {
+                it.userId in candidateUsers && installed.byUid[it.uid]?.size == 1 && it.uid % PER_USER_RANGE !in protected
+            }.map { it.uid }
+            val ruleNames = required.flatMap { installed.byUid[it].orEmpty().map { app -> app.packageName } }.toSet()
+            required + installed.packages.filter { it.packageName in ruleNames }.map { it.uid }
+        }
+        val keys = before.values.filter { it.currentUid != AllowlistRestore.DEFAULT_UID }.map { it.name }.toSet() +
+            inventory.packages.filter { it.status == BackupPackage.OK }.map { it.packageName }
+        val rules = AllowlistPackageReader.rules(service, keys)
+        check(readAllowlistSnapshot() == before && protectedProfileAppIds() == protected) { "Profiles changed while preparing restore; retry" }
+        Log.i(TAG, "Restore preparation: ${document.apps.size} entries, ${android.os.SystemClock.elapsedRealtime() - started} ms")
+        return AllowlistPlan.Context(document, inventory, before, rules, protected, candidateUsers)
+    }
+
+    internal suspend fun restoreAllowlist(plan: AllowlistPlan.Plan): AllowlistPlan.Context? = withContext(Dispatchers.IO) {
         allowlistBackupMutex.withLock {
             val service = backupService()
-            validateBackup(document, service)
-            val protected = protectedProfileAppIds()
-            val before = readAllowlistSnapshot()
-            before.values.filter {
-                it.currentUid != AllowlistRestore.DEFAULT_UID &&
-                    it.currentUid % PER_USER_RANGE !in protected
-            }.forEach { profile ->
-                check(profile.name in service.getUidPackagesForBackup(profile.currentUid)) {
-                    "Existing profile package/UID mismatch: ${profile.currentUid}"
-                }
-            }
-            check(readAllowlistSnapshot() == before) { "Profiles changed before restore; retry" }
+            val fresh = prepareAllowlist(plan.context.document, plan.context.candidateUsers, service)
+            val freshPlan = AllowlistPlan.create(fresh, plan.options)
+            if (!plan.sameExecution(freshPlan)) return@withLock fresh
+            check(plan.canApply) { "No changes selected" }
+            currentCoroutineContext().ensureActive()
             withContext(NonCancellable) {
+                val started = android.os.SystemClock.elapsedRealtime()
                 try {
-                    AllowlistRestore.apply(document, before, protected, object : AllowlistRestore.Store {
+                    AllowlistRestore.apply(plan, object : AllowlistRestore.Store {
                         override fun read(uid: Int) = Natives.readAppProfile(uid)
                         override fun write(profile: Natives.Profile) = Natives.setAppProfile(profile)
                         override fun readRules(key: String) = service.readProfileRulesForBackup(key)
                         override fun writeRules(key: String, rules: String) = service.writeProfileRulesForBackup(key, rules)
+                        override fun identitiesMatch(uids: Set<Int>): Boolean {
+                            if (protectedProfileAppIds() != plan.context.protected) return false
+                            return uids.all { uid ->
+                                val expected = plan.context.installed.byUid[uid] ?: return@all false
+                                expected.all { it.status == BackupPackage.OK } && service.getBackupUidIdentity(uid) == expected
+                            }
+                        }
                     })
                 } finally {
+                    Log.i(TAG, "Restore execution: ${plan.profiles.size} profiles, ${plan.rules.size} rules, ${android.os.SystemClock.elapsedRealtime() - started} ms")
                     viewModelScope.launch {
                         runCatching {
                             withTimeout(30_000) { refreshAppConfigurations() }
@@ -497,15 +543,8 @@ class SuperUserViewModel : ViewModel() {
                     }
                 }
             }
+            null
         }
-    }
-
-    private fun validateBackup(document: AllowlistBackup.Document, service: IKsuInterface) {
-        service.refreshPackages()
-        val installed = document.apps.associate { entry ->
-            entry.profile.currentUid to service.getUidPackagesForBackup(entry.profile.currentUid).toList()
-        }
-        AllowlistBackup.validateAgainst(document, installed, protectedProfileAppIds())
     }
 
     private suspend fun backupService(): IKsuInterface {

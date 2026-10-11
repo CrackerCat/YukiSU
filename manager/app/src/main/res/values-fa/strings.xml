@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">لیست مجاز با موفقیت پشتیبان گیری شد</string>
     <string name="allowlist_backup_failed">پشتیبان گیری از لیست مجاز ناموفق بود: %1$s</string>
     <string name="allowlist_restore_confirm_title">تأیید بازیابی فهرست مجاز</string>
-    <string name="allowlist_restore_confirm_message">این عمل فهرست مجاز فعلی را بازنویسی می‌کند. ادامه می‌دهید؟</string>
     <string name="allowlist_restore_success">فهرست مجاز با موفقیت بازیابی شد</string>
     <string name="allowlist_restore_failed">بازیابی فهرست مجاز انجام نشد: %1$s</string>
     <string name="backup_allowlist">پشتیبان‌گیری فهرست مجاز</string>

@@ -17,7 +17,7 @@ import java.nio.charset.CodingErrorAction
 
 internal object AllowlistBackup {
     private const val FORMAT = "yukisu.allowlist"
-    private const val VERSION = 1
+    private const val VERSION = 2
     private const val PROFILE_VERSION = 4
     private const val MAX_BYTES = 4 * 1024 * 1024
     private const val MAX_ENTRIES = 65534
@@ -25,8 +25,12 @@ internal object AllowlistBackup {
     private val integerPattern = Regex("-?(0|[1-9][0-9]*)")
     private val gson = GsonBuilder().serializeNulls().setPrettyPrinting().create()
 
-    data class Document(val defaultUmountModules: Boolean, val apps: List<Entry>)
-    data class Entry(val packages: List<String>, val profile: Natives.Profile)
+    data class Document(val defaultUmountModules: Boolean, val apps: List<Entry>, val version: Int = VERSION)
+    data class Entry(
+        val packages: List<String>,
+        val profile: Natives.Profile,
+        val signingCertificates: Map<String, List<String>> = emptyMap()
+    )
 
     fun read(input: InputStream): Document {
         val output = java.io.ByteArrayOutputStream()
@@ -43,6 +47,7 @@ internal object AllowlistBackup {
     }
 
     fun encode(document: Document): String {
+        require(document.version == VERSION) { "Only v2 backups can be exported" }
         validate(document)
         val root = JsonObject().apply {
             addProperty("format", FORMAT)
@@ -54,6 +59,11 @@ internal object AllowlistBackup {
                     val p = entry.profile
                     add(JsonObject().apply {
                         add("packages", strings(entry.packages.sorted()))
+                        add("signingCertificates", JsonObject().apply {
+                            entry.signingCertificates.toSortedMap().forEach { (name, certificates) ->
+                                add(name, strings(certificates.sorted()))
+                            }
+                        })
                         addProperty("appUid", p.currentUid)
                         addProperty("profileKey", p.name)
                         addProperty("allowSu", p.allowSu)
@@ -89,15 +99,17 @@ internal object AllowlistBackup {
             value
         }.objectWithKeys("format", "version", "profileVersion", "defaultUmountModules", "apps")
         require(root.string("format") == FORMAT) { "Unsupported backup format; legacy backups are not supported" }
-        require(root.int("version") == VERSION) { "Unsupported backup version" }
+        val version = root.int("version")
+        require(version in 1..VERSION) { "Unsupported backup version" }
         require(root.int("profileVersion") == PROFILE_VERSION) { "Unsupported profile version" }
         return Document(root.boolean("defaultUmountModules"), root.array("apps").map { element ->
-            val item = element.objectWithKeys(
+            val keys = arrayOf(
                 "packages", "appUid", "profileKey", "allowSu", "rootUseDefault", "rootTemplate",
                 "rootUid", "rootGid", "groups", "capabilities", "capabilitiesPermitted",
                 "capabilitiesInheritable", "context", "namespace", "flags", "nonRootUseDefault",
                 "umountModules", "sepolicyRules"
             )
+            val item = element.objectWithKeys(*(if (version == 2) keys + "signingCertificates" else keys))
             Entry(item.array("packages").map { it.stringValue() }, Natives.Profile(
                 name = item.string("profileKey"), currentUid = item.int("appUid"),
                 allowSu = item.boolean("allowSu"), rootUseDefault = item.boolean("rootUseDefault"),
@@ -109,8 +121,15 @@ internal object AllowlistBackup {
                 context = item.string("context"), namespace = item.int("namespace"), flags = item["flags"].integer(),
                 nonRootUseDefault = item.boolean("nonRootUseDefault"), umountModules = item.boolean("umountModules"),
                 rules = item.string("sepolicyRules")
-            ))
-        }).also(::validate)
+            ), if (version == 2) {
+                val certificates = item["signingCertificates"]
+                require(certificates.isJsonObject) { "Invalid signing certificates" }
+                certificates.asJsonObject.entrySet().associate { (name, value) ->
+                    require(value.isJsonArray) { "Invalid signing certificates" }
+                    name to value.asJsonArray.map { it.stringValue() }
+                }
+            } else emptyMap())
+        }, version).also(::validate)
     }
 
     fun validateAgainst(document: Document, installed: Map<Int, List<String>>, protectedAppIds: Set<Int>) {
@@ -124,10 +143,12 @@ internal object AllowlistBackup {
         }
     }
 
-    private fun validate(document: Document) {
+    internal fun validate(document: Document) {
+        require(document.version in 1..VERSION) { "Unsupported backup version" }
         require(document.apps.size <= MAX_ENTRIES) { "Too many profiles" }
         val uids = mutableSetOf<Int>()
         val rules = mutableMapOf<String, String>()
+        val packages = mutableSetOf<Pair<Int, String>>()
         document.apps.forEach { entry ->
             val p = entry.profile
             require(p.currentUid == 1000 || p.currentUid >= 2000 && p.currentUid != 9999) { "Invalid app UID" }
@@ -135,6 +156,18 @@ internal object AllowlistBackup {
             require(entry.packages.isNotEmpty() && entry.packages.size == entry.packages.distinct().size) { "Invalid package set" }
             entry.packages.forEach {
                 require(it.length < 256 && packagePattern.matches(it)) { "Invalid package name" }
+                require(packages.add(p.currentUid / 100000 to it)) { "Duplicate package within user" }
+            }
+            if (document.version == 2) {
+                require(entry.signingCertificates.keys == entry.packages.toSet()) { "Missing package signing certificates" }
+                entry.signingCertificates.values.forEach { certificates ->
+                    require(certificates.isNotEmpty() && certificates.distinct().size == certificates.size &&
+                        certificates.all { it.length == 64 && it.all { ch -> ch in '0'..'9' || ch in 'a'..'f' } }) {
+                        "Invalid signing certificate digest"
+                    }
+                }
+            } else {
+                require(entry.signingCertificates.isEmpty()) { "Unexpected v1 signing certificates" }
             }
             require(p.name in entry.packages) { "Profile key must belong to the UID's packages" }
             require(p.uid >= 0 && p.gid >= 0 && p.groups.all { it >= 0 }) { "Invalid root UID/GID" }

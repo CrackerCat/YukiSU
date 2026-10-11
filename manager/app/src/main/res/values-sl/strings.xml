@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Seznam dovoljenih je uspešno varnostno kopiran</string>
     <string name="allowlist_backup_failed">Varnostno kopiranje seznama dovoljenih ni uspelo: %1$s</string>
     <string name="allowlist_restore_confirm_title">Potrdi obnovitev seznama dovoljenih</string>
-    <string name="allowlist_restore_confirm_message">To dejanje bo prepisalo trenutni seznam dovoljenih. Nadaljujem?</string>
     <string name="allowlist_restore_success">Seznam dovoljenih uspešno obnovljen</string>
     <string name="allowlist_restore_failed">Obnovitev seznama dovoljenih ni uspela: %1$s</string>
     <string name="backup_allowlist">Varnostno kopiraj seznam dovoljenih</string>

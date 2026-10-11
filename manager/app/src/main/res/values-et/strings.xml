@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Lubade loendi varundamine õnnestus</string>
     <string name="allowlist_backup_failed">Lubatud loendi varundamine ebaõnnestus: %1$s</string>
     <string name="allowlist_restore_confirm_title">Kinnita lubatud loendi taastamine</string>
-    <string name="allowlist_restore_confirm_message">See toiming kirjutab üle praeguse lubatud loendi. Kas jätkata?</string>
     <string name="allowlist_restore_success">Lubatud loend edukalt taastatud</string>
     <string name="allowlist_restore_failed">Lubatud loendi taastamine ebaõnnestus: %1$s</string>
     <string name="backup_allowlist">Varunda lubatud loend</string>

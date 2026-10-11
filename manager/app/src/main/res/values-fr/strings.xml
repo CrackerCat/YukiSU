@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">Sauvegarde de la liste blanche réussie</string>
     <string name="allowlist_backup_failed">La sauvegarde de la liste d\'autorisations a échoué : %1$s</string>
     <string name="allowlist_restore_confirm_title">Confirmer la restauration de la liste blanche</string>
-    <string name="allowlist_restore_confirm_message">Cette opération écrasera la liste blanche actuelle. Continuer ?</string>
     <string name="allowlist_restore_success">Liste blanche restaurée avec succès</string>
     <string name="allowlist_restore_failed">La restauration de la liste d\'autorisations a échoué : %1$s</string>
     <string name="backup_allowlist">Sauvegarder la liste blanche</string>

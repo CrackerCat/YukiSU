@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">Er is een back-up gemaakt van de toelatingslijst</string>
     <string name="allowlist_backup_failed">Kan geen back-up maken van de toelatingslijst: %1$s</string>
     <string name="allowlist_restore_confirm_title">Herstel van toegestane lijst bevestigen</string>
-    <string name="allowlist_restore_confirm_message">Deze bewerking overschrijft de huidige toegestane lijst. Doorgaan?</string>
     <string name="allowlist_restore_success">Toegestane lijst succesvol hersteld</string>
     <string name="allowlist_restore_failed">Herstel van toegestane lijst mislukt: %1$s</string>
     <string name="backup_allowlist">Toegestane lijst back-uppen</string>

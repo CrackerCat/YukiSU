@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">अनुमती यादीचा यशस्वीरित्या बॅकअप घेतला</string>
     <string name="allowlist_backup_failed">अनुमती यादीचा बॅकअप घेण्यात अयशस्वी: %1$s</string>
     <string name="allowlist_restore_confirm_title">परवानगी यादी पुनर्संचयन निश्चित करा</string>
-    <string name="allowlist_restore_confirm_message">ही क्रिया सध्याची परवानगी यादी अधिलिखित करेल. पुढे जायचे?</string>
     <string name="allowlist_restore_success">परवानगी यादी यशस्वीरित्या पुनर्संचयित केली</string>
     <string name="allowlist_restore_failed">परवानगी यादी पुनर्संचयन अयशस्वी: %1$s</string>
     <string name="backup_allowlist">परवानगी यादी बॅकअप करा</string>

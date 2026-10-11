@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">السماح بالنسخ الاحتياطي للقائمة بنجاح</string>
     <string name="allowlist_backup_failed">فشل النسخ الاحتياطي لقائمة السماح: %1$s</string>
     <string name="allowlist_restore_confirm_title">تأكيد استعادة القائمة المسموح بها</string>
-    <string name="allowlist_restore_confirm_message">هذه العملية ستقوم بالكتابة فوق قائمة المسموح بها. هل تريد المتابعة؟</string>
     <string name="allowlist_restore_success">تمت استعادة القائمة بنجاح</string>
     <string name="allowlist_restore_failed">فشل استعادة القائمة المسموحة: %1$s</string>
     <string name="backup_allowlist">قائمة النسخ الاحتياطي</string>

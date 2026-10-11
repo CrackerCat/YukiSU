@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">ব্যাকআপ সম্পন্ন</string>
     <string name="allowlist_backup_failed">অনুমতি তালিকা ব্যাকআপ ব্যর্থ: %1$s</string>
     <string name="allowlist_restore_confirm_title">অনুমতি তালিকা পুনরুদ্ধার নিশ্চিত করুন</string>
-    <string name="allowlist_restore_confirm_message">এই অপারেশনটি বর্তমান অনুমতি তালিকা ওভাররাইট করবে। চালিয়ে যাবেন?</string>
     <string name="allowlist_restore_success">অনুমতি তালিকা সফলভাবে পুনরুদ্ধার করা হয়েছে</string>
     <string name="allowlist_restore_failed">অনুমতি তালিকা পুনরুদ্ধার ব্যর্থ: %1$s</string>
     <string name="backup_allowlist">অনুমতি তালিকা ব্যাকআপ করুন</string>

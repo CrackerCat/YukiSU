@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">İcazə verilənlər siyahısı uğurla yedəkləndi</string>
     <string name="allowlist_backup_failed">İcazə verilən siyahını yedəkləmək alınmadı: %1$s</string>
     <string name="allowlist_restore_confirm_title">İcazə Siyahısının Bərpasını Təsdiqlə</string>
-    <string name="allowlist_restore_confirm_message">Bu əməliyyat cari icazə siyahısının üzərinə yazacaq. Davam edilsin?</string>
     <string name="allowlist_restore_success">İcazə siyahısı uğurla bərpa edildi</string>
     <string name="allowlist_restore_failed">İcazə siyahısının bərpası alınmadı: %1$s</string>
     <string name="backup_allowlist">İcazə siyahısını ehtiyatla</string>

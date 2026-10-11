@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 
 class AllowlistBackupTest {
     private fun entry(uid: Int = 10123, name: String = "test.app") =
-        AllowlistBackup.Entry(listOf(name), Natives.Profile(name, uid))
+        AllowlistBackup.Entry(listOf(name), Natives.Profile(name, uid), mapOf(name to listOf("a".repeat(64))))
     private fun document(vararg entries: AllowlistBackup.Entry) = AllowlistBackup.Document(true, entries.toList())
     private fun json() = AllowlistBackup.encode(document(entry()))
 
@@ -37,7 +37,7 @@ class AllowlistBackupTest {
     }
 
     @Test fun sharedUidRequiresExactMembershipButAllowsExistingKeyToDiffer() {
-        val backup = document(entry().copy(packages = listOf("test.app", "test.shared")))
+        val backup = document(entry().copy(packages = listOf("test.app", "test.shared"), signingCertificates = mapOf("test.app" to listOf("a".repeat(64)), "test.shared" to listOf("a".repeat(64)))))
         AllowlistBackup.validateAgainst(backup, mapOf(10123 to listOf("test.shared", "test.app")), emptySet())
         assertFails { AllowlistBackup.validateAgainst(backup, mapOf(10123 to listOf("test.app")), emptySet()) }
         assertFails { AllowlistBackup.validateAgainst(backup, mapOf(10123 to listOf("test.app", "test.shared", "test.other")), emptySet()) }
@@ -52,8 +52,8 @@ class AllowlistBackupTest {
     }
 
     @Test fun malformedLegacyDuplicateAndNonJsonSyntaxAreRejected() {
-        listOf("\u007fKSU", "{}", "[]", json() + "{}", json().replace("\"version\": 1", "\"version\": 1, \"version\": 1"),
-            json().replace("\"version\": 1", "version: 1"), json().replace("\"format\":", "/*comment*/ \"format\":"))
+        listOf("\u007fKSU", "{}", "[]", json() + "{}", json().replace("\"version\": 2", "\"version\": 2, \"version\": 2"),
+            json().replace("\"version\": 2", "version: 2"), json().replace("\"format\":", "/*comment*/ \"format\":"))
             .forEach { assertFails(it.take(50)) { AllowlistBackup.parse(it) } }
     }
 
@@ -67,7 +67,7 @@ class AllowlistBackupTest {
         root.remove("defaultUmountModules")
         assertFails { AllowlistBackup.parse(root.toString()) }
         assertFails { AllowlistBackup.parse(json().replace("\"allowSu\": false", "\"allowSu\": \"false\"")) }
-        assertFails { AllowlistBackup.parse(json().replace("\"version\": 1", "\"version\": 2")) }
+        assertFails { AllowlistBackup.parse(json().replace("\"version\": 2", "\"version\": 3")) }
     }
 
     @Test fun unsafeNumbersStringsAndUnionParametersAreRejected() {
@@ -96,7 +96,34 @@ class AllowlistBackupTest {
     @Test fun exportNeverContainsManagerTrustFields() {
         val output = json()
         assertFalse(output.contains("dynamic", ignoreCase = true))
-        assertFalse(output.contains("signature", ignoreCase = true))
+        assertTrue(output.contains("signingCertificates"))
         assertTrue(output.contains("defaultUmountModules"))
+    }
+
+    @Test fun v1RemainsReadableButCannotBeExportedWithoutCertificates() {
+        val root = JsonParser.parseString(json()).asJsonObject
+        root.addProperty("version", 1)
+        root.getAsJsonArray("apps")[0].asJsonObject.remove("signingCertificates")
+        val document = AllowlistBackup.parse(root.toString())
+        assertEquals(1, document.version)
+        assertTrue(document.apps.single().signingCertificates.isEmpty())
+        assertFails { AllowlistBackup.encode(document) }
+    }
+
+    @Test fun v2RequiresExactPackageCertificateCoverageAndValidDistinctDigests() {
+        val source = entry()
+        listOf(
+            emptyMap(), mapOf("test.other" to listOf("a".repeat(64))),
+            mapOf("test.app" to emptyList()), mapOf("test.app" to listOf("A".repeat(64))),
+            mapOf("test.app" to listOf("a".repeat(63))), mapOf("test.app" to listOf("g".repeat(64))),
+            mapOf("test.app" to listOf("a".repeat(64), "a".repeat(64)))
+        ).forEach { assertFails { AllowlistBackup.encode(document(source.copy(signingCertificates = it))) } }
+        val root = JsonParser.parseString(json()).asJsonObject
+        root.getAsJsonArray("apps")[0].asJsonObject.remove("signingCertificates")
+        assertFails { AllowlistBackup.parse(root.toString()) }
+    }
+
+    @Test fun duplicatePackageWithinOneUserIsRejectedEvenWithDifferentUids() {
+        assertFails { AllowlistBackup.encode(document(entry(), entry(10500))) }
     }
 }

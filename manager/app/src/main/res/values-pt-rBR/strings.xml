@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">Lista de permissões salva com sucesso</string>
     <string name="allowlist_backup_failed">Falha ao fazer backup da lista de permissões: %1$s</string>
     <string name="allowlist_restore_confirm_title">Confirmar restauração da lista de permissões</string>
-    <string name="allowlist_restore_confirm_message">Esta operação substituirá a lista de permissões atual. Continuar?</string>
     <string name="allowlist_restore_success">Lista de permissões restaurada com sucesso</string>
     <string name="allowlist_restore_failed">Falha na restauração da lista de permissões: %1$s</string>
     <string name="backup_allowlist">Backup da lista de permissões</string>

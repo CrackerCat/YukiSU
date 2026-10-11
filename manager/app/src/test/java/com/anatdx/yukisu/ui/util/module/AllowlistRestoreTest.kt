@@ -1,6 +1,7 @@
 package com.anatdx.yukisu.ui.util.module
 
 import com.anatdx.yukisu.Natives
+import com.anatdx.yukisu.BackupPackage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -8,9 +9,24 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class AllowlistRestoreTest {
+    private fun entry(profile: Natives.Profile) = AllowlistBackup.Entry(
+        listOf(profile.name), profile, mapOf(profile.name to listOf("a".repeat(64)))
+    )
+
+    private fun apply(document: AllowlistBackup.Document, before: Map<Int, Natives.Profile>, protected: Set<Int>, store: Store) {
+        val profiles = (before.values + document.apps.map { it.profile }).filter { it.currentUid != 9999 }.associateBy { it.currentUid }
+        val installed = AllowlistPlan.Inventory(profiles.values.map {
+            BackupPackage(it.name, it.currentUid, currentSigners = listOf("a".repeat(64)), status = BackupPackage.OK)
+        })
+        val keys = profiles.values.map { it.name }.toSet()
+        val context = AllowlistPlan.Context(document, installed, before, keys.associateWith(store::readRules), protected)
+        val plan = AllowlistPlan.create(context, AllowlistPlan.Options(replace = true, restoreDefault = true))
+        AllowlistRestore.apply(plan, store)
+    }
+
     private val original = Natives.Profile("test.app", 10123)
     private val target = original.copy(allowSu = true, rules = "new rules")
-    private val document = AllowlistBackup.Document(true, listOf(AllowlistBackup.Entry(listOf("test.app"), target)))
+    private val document = AllowlistBackup.Document(true, listOf(entry(target)))
 
     private class Store(initial: List<Natives.Profile>) : AllowlistRestore.Store {
         val profiles = initial.associateBy { it.currentUid }.toMutableMap()
@@ -19,6 +35,7 @@ class AllowlistRestoreTest {
         var silentlyIgnore: Int? = null
         var failRollback = false
         val writes = mutableListOf<Int>()
+        override fun identitiesMatch(uids: Set<Int>) = true
         override fun read(uid: Int) = profiles[uid]
         override fun write(profile: Natives.Profile): Boolean {
             writes += profile.currentUid
@@ -36,7 +53,7 @@ class AllowlistRestoreTest {
 
     @Test fun restoreUpdatesProfilesRulesAndDefaultLast() {
         val store = Store(listOf(original))
-        AllowlistRestore.apply(document, store.profiles.toMap(), emptySet(), store)
+        apply(document, store.profiles.toMap(), emptySet(), store)
         assertEquals(target.copy(rules = ""), store.profiles[10123])
         assertEquals("new rules", store.rules["test.app"])
         val defaults = store.profiles.getValue(9999)
@@ -68,14 +85,14 @@ class AllowlistRestoreTest {
             rules["test.hide"] = "allow su app_data_file file read;"
         }
         val backup = AllowlistBackup.Document(false, listOf(custom, denied).map {
-            AllowlistBackup.Entry(listOf(it.name), it)
+            entry(it)
         })
         val parsed = AllowlistBackup.parse(AllowlistBackup.encode(backup))
         AllowlistBackup.validateAgainst(
             parsed, mapOf(10123 to listOf("test.app"), 10124 to listOf("test.hide")), emptySet()
         )
 
-        AllowlistRestore.apply(parsed, store.profiles.toMap(), emptySet(), store)
+        apply(parsed, store.profiles.toMap(), emptySet(), store)
 
         assertEquals(custom.copy(rules = ""), store.profiles[10123])
         assertEquals(denied, store.profiles[10124])
@@ -86,13 +103,13 @@ class AllowlistRestoreTest {
 
     @Test fun historicalCurrentRulesDoNotBlockReplacement() {
         val restored = target.copy(rules = "allow su app_data_file file read;")
-        val backup = document.copy(apps = listOf(AllowlistBackup.Entry(listOf("test.app"), restored)))
+        val backup = document.copy(apps = listOf(entry(restored)))
         val store = Store(listOf(original)).apply {
             rules["test.app"] = "No sepolicy profile for test.app\n"
         }
         AllowlistBackup.validateAgainst(backup, mapOf(10123 to listOf("test.app")), emptySet())
 
-        AllowlistRestore.apply(backup, store.profiles.toMap(), emptySet(), store)
+        apply(backup, store.profiles.toMap(), emptySet(), store)
 
         assertEquals(restored.copy(rules = ""), store.profiles[10123])
         assertEquals(restored.rules, store.rules["test.app"])
@@ -100,29 +117,29 @@ class AllowlistRestoreTest {
 
     @Test fun failureRollsBackEarlierPermissionsAndRules() {
         val store = Store(listOf(original)).apply { failOnce = 9999 }
-        val failure = assertFailsWith<AllowlistRestore.Failure> { AllowlistRestore.apply(document, store.profiles.toMap(), emptySet(), store) }
+        val failure = assertFailsWith<AllowlistRestore.Failure> { apply(document, store.profiles.toMap(), emptySet(), store) }
         assertFalse(failure.rollbackFailed)
         assertEquals(original, store.profiles[10123])
         assertEquals("old rules", store.rules["test.app"])
-        assertFalse(store.profiles.getValue(9999).umountModules)
+        assertFalse(store.profiles[9999]?.umountModules == true)
     }
 
     @Test fun successfulWriteWithoutEffectIsDetected() {
         val store = Store(listOf(original)).apply { silentlyIgnore = 10123 }
-        val failure = assertFailsWith<AllowlistRestore.Failure> { AllowlistRestore.apply(document, store.profiles.toMap(), emptySet(), store) }
+        val failure = assertFailsWith<AllowlistRestore.Failure> { apply(document, store.profiles.toMap(), emptySet(), store) }
         assertFalse(failure.rollbackFailed)
         assertEquals("old rules", store.rules["test.app"])
     }
 
     @Test fun rollbackFailureIsReportedExplicitly() {
         val store = Store(listOf(original)).apply { failOnce = 9999; failRollback = true }
-        val failure = assertFailsWith<AllowlistRestore.Failure> { AllowlistRestore.apply(document, store.profiles.toMap(), emptySet(), store) }
+        val failure = assertFailsWith<AllowlistRestore.Failure> { apply(document, store.profiles.toMap(), emptySet(), store) }
         assertTrue(failure.rollbackFailed)
     }
 
     @Test fun newEntriesReturnToDefaultDeniedBehaviorOnFailure() {
         val store = Store(emptyList()).apply { failOnce = 9999 }
-        assertFailsWith<AllowlistRestore.Failure> { AllowlistRestore.apply(document, emptyMap(), emptySet(), store) }
+        assertFailsWith<AllowlistRestore.Failure> { apply(document, emptyMap(), emptySet(), store) }
         assertTrue(10123 in store.writes)
         assertFalse(store.profiles[10123]?.allowSu == true)
         assertEquals("old rules", store.rules["test.app"])
@@ -130,7 +147,7 @@ class AllowlistRestoreTest {
 
     @Test fun restoresNewProfileAfterSnapshottingItsExistingRules() {
         val store = Store(emptyList())
-        AllowlistRestore.apply(document, emptyMap(), emptySet(), store)
+        apply(document, emptyMap(), emptySet(), store)
         assertEquals(target.copy(rules = ""), store.profiles[10123])
         assertEquals("new rules", store.rules["test.app"])
     }
@@ -141,7 +158,7 @@ class AllowlistRestoreTest {
             nonRootUseDefault = false
         )
         val store = Store(listOf(original, defaults))
-        AllowlistRestore.apply(document, store.profiles.toMap(), emptySet(), store)
+        apply(document, store.profiles.toMap(), emptySet(), store)
         assertEquals(defaults.copy(umountModules = true), store.profiles[9999])
     }
 
@@ -150,7 +167,7 @@ class AllowlistRestoreTest {
         val manager = Natives.Profile("test.manager", 10125, allowSu = true)
         val store = Store(listOf(original, extra, manager))
         val before = mapOf(10123 to original, 10124 to extra)
-        AllowlistRestore.apply(document, before, emptySet(), store)
+        apply(document, before, emptySet(), store)
         assertFalse(store.profiles.getValue(10124).allowSu)
         assertTrue(store.profiles.getValue(10124).nonRootUseDefault)
         assertEquals(manager, store.profiles[10125])

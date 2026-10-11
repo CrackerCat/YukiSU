@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">Atļauju saraksts ir veiksmīgi dublēts</string>
     <string name="allowlist_backup_failed">Neizdevās dublēt atļauju sarakstu: %1$s</string>
     <string name="allowlist_restore_confirm_title">Apstipriniet atļauto saraksta atjaunošanu</string>
-    <string name="allowlist_restore_confirm_message">Šī darbība pārrakstīs pašreizējo atļauto sarakstu. Vai turpināt?</string>
     <string name="allowlist_restore_success">Atļauto saraksts veiksmīgi atjaunots</string>
     <string name="allowlist_restore_failed">Atļauto saraksta atjaunošana neizdevās: %1$s</string>
     <string name="backup_allowlist">Dublēt atļauto sarakstu</string>

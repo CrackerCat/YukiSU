@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">బ్యాకప్ పూర్తయింది</string>
     <string name="allowlist_backup_failed">అనుమతి జాబితా బ్యాకప్ విఫలమైంది: %1$s</string>
     <string name="allowlist_restore_confirm_title">అనుమతి జాబితా పునరుద్ధరణను నిర్ధారించండి</string>
-    <string name="allowlist_restore_confirm_message">ఈ ఆపరేషన్ ప్రస్తుత అనుమతి జాబితాను ఓవర్‌రైట్ చేస్తుంది. కొనసాగించాలా?</string>
     <string name="allowlist_restore_success">అనుమతి జాబితా విజయవంతంగా పునరుద్ధరించబడింది</string>
     <string name="allowlist_restore_failed">అనుమతి జాబితా పునరుద్ధరణ విఫలమైంది: %1$s</string>
     <string name="backup_allowlist">అనుమతి జాబితాను బ్యాకప్ చేయండి</string>

@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">अनुमति सूची का सफलतापूर्वक बैकअप लिया गया</string>
     <string name="allowlist_backup_failed">अनुमति सूची का बैकअप लेने में विफल: %1$s</string>
     <string name="allowlist_restore_confirm_title">अनुमति सूची पुनर्स्थापना की पुष्टि करें</string>
-    <string name="allowlist_restore_confirm_message">यह ऑपरेशन वर्तमान अनुमति सूची को अधिलेखित कर देगा। जारी रखें?</string>
     <string name="allowlist_restore_success">अनुमति सूची सफलतापूर्वक पुनर्स्थापित की गई</string>
     <string name="allowlist_restore_failed">अनुमति सूची पुनर्स्थापना विफल: %1$s</string>
     <string name="backup_allowlist">अनुमति सूची का बैकअप लें</string>

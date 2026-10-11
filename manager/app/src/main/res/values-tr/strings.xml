@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">İzin verilenler listesi yedekleme başarılı</string>
     <string name="allowlist_backup_failed">İzin verilenler listesi yedekleme başarısız: %1$s</string>
     <string name="allowlist_restore_confirm_title">İzin Verilenler Listesi Geri Yüklemeyi Onayla</string>
-    <string name="allowlist_restore_confirm_message">Bu işlem, mevcut İzin verilen listesinin üzerine yazacaktır. Devam etmek istiyor musunuz?</string>
     <string name="allowlist_restore_success">İzin verilen listesi başarıyla geri yüklendi</string>
     <string name="allowlist_restore_failed">İzin verilen listesi geri yükleme başarısız: %1$s</string>
     <string name="backup_allowlist">İzin verilen listesini yedekle</string>

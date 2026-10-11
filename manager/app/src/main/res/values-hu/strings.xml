@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">Az engedélyezési lista biztonsági mentése sikeresen megtörtént</string>
     <string name="allowlist_backup_failed">Nem sikerült biztonsági másolatot készíteni az engedélyezési listáról: %1$s</string>
     <string name="allowlist_restore_confirm_title">Engedélyezési lista visszaállításának megerősítése</string>
-    <string name="allowlist_restore_confirm_message">Ez a művelet felülírja a jelenlegi engedélyezési listát. Folytatja?</string>
     <string name="allowlist_restore_success">Engedélyezési lista sikeresen visszaállítva</string>
     <string name="allowlist_restore_failed">Az engedélyezési lista visszaállítása sikertelen: %1$s</string>
     <string name="backup_allowlist">Engedélyezési lista mentése</string>

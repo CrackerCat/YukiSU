@@ -174,7 +174,6 @@
     <string name="allowlist_backup_success">허용 목록이 성공적으로 백업되었습니다.</string>
     <string name="allowlist_backup_failed">허용 목록 백업 실패: %1$s</string>
     <string name="allowlist_restore_confirm_title">허용 목록 복원 확인</string>
-    <string name="allowlist_restore_confirm_message">이 작업은 현재 허용 목록을 덮어씁니다. 계속하시겠습니까?</string>
     <string name="allowlist_restore_success">허용 목록이 성공적으로 복원되었습니다</string>
     <string name="allowlist_restore_failed">허용 목록 복원 실패: %1$s</string>
     <string name="backup_allowlist">허용 목록 백업</string>

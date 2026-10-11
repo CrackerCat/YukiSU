@@ -176,7 +176,6 @@
     <string name="allowlist_backup_success">Резервная копия создана успешно</string>
     <string name="allowlist_backup_failed">Ошибка резервного копирования списка: %1$s</string>
     <string name="allowlist_restore_confirm_title">Подтвердите восстановление списка</string>
-    <string name="allowlist_restore_confirm_message">Эта операция перезапишет текущий список разрешений. Продолжить?</string>
     <string name="allowlist_restore_success">Список успешно восстановлен</string>
     <string name="allowlist_restore_failed">Не удалось восстановить список: %1$s</string>
     <string name="backup_allowlist">Резервное копирование списка</string>

@@ -355,7 +355,6 @@
     <string name="allowlist_backup_success">Allowlist backed up successfully</string>
     <string name="allowlist_backup_failed">Failed to backup allowlist: %1$s</string>
     <string name="allowlist_restore_confirm_title">Confirm Allowlist Restoration</string>
-    <string name="allowlist_restore_confirm_message">Overwrite app settings and reset unlisted apps to defaults. Manager settings stay unchanged.</string>
     <string name="allowlist_restore_success">Allowlist restored successfully</string>
     <string name="allowlist_restore_failed">Allowlist restore failed: %1$s</string>
     <string name="backup_allowlist">Backup Allowlist</string>
@@ -951,11 +950,40 @@
     <string name="require_manager_version">Manager update required</string>
     <string name="no_such_module">Module %1$s does not exist</string>
     <string name="module_unavailable">Module %1$s is disabled, updating, or pending removal</string>
-    <string name="allowlist_json_restore_confirm" tools:ignore="MissingTranslation">Packages and UIDs must match; some changes require a restart.</string>
     <string name="allowlist_rollback_success" tools:ignore="MissingTranslation">The previous settings were restored.</string>
     <string name="allowlist_rollback_failed" tools:ignore="MissingTranslation">Some previous settings could not be restored. Check app permissions and the default unmount setting.</string>
     <string name="yukizygisk_crash_protection_title" tools:ignore="MissingTranslation">Module crash protection</string>
     <string name="yukizygisk_crash_protection_summary" tools:ignore="MissingTranslation">Isolate Zygisk modules that crash the Android framework and retry system startup.</string>
     <string name="yukizygisk_module_suspended" tools:ignore="MissingTranslation">Caused a system crash; isolated for protection</string>
     <string name="yukizygisk_module_suspended_detail" tools:ignore="MissingTranslation">This module caused a system crash. Injection has been paused.</string>
+
+    <string name="allowlist_applying" tools:ignore="MissingTranslation">Restoring settings…</string>
+    <string name="allowlist_preview_counts" tools:ignore="MissingTranslation">Restore %1$d · UID changes %2$d · Awaiting match %3$d · Skipped %4$d · Reset %5$d</string>
+    <string name="allowlist_legacy_identity" tools:ignore="MissingTranslation">This older backup has no signing certificates. Continuing matches apps by package name only.</string>
+    <string name="allowlist_replace_all" tools:ignore="MissingTranslation">Replace all ordinary app settings; reset settings absent from this backup</string>
+    <string name="allowlist_replace_unavailable" tools:ignore="MissingTranslation">Full replacement requires every entry to be selected and matched, and all existing settings to be identifiable and free of conflicts.</string>
+    <string name="allowlist_restore_default" tools:ignore="MissingTranslation">Restore default module unmounting: %1$s → %2$s (affects all apps using defaults)</string>
+    <string name="allowlist_value_on" tools:ignore="MissingTranslation">On</string>
+    <string name="allowlist_value_off" tools:ignore="MissingTranslation">Off</string>
+    <string name="allowlist_uid_mapping" tools:ignore="MissingTranslation">UID %1$d → %2$s</string>
+    <string name="allowlist_choose_candidate" tools:ignore="MissingTranslation">Choose matching app</string>
+    <string name="allowlist_candidate_warning" tools:ignore="MissingTranslation">A certificate can be shared by different apps. Select only the app this backup entry belongs to.</string>
+    <string name="allowlist_no_candidates" tools:ignore="MissingTranslation">No app with matching signing certificates was found in this Android user.</string>
+    <string name="allowlist_candidate_identity" tools:ignore="MissingTranslation">User %1$d · UID %2$d</string>
+    <string name="allowlist_reset_item" tools:ignore="MissingTranslation">Reset: %1$s (UID %2$d)</string>
+    <string name="allowlist_global_rules" tools:ignore="MissingTranslation">SELinux rule files are shared across users. The following files will change:</string>
+    <string name="allowlist_clear_rules" tools:ignore="MissingTranslation">Clear rules: %1$s</string>
+    <string name="allowlist_write_rules" tools:ignore="MissingTranslation">Overwrite rules: %1$s</string>
+    <string name="allowlist_no_changes" tools:ignore="MissingTranslation">No changes to apply.</string>
+    <string name="allowlist_preview_changed" tools:ignore="MissingTranslation">Apps or settings changed. Review the updated preview and select app mappings again.</string>
+    <string name="allowlist_restore_result" tools:ignore="MissingTranslation">Restored %1$d · Skipped %2$d · Reset %3$d</string>
+    <string name="allowlist_match_ready" tools:ignore="MissingTranslation">Matched</string>
+    <string name="allowlist_match_mapped" tools:ignore="MissingTranslation">App mapping selected</string>
+    <string name="allowlist_match_missing" tools:ignore="MissingTranslation">App or Android user is not installed</string>
+    <string name="allowlist_match_shared" tools:ignore="MissingTranslation">Shared UID membership changed</string>
+    <string name="allowlist_match_signature" tools:ignore="MissingTranslation">Signing certificates do not match</string>
+    <string name="allowlist_match_unreadable" tools:ignore="MissingTranslation">Cannot verify current app identity</string>
+    <string name="allowlist_match_protected" tools:ignore="MissingTranslation">Manager configuration is protected</string>
+    <string name="allowlist_match_duplicate" tools:ignore="MissingTranslation">Multiple entries target the same UID</string>
+    <string name="allowlist_match_rules" tools:ignore="MissingTranslation">Rules conflict with another entry or settings that must be preserved</string>
 </resources>
