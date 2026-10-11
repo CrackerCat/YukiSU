@@ -999,7 +999,9 @@
     <string name="allowlist_match_duplicate" tools:ignore="MissingTranslation">Multiple entries target the same UID</string>
     <string name="allowlist_match_rules" tools:ignore="MissingTranslation">Rules conflict with another entry or settings that must be preserved</string>
     <string name="feature_status_forced_summary">Forced by boot config</string>
-    <string name="install_block_modules">Block kernel modules</string>
+    <string name="install_block_modules">Block kernel modules (risky)</string>
+    <string name="install_block_modules_warning" tools:ignore="MissingTranslation">Blocking required modules, such as MediaTek mkp, may prevent booting. Enable only for modules you know are safe to block. To recover, flash the stock boot / init_boot image with fastboot.</string>
+    <string name="install_block_modules_list" tools:ignore="MissingTranslation">Modules to block</string>
     <string name="install_block_modules_summary">Comma-separated names; leave empty to block none</string>
     <string name="install_block_modules_invalid">Use letters, digits and underscores; up to 64 per name and 255 total</string>
 </resources>

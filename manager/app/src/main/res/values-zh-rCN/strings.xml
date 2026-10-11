@@ -993,7 +993,9 @@
     <string name="allowlist_match_duplicate">多个条目指向同一个 UID</string>
     <string name="allowlist_match_rules">规则与其他条目或需要保留的配置冲突</string>
     <string name="feature_status_forced_summary">由启动配置强制设置</string>
-    <string name="install_block_modules">阻止内核模块加载</string>
+    <string name="install_block_modules">阻止内核模块加载（有风险）</string>
+    <string name="install_block_modules_warning">屏蔽系统依赖的模块（如部分联发科设备的 mkp）可能导致无法开机。仅在确认可以安全屏蔽时启用；若无法开机，请通过 fastboot 刷回原厂 boot / init_boot 镜像恢复。</string>
+    <string name="install_block_modules_list">要屏蔽的模块</string>
     <string name="install_block_modules_summary">名称以逗号分隔；留空则不阻止任何模块</string>
     <string name="install_block_modules_invalid">仅限字母、数字和下划线；每项最多 64 个字符，总计最多 255 个</string>
 </resources>

@@ -185,9 +185,10 @@ fun InstallScreen(
     // Signature bypass - when enabled, only SuperKey authentication works
     var signatureBypass by remember { mutableStateOf(false) }
     var allowShell by remember { mutableStateOf(false) }
+    var blockModulesEnabled by rememberSaveable { mutableStateOf(false) }
     var blockModules by rememberSaveable { mutableStateOf("") }
     var blockModulesInitialized by rememberSaveable { mutableStateOf(false) }
-    val normalizedBlockModules = normalizeBlockModules(blockModules)
+    val normalizedBlockModules = normalizeBlockModules(if (blockModulesEnabled) blockModules else "")
     LaunchedEffect(Unit) {
         if (!blockModulesInitialized) {
             val loaded = getLoadedBlockableModules().joinToString(",")
@@ -841,23 +842,48 @@ fun InstallScreen(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            OutlinedTextField(
-                                value = blockModules,
-                                onValueChange = {
-                                    blockModules = it
-                                    blockModulesInitialized = true
-                                },
+                            Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                label = { Text(stringResource(R.string.install_block_modules)) },
-                                supportingText = {
-                                    Text(stringResource(
-                                        if (normalizedBlockModules == null) R.string.install_block_modules_invalid
-                                        else R.string.install_block_modules_summary
-                                    ))
-                                },
-                                isError = normalizedBlockModules == null,
-                                singleLine = true,
-                            )
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.install_block_modules),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.install_block_modules_warning),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f),
+                                    )
+                                }
+                                YukiSwitch(
+                                    checked = blockModulesEnabled,
+                                    onCheckedChange = { blockModulesEnabled = it },
+                                )
+                            }
+                            if (blockModulesEnabled) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                OutlinedTextField(
+                                    value = blockModules,
+                                    onValueChange = {
+                                        blockModules = it
+                                        blockModulesInitialized = true
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    label = { Text(stringResource(R.string.install_block_modules_list)) },
+                                    supportingText = {
+                                        Text(stringResource(
+                                            if (normalizedBlockModules == null) R.string.install_block_modules_invalid
+                                            else R.string.install_block_modules_summary
+                                        ))
+                                    },
+                                    isError = normalizedBlockModules == null,
+                                    singleLine = true,
+                                )
+                            }
                             Spacer(modifier = Modifier.height(12.dp))
 
                             if (directKernelMethod) {
