@@ -40,6 +40,10 @@ class ModuleRepositoryViewModel : ViewModel() {
         private set
     var addingMmrlRepositoryUrl by mutableStateOf<String?>(null)
         private set
+    var isLoadingDetails by mutableStateOf(false)
+        private set
+    var detailError by mutableStateOf<String?>(null)
+        private set
     var installedModules by mutableStateOf<Map<String, InstalledModuleState>>(emptyMap())
         private set
 
@@ -60,7 +64,7 @@ class ModuleRepositoryViewModel : ViewModel() {
             }
             .sortedWith(
                 compareByDescending<RepositoryModule> { installedModules.containsKey(it.moduleId) }
-                    .thenByDescending { it.declaredArtifact()?.timestamp ?: 0L }
+                    .thenByDescending { it.updatedAt ?: it.declaredArtifact()?.timestamp ?: 0L }
                     .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }
                     .thenBy { it.sourceId }
             )
@@ -163,7 +167,16 @@ class ModuleRepositoryViewModel : ViewModel() {
     fun moduleCount(sourceId: String): Int = manager.moduleCount(sourceId)
 
     fun loadModuleDetails(sourceId: String, moduleId: String) {
-        viewModelScope.launch { manager.loadModuleDetails(sourceId, moduleId) }
+        if (isLoadingDetails) return
+        viewModelScope.launch {
+            isLoadingDetails = true
+            detailError = null
+            try {
+                detailError = manager.loadModuleDetails(sourceId, moduleId).exceptionOrNull()?.message
+            } finally {
+                isLoadingDetails = false
+            }
+        }
     }
 
     fun compatibility(module: RepositoryModule): CompatibilityResult {

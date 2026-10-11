@@ -27,6 +27,7 @@ object ModuleRepositoryParser {
             RepositoryFormat.KERNEL_SU -> parseKernelSu(sourceId, indexUrl, root.asJsonArray)
             RepositoryFormat.MMRL -> parseMmrl(sourceId, indexUrl, root.asJsonObject)
             RepositoryFormat.AUTO -> error("AUTO is not a concrete repository format")
+            RepositoryFormat.KERNEL_SU_V1 -> error("Registry documents require the versioned API client")
         }
     }
 
@@ -239,6 +240,7 @@ object ModuleRepositoryParser {
 fun RepositoryFormat.displayName(): String = when (this) {
     RepositoryFormat.AUTO -> "Auto"
     RepositoryFormat.KERNEL_SU -> "KernelSU Repo"
+    RepositoryFormat.KERNEL_SU_V1 -> "KernelSU Modules"
     RepositoryFormat.MMRL -> "MMRL"
 }
 

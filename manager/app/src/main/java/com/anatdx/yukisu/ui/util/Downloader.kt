@@ -6,6 +6,9 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.content.FileProvider
+import com.anatdx.yukisu.data.registry.ExpectedFile
+import com.anatdx.yukisu.data.registry.RegistryDownloadStore
+import com.anatdx.yukisu.data.registry.RegistryUrls
 import com.anatdx.yukisu.ksuApp
 import com.anatdx.yukisu.ui.util.module.LatestVersionInfo
 import okhttp3.CacheControl
@@ -43,18 +46,31 @@ fun download(
     description: String,
     maxBytes: Long? = null,
     requireSecureTransport: Boolean = false,
+    expected: ExpectedFile? = null,
     onDownloaded: (Uri) -> Unit = {},
     onProgress: (DownloadProgress) -> Unit = {},
     onError: (String) -> Unit = {}
 ): DownloadHandle {
     Log.d(TAG, "Start Download: $url")
     val appContext = context.applicationContext
+    if (expected != null && !RegistryUrls.isAllowedReleaseDownloadUrl(url)) {
+        deliverDownloadError(url, IOException("Registry download URL is not allowed"), onError)
+        return DownloadHandle {}
+    }
     val request = Request.Builder()
         .url(url)
         .cacheControl(CacheControl.Builder().noStore().build())
         .header("Accept", "application/zip, application/octet-stream")
+        .header("Accept-Encoding", "identity")
         .build()
-    val call = ksuApp.okhttpClient.newCall(request)
+    val client = if (expected == null) ksuApp.okhttpClient else ksuApp.okhttpClient.newBuilder()
+        .addNetworkInterceptor { chain ->
+            if (!RegistryUrls.isAllowedDownloadHop(chain.request().url.toString())) {
+                throw IOException("Registry download redirected to a blocked URL")
+            }
+            chain.proceed(chain.request())
+        }.build()
+    val call = client.newCall(request)
 
     call.enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
@@ -73,6 +89,32 @@ fun download(
                         "Download redirected to an insecure URL"
                     }
                     val body = checkNotNull(response.body) { "Empty response body for $url" }
+                    if (expected != null) {
+                        check(RegistryUrls.isAllowedDownloadHop(finalUrl.toString())) {
+                            "Registry download redirected to a blocked URL"
+                        }
+                        val store = File(appContext.filesDir, RegistryDownloadStore.DIR_NAME)
+                        RegistryDownloadStore.cleanup(store, 7L * 24 * 60 * 60 * 1000)
+                        var lastPercent = -1
+                        val target = body.byteStream().use { input ->
+                            RegistryDownloadStore.download(
+                                input, store, expected, "${java.util.UUID.randomUUID()}-$fileName",
+                                onProgress = { bytes ->
+                                    val percent = (bytes.toDouble() / expected.size * 100).toInt()
+                                    if (percent != lastPercent) {
+                                        lastPercent = percent
+                                        mainHandler.post { onProgress(DownloadProgress(bytes, expected.size)) }
+                                    }
+                                },
+                                checkActive = { if (call.isCanceled()) throw IOException("Download cancelled") },
+                            )
+                        }
+                        mainHandler.post {
+                            if (call.isCanceled()) RegistryDownloadStore.delete(store, target)
+                            else onDownloaded(Uri.fromFile(target))
+                        }
+                        return
+                    }
                     val downloadDir = File(appContext.cacheDir, "module_downloads")
                     check(downloadDir.isDirectory || downloadDir.mkdirs()) {
                         "Cannot create the module download cache"

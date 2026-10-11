@@ -68,6 +68,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.text.HtmlCompat
+import com.anatdx.yukisu.data.registry.UpdateVerification
+import com.anatdx.yukisu.ui.viewmodel.ModuleUpdateInfo
 import com.anatdx.yukisu.ui.webui.ModuleConfig
 import com.anatdx.yukisu.ui.webui.ModuleConfig.Companion.asModuleConfig
 import com.ramcosta.composedestinations.annotation.Destination
@@ -946,24 +949,32 @@ private fun ModuleList(
 
     suspend fun onModuleUpdate(
         module: ModuleViewModel.ModuleInfo,
-        changelogUrl: String,
-        downloadUrl: String,
+        update: ModuleUpdateInfo,
         fileName: String
     ) {
+        val verification = update.verification
+        if (verification is UpdateVerification.Rejected) {
+            Toast.makeText(context, "$downloadErrorText: ${verification.reason}", Toast.LENGTH_LONG).show()
+            return
+        }
         val client = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
 
-        val request = okhttp3.Request.Builder()
-            .url(changelogUrl)
-            .header("User-Agent", "YukiSU/${BuildConfig.VERSION_NAME}")
-            .build()
-
-        val changelogResult = loadingDialog.withLoading {
+        val changelogResult = if (verification is UpdateVerification.Registry) {
+            Result.success(
+                HtmlCompat.fromHtml(verification.release.changelogHtml.orEmpty(), HtmlCompat.FROM_HTML_MODE_LEGACY)
+                    .toString().ifBlank { "${module.name} ${update.version}" }
+            )
+        } else loadingDialog.withLoading {
             withContext(Dispatchers.IO) {
                 runCatching {
-                    client.newCall(request).execute().body!!.string()
+                    val request = okhttp3.Request.Builder()
+                        .url(update.changelog)
+                        .header("User-Agent", "YukiSU/${BuildConfig.VERSION_NAME}")
+                        .build()
+                    client.newCall(request).execute().use { it.body.string() }
                 }
             }
         }
@@ -989,7 +1000,7 @@ private fun ModuleList(
         val confirmResult = confirmDialog.awaitConfirm(
             changelogText,
             content = changelog,
-            markdown = true,
+            markdown = verification !is UpdateVerification.Registry,
             confirm = updateText,
         )
 
@@ -1001,9 +1012,10 @@ private fun ModuleList(
         activeDownload = ModuleDownloadUiState(module.name, fileName)
         downloadHandle = download(
             context,
-            downloadUrl,
+            update.zipUrl,
             fileName,
             downloading,
+            expected = (verification as? UpdateVerification.Registry)?.expected,
             onDownloaded = { uri ->
                 activeDownload = null
                 downloadHandle = null
@@ -1133,16 +1145,14 @@ private fun ModuleList(
                         key = { it.dirId }
                     ) { module ->
                         val scope = rememberCoroutineScope()
-                        val updatedModule by produceState(initialValue = Triple("", "", "")) {
-                            scope.launch(Dispatchers.IO) {
-                                value = viewModel.checkUpdate(module)
-                            }
+                        val updatedModule by produceState(initialValue = ModuleUpdateInfo(), key1 = module) {
+                            value = withContext(Dispatchers.IO) { viewModel.checkUpdate(module) }
                         }
 
                         ModuleItem(
                             navigator = navigator,
                             module = module,
-                            updateUrl = updatedModule.first,
+                            updateUrl = updatedModule.zipUrl,
                             mountInfo = mountState?.modules?.get(module.dirId),
                             mountConfigEnabled = mountState?.externalOwner?.isEmpty() == true && mountState.builtinEnabled,
                             onMountConfig = { onMountConfig(module.dirId, module.name) },
@@ -1171,9 +1181,8 @@ private fun ModuleList(
                                 scope.launch {
                                     onModuleUpdate(
                                         module,
-                                        updatedModule.third,
-                                        updatedModule.first,
-                                        "${module.name}-${updatedModule.second}.zip"
+                                        updatedModule,
+                                        "${module.name}-${updatedModule.version}.zip"
                                     )
                                 }
                             },

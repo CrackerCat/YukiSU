@@ -9,6 +9,7 @@ lifecycle = "2.11.0"
 navigation = "2.10.2"
 activity-compose = "1.13.0"
 kotlinx-coroutines = "1.11.0"
+kotlinx-serialization = "1.11.0"
 coil-compose = "2.7.0"
 compose-destination = "2.3.0"
 sheets-compose-dialogs = "1.3.0"
@@ -38,6 +39,7 @@ commons-compress = "1.28.0"
 xz = "1.12"
 
 [plugins]
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 agp-app = { id = "com.android.application", version.ref = "agp" }
 agp-lib = { id = "com.android.library", version.ref = "agp" }
 
@@ -48,6 +50,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 lsplugin-cmaker = { id = "org.lsposed.lsplugin.cmaker", version.ref = "cmaker" }
 
 [libraries]
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist-drawablepainter" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
 

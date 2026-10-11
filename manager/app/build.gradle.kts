@@ -46,6 +46,7 @@ import org.objectweb.asm.Opcodes
 plugins {
     alias(libs.plugins.agp.app)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     id("kotlin-parcelize")
 
@@ -989,5 +990,6 @@ dependencies {
     implementation(libs.yukifb)
 
     testImplementation(libs.kotlin.test)
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.kotlinx.coroutines.test)
 }

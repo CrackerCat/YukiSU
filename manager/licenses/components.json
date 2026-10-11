@@ -485,14 +485,14 @@
     "id": "serialization",
     "name": "kotlinx.serialization",
     "license": "Apache-2.0",
-    "source": "https://github.com/Kotlin/kotlinx.serialization/tree/v1.7.3",
+    "source": "https://github.com/Kotlin/kotlinx.serialization/tree/v1.11.0",
     "texts": [
       "Apache-2.0.txt"
     ],
     "artifacts": [
-      "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.7.3",
-      "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.7.3",
-      "org.jetbrains.kotlinx:kotlinx-serialization-protobuf-jvm:1.7.3"
+      "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.11.0",
+      "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.11.0",
+      "org.jetbrains.kotlinx:kotlinx-serialization-protobuf-jvm:1.11.0"
     ],
     "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
   },

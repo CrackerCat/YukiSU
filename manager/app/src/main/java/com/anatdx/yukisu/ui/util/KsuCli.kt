@@ -14,6 +14,8 @@ import android.provider.OpenableColumns
 import androidx.core.net.toUri
 import android.util.Log
 import android.widget.Toast
+import com.anatdx.yukisu.data.registry.RegistryDownloadStore
+import com.anatdx.yukisu.data.registry.copyForInstall
 import com.anatdx.yukisu.R
 import com.topjohnwu.superuser.CallbackList
 import com.topjohnwu.superuser.Shell
@@ -1310,20 +1312,27 @@ fun flashModule(
     onStdout: (String) -> Unit,
     onStderr: (String) -> Unit
 ): Boolean {
-    val resolver = ksuApp.contentResolver
-    with(resolver.openInputStream(uri)) {
-        val file = File(ksuApp.cacheDir, "module.zip")
-        file.outputStream().use { output ->
-            this?.copyTo(output)
-        }
+    val store = File(ksuApp.filesDir, RegistryDownloadStore.DIR_NAME)
+    val storedFile = if (uri.scheme == "file") uri.path?.let(::File) else null
+    val expected = storedFile?.let { RegistryDownloadStore.expectedFor(store, it) }
+    val file = File.createTempFile("module-", ".zip", ksuApp.cacheDir)
+    try {
+        val input = ksuApp.contentResolver.openInputStream(uri)
+            ?: throw java.io.IOException("Cannot open module ZIP")
+        input.use { copyForInstall(it, file, expected) }
         val cmd = "module install ${shellArg(file.absolutePath)}"
         val result = flashWithIO(ksudCmd(cmd), onStdout, onStderr)
         Log.i("KernelSU", "install module $uri result: $result")
 
-        file.delete()
-
         onFinish(result.isSuccess, result.code)
         return result.isSuccess
+    } catch (error: java.io.IOException) {
+        if (expected != null) RegistryDownloadStore.delete(store, storedFile)
+        onStderr("! ${error.message ?: "Cannot read module ZIP"}")
+        onFinish(false, 1)
+        return false
+    } finally {
+        file.delete()
     }
 }
 

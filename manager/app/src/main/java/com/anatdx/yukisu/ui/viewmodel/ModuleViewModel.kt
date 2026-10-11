@@ -9,6 +9,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.anatdx.yukisu.data.registry.UpdateVerification
+import com.anatdx.yukisu.data.repository.ModuleRepositoryProvider
 import com.anatdx.yukisu.ui.webui.ModuleConfig
 import com.anatdx.yukisu.ui.webui.ModuleConfig.Companion.asModuleConfig
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +38,13 @@ enum class ModuleRuntimeKind {
     Zygisk,
     Native,
 }
+
+data class ModuleUpdateInfo(
+    val zipUrl: String = "",
+    val version: String = "",
+    val changelog: String = "",
+    val verification: UpdateVerification = UpdateVerification.Legacy,
+)
 
 class ModuleViewModel : ViewModel() {
 
@@ -249,12 +258,11 @@ class ModuleViewModel : ViewModel() {
         return version.replace(Regex("[^a-zA-Z0-9.\\-_]"), "_")
     }
 
-    fun checkUpdate(m: ModuleInfo): Triple<String, String, String> {
-        val empty = Triple("", "", "")
+    suspend fun checkUpdate(m: ModuleInfo): ModuleUpdateInfo {
+        val empty = ModuleUpdateInfo()
         if (m.updateJson.isEmpty() || m.remove || m.update || !m.enabled) {
             return empty
         }
-        // download updateJson
         val result = kotlin.runCatching {
             val url = m.updateJson
             Log.i(TAG, "checkUpdate url: $url")
@@ -270,14 +278,9 @@ class ModuleViewModel : ViewModel() {
                 .header("User-Agent", CUSTOM_USER_AGENT)
                 .build()
 
-            val response = client.newCall(request).execute()
-
-            Log.d(TAG, "checkUpdate code: ${response.code}")
-            if (response.isSuccessful) {
-                response.body?.string() ?: ""
-            } else {
-                Log.d(TAG, "checkUpdate failed: ${response.message}")
-                ""
+            client.newCall(request).execute().use { response ->
+                Log.d(TAG, "checkUpdate code: ${response.code}")
+                if (response.isSuccessful) response.body.string() else ""
             }
         }.getOrElse { e ->
             Log.e(TAG, "checkUpdate exception", e)
@@ -303,7 +306,8 @@ class ModuleViewModel : ViewModel() {
             return empty
         }
 
-        return Triple(zipUrl, version, changelog)
+        val verification = ModuleRepositoryProvider.get().verifyUpdate(m.id, m.updateJson, zipUrl, versionCode)
+        return ModuleUpdateInfo(zipUrl, version, changelog, verification)
     }
 }
 

@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Source
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -77,6 +78,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anatdx.yukisu.R
+import com.anatdx.yukisu.data.registry.RegistryUrls
 import com.anatdx.yukisu.data.repository.CompatibilityStatus
 import com.anatdx.yukisu.data.repository.InstalledModuleBinding
 import com.anatdx.yukisu.data.repository.InstalledModuleState
@@ -472,7 +474,8 @@ private fun RepositoryModuleCard(
     val updateAvailable = installed != null &&
         binding?.sourceId == module.sourceId &&
         binding.pinnedVersionCode == null &&
-        module.declaredArtifact()?.versionCode?.let { it > installed.versionCode } == true
+        (if (source?.format == RepositoryFormat.KERNEL_SU_V1) module.declaredVersionCode
+        else module.declaredArtifact()?.versionCode ?: 0L) > installed.versionCode
     RepositoryCard(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -523,6 +526,10 @@ private fun RepositoryModuleCard(
                 )
                 if (duplicateCount > 1) {
                     RepositoryTag(stringResource(R.string.repository_source_count, duplicateCount))
+                }
+                module.stars?.let { stars ->
+                    Icon(Icons.Outlined.Star, null, modifier = Modifier.size(16.dp))
+                    Text(stars.toString(), style = MaterialTheme.typography.labelMedium)
                 }
                 if (updateAvailable) {
                     RepositoryTag(stringResource(R.string.repository_update_available))
@@ -1177,8 +1184,11 @@ fun ModuleRepositoryDetailScreen(
         ),
     ) { innerPadding ->
         if (module == null) {
-            Box(Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+            Column(Modifier.fillMaxSize().padding(innerPadding), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(stringResource(R.string.repository_module_missing))
+                RepositoryTextButton(onClick = { viewModel.refreshSource(sourceId) }) {
+                    Text(stringResource(R.string.repository_retry))
+                }
             }
             return@Scaffold
         }
@@ -1219,6 +1229,12 @@ fun ModuleRepositoryDetailScreen(
                         )
                         Text("ID: ${module.moduleId}", style = MaterialTheme.typography.bodySmall)
                         if (module.author.isNotBlank()) Text(module.author)
+                        module.stars?.let { stars ->
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Icon(Icons.Outlined.Star, null, modifier = Modifier.size(16.dp))
+                                Text(stars.toString(), style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                         if (module.description.isNotBlank()) {
                             Text(module.description, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -1287,7 +1303,20 @@ fun ModuleRepositoryDetailScreen(
                     )
                 }
             }
-            if (!module.hasConsistentLatestArtifact) {
+            if (viewModel.isLoadingDetails) {
+                item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            }
+            viewModel.detailError?.let { error ->
+                item {
+                    Text(error, color = MaterialTheme.colorScheme.error)
+                    RepositoryTextButton(onClick = { viewModel.loadModuleDetails(sourceId, moduleId) }) {
+                        Text(stringResource(R.string.repository_retry))
+                    }
+                }
+            }
+            if (!module.hasConsistentLatestArtifact &&
+                (source?.format != RepositoryFormat.KERNEL_SU_V1 || module.detailsLoaded)
+            ) {
                 item {
                     RepositoryNotice(
                         title = stringResource(R.string.repository_inconsistent_index),
@@ -1418,6 +1447,7 @@ fun ModuleRepositoryDetailScreen(
                         url = version.downloadUrl,
                         fileName = safeName,
                         description = module?.name ?: moduleId,
+                        expected = version.expectedFile(),
                         onDownloaded = { uri ->
                             downloadingVersion = null
                             downloadHandle = null
@@ -1512,6 +1542,7 @@ private fun VersionCard(
     onInstall: () -> Unit,
 ) {
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
     RepositoryCard(
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -1538,6 +1569,11 @@ private fun VersionCard(
                 }
                 version.size?.let {
                     Text(Formatter.formatFileSize(context, it), style = MaterialTheme.typography.bodySmall)
+                }
+                version.changelogUrl?.takeIf(RegistryUrls::isWebUrl)?.let { url ->
+                    RepositoryTextButton(onClick = { uriHandler.openUri(url) }) {
+                        Text(stringResource(R.string.module_changelog))
+                    }
                 }
             }
             RepositoryButton(onClick = onInstall) {

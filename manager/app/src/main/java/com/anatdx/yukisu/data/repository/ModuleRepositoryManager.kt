@@ -3,6 +3,12 @@ package com.anatdx.yukisu.data.repository
 import android.content.Context
 import android.util.AtomicFile
 import android.util.Log
+import com.anatdx.yukisu.data.registry.FileRegistryCache
+import com.anatdx.yukisu.data.registry.RegistryClient
+import com.anatdx.yukisu.data.registry.RegistryFetcher
+import com.anatdx.yukisu.data.registry.RegistryUpdatePolicy
+import com.anatdx.yukisu.data.registry.RegistryUrls
+import com.anatdx.yukisu.data.registry.UpdateVerification
 import com.anatdx.yukisu.ksuApp
 import com.google.gson.Gson
 import com.google.gson.JsonElement
@@ -35,7 +41,7 @@ class ModuleRepositoryManager(
 ) {
     companion object {
         private const val TAG = "ModuleRepository"
-        private const val LEGACY_KERNEL_SU_SOURCE_ID = "builtin-kernelsu-modules"
+        const val KERNEL_SU_SOURCE_ID = "builtin-kernelsu-modules"
         const val MMRL_DIRECTORY_URL = "https://mmrl.dev/api/repositories.json"
         private const val MAX_INDEX_BYTES = 16L * 1024L * 1024L
     }
@@ -68,6 +74,20 @@ class ModuleRepositoryManager(
 
     private val snapshots = ConcurrentHashMap<String, RepositorySnapshot>()
 
+    private val sourceLocks = ConcurrentHashMap<String, Mutex>()
+    private val registries = ConcurrentHashMap<String, RegistryClient>()
+
+    private fun sourceLock(sourceId: String): Mutex = sourceLocks.getOrPut(sourceId) { Mutex() }
+
+    private fun registry(source: RepositorySource): RegistryClient = registries.getOrPut(source.id) {
+        val baseUrl = registryBaseUrl(source.url)
+        RegistryClient(
+            baseUrl = baseUrl,
+            fetcher = RegistryFetcher { fetchBody(it, baseUrl).body },
+            cache = FileRegistryCache(File(repositoryDir, "registry-${source.id}")),
+        )
+    }
+
     init {
         loadFromDisk()
     }
@@ -81,11 +101,14 @@ class ModuleRepositoryManager(
         require(_sources.value.none { canonicalUrl(it.url) == canonicalUrl(normalizedUrl) }) {
             "This repository source already exists"
         }
+        val effectiveFormat = if (format != RepositoryFormat.MMRL &&
+            RegistryUrls.isSameOrigin(normalizedUrl, RegistryUrls.DEFAULT_BASE_URL)
+        ) RepositoryFormat.KERNEL_SU_V1 else format
         val provisional = RepositorySource(
             id = UUID.randomUUID().toString(),
             name = name.trim().ifBlank { normalizedUrl },
             url = normalizedUrl,
-            format = format,
+            format = effectiveFormat,
             priority = (_sources.value.maxOfOrNull(RepositorySource::priority) ?: -1) + 1,
             nameOverridden = name.isNotBlank(),
         )
@@ -139,13 +162,18 @@ class ModuleRepositoryManager(
     }
 
     suspend fun refreshSource(sourceId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        sourceLock(sourceId).withLock { refreshSourceLocked(sourceId) }
+    }
+
+    private suspend fun refreshSourceLocked(sourceId: String): Result<Unit> {
         val source = _sources.value.firstOrNull { it.id == sourceId }
-            ?: return@withContext Result.failure(IllegalArgumentException("Repository source not found"))
-        runCatching {
+            ?: return Result.failure(IllegalArgumentException("Repository source not found"))
+        return runCatching {
             val snapshot = fetchSnapshot(source)
             mutex.withLock {
-                val updated = source.copy(
-                    name = if (source.nameOverridden) source.name else snapshot.remoteName ?: source.name,
+                val current = _sources.value.firstOrNull { it.id == sourceId } ?: return@withLock
+                val updated = current.copy(
+                    name = if (current.nameOverridden) current.name else snapshot.remoteName ?: current.name,
                     format = snapshot.format,
                     remoteId = snapshot.remoteId,
                     remoteName = snapshot.remoteName,
@@ -161,8 +189,10 @@ class ModuleRepositoryManager(
         }.onFailure { error ->
             Log.e(TAG, "Failed to refresh repository ${source.id} (${source.url})", error)
             mutex.withLock {
-                replaceSource(source.copy(lastError = error.describeFailure()))
-                persistState()
+                _sources.value.firstOrNull { it.id == sourceId }?.let {
+                    replaceSource(it.copy(lastError = error.describeFailure()))
+                    persistState()
+                }
             }
         }
     }
@@ -171,14 +201,42 @@ class ModuleRepositoryManager(
         sourceId: String,
         moduleId: String,
     ): Result<RepositoryModule> = withContext(Dispatchers.IO) {
+        sourceLock(sourceId).withLock { loadModuleDetailsLocked(sourceId, moduleId) }
+    }
+
+    private suspend fun loadModuleDetailsLocked(sourceId: String, moduleId: String): Result<RepositoryModule> {
         val source = _sources.value.firstOrNull { it.id == sourceId }
-            ?: return@withContext Result.failure(IllegalArgumentException("Repository source not found"))
+            ?: return Result.failure(IllegalArgumentException("Repository source not found"))
         val module = module(sourceId, moduleId)
-            ?: return@withContext Result.failure(IllegalArgumentException("Repository module not found"))
-        if (source.format != RepositoryFormat.KERNEL_SU || module.detailsLoaded) {
-            return@withContext Result.success(module)
+            ?: return Result.failure(IllegalArgumentException("Repository module not found"))
+        if (source.format == RepositoryFormat.KERNEL_SU_V1) {
+            return runCatching {
+                val registry = registry(source)
+                val loaded = try {
+                    registry.loadDetail(moduleId)
+                } catch (error: Exception) {
+                    registry.currentCatalog()?.let { catalog ->
+                        mutex.withLock {
+                            snapshots[sourceId] = catalog.toRepositorySnapshot(sourceId, registry.baseUrl, snapshots[sourceId])
+                            publishCatalog()
+                        }
+                    }
+                    throw error
+                }
+                mutex.withLock {
+                    val snapshot = loaded.catalog.toRepositorySnapshot(
+                        sourceId, registry.baseUrl, snapshots[sourceId], loaded.detail,
+                    )
+                    snapshots[sourceId] = snapshot
+                    publishCatalog()
+                    snapshot.modules.first { it.moduleId == moduleId }
+                }
+            }
         }
-        runCatching {
+        if (source.format != RepositoryFormat.KERNEL_SU || module.detailsLoaded) {
+            return Result.success(module)
+        }
+        return runCatching {
             val indexUrl = candidateIndexUrls(source).first()
             val encodedId = URLEncoder.encode(moduleId, Charsets.UTF_8.name()).replace("+", "%20")
             val detailUrl = URI(indexUrl).resolve("module/$encodedId.json").toString()
@@ -202,6 +260,28 @@ class ModuleRepositoryManager(
                 publishCatalog()
                 enriched
             }
+        }
+    }
+
+    suspend fun verifyUpdate(
+        moduleId: String,
+        updateJsonUrl: String,
+        zipUrl: String,
+        versionCode: Int,
+    ): UpdateVerification = withContext(Dispatchers.IO) {
+        if (RegistryUpdatePolicy.isUnrelatedToRegistry(RegistryUrls.DEFAULT_BASE_URL, updateJsonUrl, zipUrl)) {
+            return@withContext UpdateVerification.Legacy
+        }
+        sourceLock(KERNEL_SU_SOURCE_ID).withLock {
+            val source = _sources.value.first { it.id == KERNEL_SU_SOURCE_ID }
+            val registry = registry(source)
+            val catalog = runCatching { registry.catalog() }.getOrNull()
+            val inIndex = catalog?.find(moduleId) != null
+            val loaded = if (inIndex) runCatching { registry.loadDetail(moduleId) }.getOrNull() else null
+            RegistryUpdatePolicy.decide(
+                registry.baseUrl, updateJsonUrl, zipUrl, versionCode,
+                registry.currentCatalog()?.let { it.find(moduleId) != null }, loaded?.detail,
+            )
         }
     }
 
@@ -299,13 +379,19 @@ class ModuleRepositoryManager(
         val state = readAtomic(stateFile)?.let {
             runCatching { gson.fromJson(it, PersistedState::class.java) }.getOrNull()
         }
-        val loadedSources = state?.sources.orEmpty()
-            .filterNot { it.id == LEGACY_KERNEL_SU_SOURCE_ID }
-        AtomicFile(snapshotFile(LEGACY_KERNEL_SU_SOURCE_ID)).delete()
+        val loadedSources = restoreKernelSuSource(state?.sources.orEmpty())
+        AtomicFile(snapshotFile(KERNEL_SU_SOURCE_ID)).delete()
         _sources.value = loadedSources.sortedBy(RepositorySource::priority)
             .mapIndexed { index, source -> source.copy(priority = index) }
         _bindings.value = state?.bindings.orEmpty().associateBy(InstalledModuleBinding::moduleId)
         _sources.value.forEach { source ->
+            if (source.format == RepositoryFormat.KERNEL_SU_V1) {
+                val registry = registry(source)
+                registry.cachedCatalog()?.let {
+                    snapshots[source.id] = it.toRepositorySnapshot(source.id, registry.baseUrl)
+                }
+                return@forEach
+            }
             readAtomic(snapshotFile(source.id))?.let { json ->
                 runCatching { gson.fromJson(json, RepositorySnapshot::class.java) }
                     .getOrNull()
@@ -349,6 +435,12 @@ class ModuleRepositoryManager(
     }
 
     private fun fetchSnapshot(source: RepositorySource): RepositorySnapshot {
+        if (source.format == RepositoryFormat.KERNEL_SU_V1) {
+            val registry = registry(source)
+            val loaded = registry.loadCatalog()
+            loaded.error?.let { throw it }
+            return loaded.catalog.toRepositorySnapshot(source.id, registry.baseUrl, snapshots[source.id])
+        }
         val failures = mutableListOf<String>()
         for (url in candidateIndexUrls(source)) {
             val result = runCatching {
@@ -377,10 +469,20 @@ class ModuleRepositoryManager(
 
     private data class FetchedBody(val finalUrl: String, val body: String)
 
-    private fun fetchBody(url: String): FetchedBody {
+    private fun fetchBody(url: String, registryOrigin: String? = null): FetchedBody {
         val request = Request.Builder().url(url).build()
-        return client.newCall(request).execute().use { response ->
+        val transport = if (registryOrigin == null) client else client.newBuilder()
+            .addNetworkInterceptor { chain ->
+                if (!RegistryUrls.isAllowedRestrictedResource(chain.request().url.toString(), registryOrigin)) {
+                    throw java.io.IOException("Registry redirected outside its HTTPS origin")
+                }
+                chain.proceed(chain.request())
+            }.build()
+        return transport.newCall(request).execute().use { response ->
             check(response.isSuccessful) { "HTTP ${response.code} for $url" }
+            check(registryOrigin == null ||
+                RegistryUrls.isAllowedRestrictedResource(response.request.url.toString(), registryOrigin)
+            ) { "Registry redirected outside its HTTPS origin" }
             val body = checkNotNull(response.body) { "Empty response body for $url" }
             val contentLength = body.contentLength()
             check(contentLength <= MAX_INDEX_BYTES || contentLength == -1L) {
@@ -400,6 +502,7 @@ class ModuleRepositoryManager(
         if (url.substringBefore('?').endsWith(".json", ignoreCase = true)) return listOf(url)
         val base = url.trimEnd('/') + "/"
         return when (source.format) {
+            RepositoryFormat.KERNEL_SU_V1 -> listOf(RegistryUrls.resolve(base, RegistryUrls.INDEX_PATH))
             RepositoryFormat.KERNEL_SU -> listOf(URI(base).resolve("modules.json").toString())
             RepositoryFormat.MMRL -> listOf(URI(base).resolve("json/modules.json").toString())
             RepositoryFormat.AUTO -> listOf(
@@ -424,7 +527,7 @@ class ModuleRepositoryManager(
     }
 
     private fun canonicalUrl(value: String): String =
-        runCatching { URI(value.trim()).normalize().toString().trimEnd('/') }
+        if (RegistryUrls.isSameOrigin(value, RegistryUrls.DEFAULT_BASE_URL)) RegistryUrls.DEFAULT_BASE_URL else runCatching { URI(value.trim()).normalize().toString().trimEnd('/') }
             .getOrDefault(value.trim().trimEnd('/'))
 
     private fun replaceSource(source: RepositorySource) {
@@ -447,6 +550,7 @@ class ModuleRepositoryManager(
     }
 
     private fun persistSnapshot(snapshot: RepositorySnapshot) {
+        if (snapshot.format == RepositoryFormat.KERNEL_SU_V1) return
         writeAtomic(snapshotFile(snapshot.sourceId), gson.toJson(snapshot))
     }
 

@@ -1,10 +1,12 @@
 package com.anatdx.yukisu.data.repository
 
+import com.anatdx.yukisu.data.registry.ExpectedFile
 import com.google.gson.annotations.SerializedName
 
 enum class RepositoryFormat {
     AUTO,
     KERNEL_SU,
+    KERNEL_SU_V1,
     MMRL,
 }
 
@@ -86,7 +88,11 @@ data class RepositoryModuleVersion(
     val timestamp: Long? = null,
     @field:SerializedName(value = "size")
     val size: Long? = null,
-)
+    @field:SerializedName(value = "sha256")
+    val sha256: String? = null,
+) {
+    fun expectedFile(): ExpectedFile? = sha256?.let { ExpectedFile(checkNotNull(size), it) }
+}
 
 data class RepositoryModule(
     @field:SerializedName(value = "sourceId")
@@ -129,6 +135,8 @@ data class RepositoryModule(
     val stars: Int? = null,
     @field:SerializedName(value = "detailsLoaded")
     val detailsLoaded: Boolean = false,
+    @field:SerializedName(value = "updatedAt")
+    val updatedAt: Long? = null,
 ) {
     /**
      * The module declaration is authoritative. MMRL history is not guaranteed to be ordered or
@@ -156,6 +164,8 @@ data class RepositorySnapshot(
     val remoteName: String? = null,
     @field:SerializedName(value = "modules")
     val modules: List<RepositoryModule>,
+    @field:SerializedName(value = "registryBuildId")
+    val registryBuildId: String? = null,
 )
 
 data class InstalledModuleBinding(
