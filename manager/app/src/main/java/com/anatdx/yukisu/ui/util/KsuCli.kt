@@ -1385,6 +1385,21 @@ sealed class LkmSelection : Parcelable {
     data object KmiNone : LkmSelection()
 }
 
+fun normalizeBlockModules(input: String): String? {
+    val names = input.split(Regex("[,\\s]+"))
+        .filter { it.isNotEmpty() }
+        .distinct()
+    if (names.any { !it.matches(Regex("[A-Za-z0-9_]{1,64}")) }) return null
+    return names.joinToString(",").takeIf { it.length <= 255 }
+}
+
+suspend fun getLoadedBlockableModules(): List<String> = withContext(Dispatchers.IO) {
+    val known = listOf("vr", "vklp", "oplus_secure_guard", "oplus_secure_guard_new", "mkp")
+    val result = getRootShell().newJob().add("cat /proc/modules").to(ArrayList(), null).exec()
+    val loaded = result.out.map { it.trim().substringBefore(' ') }.toSet()
+    known.filter { it in loaded }
+}
+
 private fun patchBootImage(
     bootFile: File?,
     lkm: LkmSelection,
@@ -1400,7 +1415,15 @@ private fun patchBootImage(
     onFinish: (Boolean, Int) -> Unit,
     onStdout: (String) -> Unit,
     onStderr: (String) -> Unit,
+    blockModules: String = "",
 ): Boolean {
+    val normalizedModules = normalizeBlockModules(blockModules)
+    if (normalizedModules == null) {
+        onStderr(ksuApp.getString(R.string.install_block_modules_invalid))
+        onFinish(false, 1)
+        return false
+    }
+
     if (!targetKmi.matches(kmiPattern)) {
         onStderr("Invalid target KMI: $targetKmi")
         onFinish(false, 1)
@@ -1425,6 +1448,8 @@ private fun patchBootImage(
     )
 
     var cmd = "boot-patch"
+    if (normalizedModules.isNotEmpty())
+        cmd += " --block-module ${shellArg(normalizedModules)}"
 
     cmd += if (bootFile == null) {
         // no boot.img, use -f to force install
@@ -1542,7 +1567,15 @@ fun patchBootImageV2(
     onFinish: (Boolean, Int) -> Unit,
     onStdout: (String) -> Unit,
     onStderr: (String) -> Unit,
+    blockModules: String = "",
 ): Boolean {
+    val normalizedModules = normalizeBlockModules(blockModules)
+    if (normalizedModules == null) {
+        onStderr(ksuApp.getString(R.string.install_block_modules_invalid))
+        onFinish(false, 1)
+        return false
+    }
+
     val pendingUtsBoot = getPendingUtsBootTemplate()
     val pendingUtsBootExists = hasPendingUtsBootConfigFile()
     if (pendingUtsBootExists && pendingUtsBoot == null) {
@@ -1581,6 +1614,10 @@ fun patchBootImageV2(
         }
         val command = buildString {
             append("boot-patch-v2")
+            if (normalizedModules.isNotEmpty()) {
+                append(" --block-module ")
+                append(shellArg(normalizedModules))
+            }
             if (inputFile != null && outputFile != null) {
                 append(" --boot ")
                 append(shellArg(inputFile.absolutePath))
@@ -1657,6 +1694,7 @@ fun installBoot(
     onFinish: (Boolean, Int) -> Unit,
     onStdout: (String) -> Unit,
     onStderr: (String) -> Unit,
+    blockModules: String = "",
 ): Boolean {
     if (embedLkmInBoot) {
         return patchBootImageV2(
@@ -1670,6 +1708,7 @@ fun installBoot(
             onFinish = onFinish,
             onStdout = onStdout,
             onStderr = onStderr,
+            blockModules = blockModules,
         )
     }
     val bootFile = bootUri?.let { uri ->
@@ -1694,6 +1733,7 @@ fun installBoot(
         onFinish = onFinish,
         onStdout = onStdout,
         onStderr = onStderr,
+        blockModules = blockModules,
     )
 }
 
@@ -1742,6 +1782,7 @@ fun downloadBoot(
     onFinish: (Boolean, Int) -> Unit,
     onStdout: (String) -> Unit,
     onStderr: (String) -> Unit,
+    blockModules: String = "",
 ): Boolean {
     val bootFile = File(ksuApp.cacheDir, "download-boot.img")
     try {
@@ -1775,6 +1816,7 @@ fun downloadBoot(
         onFinish = onFinish,
         onStdout = onStdout,
         onStderr = onStderr,
+        blockModules = blockModules,
     )
 }
 

@@ -910,4 +910,7 @@
     <string name="uts_view_unpatched_boot_title">Konfiguracija zgodnjega zagona še ni popravljena</string>
     <string name="uts_view_unpatched_boot_message">Spremenili ste globalno konfiguracijo zgodnjega zagona, vendar LKM še ni popravljen. Ali ga želite popraviti zdaj?</string>
     <string name="feature_status_forced_summary">Forced by boot config</string>
+    <string name="install_block_modules">Block kernel modules</string>
+    <string name="install_block_modules_summary">Comma-separated names; leave empty to block none</string>
+    <string name="install_block_modules_invalid">Use letters, digits and underscores; up to 64 per name and 255 total</string>
 </resources>

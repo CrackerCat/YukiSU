@@ -909,4 +909,7 @@
     <string name="uts_view_unpatched_boot_title">起動初期の設定はまだパッチに反映されていません</string>
     <string name="uts_view_unpatched_boot_message">起動初期のグローバル設定を変更しましたが、LKM へのパッチはまだ適用していません。今すぐ適用しますか？</string>
     <string name="feature_status_forced_summary">Forced by boot config</string>
+    <string name="install_block_modules">Block kernel modules</string>
+    <string name="install_block_modules_summary">Comma-separated names; leave empty to block none</string>
+    <string name="install_block_modules_invalid">Use letters, digits and underscores; up to 64 per name and 255 total</string>
 </resources>

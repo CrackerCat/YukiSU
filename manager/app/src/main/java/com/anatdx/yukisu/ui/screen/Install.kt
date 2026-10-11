@@ -185,6 +185,18 @@ fun InstallScreen(
     // Signature bypass - when enabled, only SuperKey authentication works
     var signatureBypass by remember { mutableStateOf(false) }
     var allowShell by remember { mutableStateOf(false) }
+    var blockModules by rememberSaveable { mutableStateOf("") }
+    var blockModulesInitialized by rememberSaveable { mutableStateOf(false) }
+    val normalizedBlockModules = normalizeBlockModules(blockModules)
+    LaunchedEffect(Unit) {
+        if (!blockModulesInitialized) {
+            val loaded = getLoadedBlockableModules().joinToString(",")
+            if (!blockModulesInitialized) {
+                blockModules = loaded
+                blockModulesInitialized = true
+            }
+        }
+    }
     var enableAdb by remember { mutableStateOf(false) }
     var forceBackup by remember { mutableStateOf(false) }
     val embedLkmInBootByDefault = remember {
@@ -223,6 +235,7 @@ fun InstallScreen(
 
     val onInstall: (InstallMethod, LkmSelection, String) -> Unit =
         onInstall@ { method, selectedLkm, targetKmi ->
+            val modules = normalizedBlockModules ?: return@onInstall
             if (
                 utsBootRepatch &&
                 method !is InstallMethod.DirectInstall &&
@@ -249,6 +262,7 @@ fun InstallScreen(
                             ota = isOta,
                             partition = "boot",
                             allowShell = allowShell,
+                            blockModules = modules,
                             enableAdb = enableAdb,
                             backup = false,
                             superKey = effectiveSuperKey.ifBlank { null },
@@ -279,6 +293,7 @@ fun InstallScreen(
                     targetKmi = targetKmi,
                     lkm = selectedLkm,
                     allowShell = allowShell,
+                    blockModules = modules,
                     enableAdb = enableAdb,
                     backup = forceBackup,
                     superKey = effectiveSuperKey.ifBlank { null },
@@ -299,6 +314,7 @@ fun InstallScreen(
                 ota = isOta,
                 partition = partitionSelection,
                 allowShell = allowShell,
+                blockModules = modules,
                 enableAdb = enableAdb,
                 backup = !utsBootRepatch &&
                     method is InstallMethod.SelectFile &&
@@ -825,6 +841,25 @@ fun InstallScreen(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
+                            OutlinedTextField(
+                                value = blockModules,
+                                onValueChange = {
+                                    blockModules = it
+                                    blockModulesInitialized = true
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text(stringResource(R.string.install_block_modules)) },
+                                supportingText = {
+                                    Text(stringResource(
+                                        if (normalizedBlockModules == null) R.string.install_block_modules_invalid
+                                        else R.string.install_block_modules_summary
+                                    ))
+                                },
+                                isError = normalizedBlockModules == null,
+                                singleLine = true,
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+
                             if (directKernelMethod) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -1080,7 +1115,7 @@ fun InstallScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = if (isExpressiveUi) 56.dp else 0.dp),
-                    enabled = installMethod != null && !isResolvingKmi,
+                    enabled = installMethod != null && !isResolvingKmi && normalizedBlockModules != null,
                     onClick = onClickNext,
                     shape = if (isExpressiveUi) {
                         MaterialTheme.shapes.extraLarge

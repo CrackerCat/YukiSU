@@ -916,4 +916,7 @@
     <string name="uts_view_unpatched_boot_title">早期啟動配置尚未修補</string>
     <string name="uts_view_unpatched_boot_message">您已修改早期啟動全局配置，但尚未進行 LKM 修補。您想要現在修補嗎？</string>
     <string name="feature_status_forced_summary">由啟動設定強制設定</string>
+    <string name="install_block_modules">阻止核心模組載入</string>
+    <string name="install_block_modules_summary">名稱以逗號分隔；留空則不阻止任何模組</string>
+    <string name="install_block_modules_invalid">僅限字母、數字和底線；每項最多 64 個字元，總計最多 255 個</string>
 </resources>

@@ -13,6 +13,7 @@ struct KsuConfigArgs {
     bool allow_shell = false;
     bool no_custom_rc = false;
     std::vector<std::string> forced_features;
+    std::string blocked_modules;
 
     bool add_forced_feature(std::string_view input) {
         constexpr std::array<std::string_view, 5> names = {"su_compat", "kernel_umount", "sulog",
@@ -43,6 +44,32 @@ struct KsuConfigArgs {
         return true;
     }
 
+    bool add_block_modules(std::string_view input) {
+        const std::size_t separator_size = blocked_modules.empty() ? 0 : 1;
+        if (input.empty() || input.size() > 255 ||
+            blocked_modules.size() + separator_size > 255 - input.size())
+            return false;
+        auto remaining = input;
+        while (true) {
+            const auto comma = remaining.find(',');
+            const auto name = remaining.substr(0, comma);
+            if (name.empty() || name.size() > 64)
+                return false;
+            for (const char ch : name) {
+                if (!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+                      (ch >= '0' && ch <= '9') || ch == '_'))
+                    return false;
+            }
+            if (comma == std::string_view::npos)
+                break;
+            remaining.remove_prefix(comma + 1);
+        }
+        if (!blocked_modules.empty())
+            blocked_modules += ',';
+        blocked_modules += input;
+        return true;
+    }
+
     std::string module_params() const {
         std::string result;
         if (allow_shell)
@@ -58,6 +85,11 @@ struct KsuConfigArgs {
                     result += ',';
                 result += entry;
             }
+        }
+        if (!blocked_modules.empty()) {
+            if (!result.empty())
+                result += ' ';
+            result += "block_modules=" + blocked_modules;
         }
         return result;
     }

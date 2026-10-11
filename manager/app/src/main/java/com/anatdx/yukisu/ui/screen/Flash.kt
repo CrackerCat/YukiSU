@@ -909,6 +909,7 @@ sealed class FlashIt : Parcelable {
         val ota: Boolean,
         val partition: String? = null,
         val allowShell: Boolean = false,
+        val blockModules: String = "",
         val enableAdb: Boolean = false,
         val backup: Boolean = false,
         val superKey: String? = null,
@@ -921,6 +922,7 @@ sealed class FlashIt : Parcelable {
         val targetKmi: String,
         val lkm: LkmSelection,
         val allowShell: Boolean = false,
+        val blockModules: String = "",
         val enableAdb: Boolean = false,
         val backup: Boolean = false,
         val superKey: String? = null,
@@ -975,7 +977,8 @@ fun flashIt(
             flashIt.embedLkmInBoot,
             onFinish,
             onStdout,
-            onStderr
+            onStderr,
+            blockModules = flashIt.blockModules,
         )
         is FlashIt.DownloadBoot -> downloadBoot(
             flashIt.url,
@@ -990,6 +993,7 @@ fun flashIt(
             onFinish,
             onStdout,
             onStderr,
+            blockModules = flashIt.blockModules,
         )
         is FlashIt.FlashModule -> flashModule(flashIt.uri, onFinish, onStdout, onStderr)
         is FlashIt.FlashModules -> {

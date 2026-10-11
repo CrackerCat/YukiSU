@@ -81,6 +81,11 @@ BootPatchV2Args parse_args(const std::vector<std::string>& args) {
             result.ota = true;
         } else if (argument == "--signature-bypass") {
             result.signature_bypass = true;
+        } else if (argument == "--block-module") {
+            std::string value;
+            take_value(value);
+            if (!result.config.add_block_modules(value))
+                result.valid = false;
         } else if (argument == "--force-feature") {
             std::string value;
             take_value(value);
@@ -463,11 +468,12 @@ int boot_patch_v2(const std::vector<std::string>& args) {
         (device_mode && (!parsed.boot.empty() || !parsed.output.empty()))) {
         LOGE("Usage: ksud boot-patch-v2 --boot <boot.img> [--module <kernelsu.ko>] "
              "--output <patched.img> [--superkey <key>] [--signature-bypass] "
-             "[--no-custom-rc] [--force-feature <FEATURE=VALUE>] [--allow-shell] [--enable-adbd] "
+             "[--no-custom-rc] [--force-feature <FEATURE=VALUE>] [--block-module <NAME>] "
+             "[--allow-shell] [--enable-adbd] "
              "[--uts-config <file>] [--force]\n"
              "       ksud boot-patch-v2 --flash [--ota] [--module <kernelsu.ko>] "
              "[--superkey <key>] [--signature-bypass] [--allow-shell] "
-             "[--no-custom-rc] [--force-feature <FEATURE=VALUE>] "
+             "[--no-custom-rc] [--force-feature <FEATURE=VALUE>] [--block-module <NAME>] "
              "[--enable-adbd] [--uts-config <file>]");
         return 1;
     }

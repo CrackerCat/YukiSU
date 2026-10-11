@@ -52,6 +52,7 @@ int kernelsu_init(void);
 #include "feature/adb_root.h"
 #include "feature/hide_bootloader.h"
 #include "feature/selinux_hide.h"
+#include "feature/module_blacklist.h"
 #include "extension/uts_view.h"
 #ifdef CONFIG_KSU_YUKIZYGISK
 #include "feature/yukizygisk/api.h"
@@ -195,6 +196,7 @@ int __init kernelsu_init(void)
 		}
 		pr_warn("uts_view: unavailable: %d\n", ret);
 	}
+	ksu_module_blacklist_init();
 	ksu_feature_init();
 	ksu_hide_bootloader_init();
 	ksu_lsm_hook_init();
@@ -303,6 +305,7 @@ static void kernelsu_exit(void)
 	ksu_lsm_hook_exit();
 	ksu_uts_view_exit();
 	ksu_feature_exit();
+	ksu_module_blacklist_exit();
 
 	if (ksu_cred) {
 		put_cred(ksu_cred);

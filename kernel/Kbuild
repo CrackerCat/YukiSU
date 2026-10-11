@@ -33,6 +33,7 @@ endif
 endif
 kernelsu-objs += hook/setuid_hook.o
 kernelsu-objs += feature/kernel_umount.o
+kernelsu-objs += feature/module_blacklist.o
 kernelsu-objs += supercall/dispatch.o
 kernelsu-objs += supercall/perm.o
 kernelsu-objs += supercall/supercall.o

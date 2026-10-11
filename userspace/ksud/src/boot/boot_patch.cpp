@@ -471,6 +471,7 @@ void print_boot_patch_usage() {
            "      --allow-shell      keep a root shell available\n"
            "      --no-custom-rc     skip the custom init.rc injection\n"
            "      --force-feature <FEATURE=VALUE> force a feature at boot (repeatable)\n"
+           "      --block-module <NAME> block kernel modules (comma-separated or repeated)\n"
            "      --enable-adbd      run adbd as root\n"
            "      --adb-debug-prop <file>  adb debug properties to embed\n"
            "      --uts-config <file>      UTS template to embed (at most once)\n"
@@ -535,6 +536,11 @@ BootPatchArgs parse_boot_patch_args(const std::vector<std::string>& args) {
             take_value(result.partition);
         } else if (arg == "--out-name") {
             take_value(result.out_name);
+        } else if (arg == "--block-module") {
+            std::string value;
+            take_value(value);
+            if (!result.config.add_block_modules(value))
+                reject("--block-module requires valid names totaling at most 255 bytes");
         } else if (arg == "--force-feature") {
             std::string value;
             take_value(value);
