@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Moduler er deaktiveret, fordi der er konflikt med Magiskes!</string>
     <string name="home_support_title">Support Udvikling</string>
     <string name="home_support_content">KernelSU forbliver gratis og open source. Donér til de officielle KernelSU-udviklere for at vise din støtte.</string>
-    <string name="about_source_code"><![CDATA[Se kildekoden på %1$s<br/>Deltag i vores %2$s-kanal]]></string>
     <string name="profile_default">Standard</string>
     <string name="profile_template">Skabelon</string>
     <string name="profile_custom">Brugerdefineret</string>

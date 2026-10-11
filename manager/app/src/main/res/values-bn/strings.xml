@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">মডিউলগুলি অক্ষম কারণ তারা ম্যাজিস্কের সাথে বিরোধিতা করে!</string>
     <string name="home_support_title">সাপোর্ট ডেভেলপমেন্ট</string>
     <string name="home_support_content">KernelSU বিনামূল্যে এবং ওপেন সোর্স থাকবে। আপনার সমর্থন দেখানোর জন্য অফিসিয়াল KernelSU বিকাশকারীদের দান করুন।</string>
-    <string name="about_source_code"><![CDATA[%1$s এ সোর্স কোড দেখুন<br/>আমাদের %2$s চ্যানেলে যোগ দিন]]></string>
     <string name="profile_default">ডিফল্ট</string>
     <string name="profile_template">টেমপ্লেট</string>
     <string name="profile_custom">কাস্টম</string>

@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Hindi pinagana ang mga modyul dahil salungat ito sa Magisk!</string>
     <string name="home_support_title">Pag-unlad ng Suporta</string>
     <string name="home_support_content">KernelSU ay mananatiling libre at open source. Mag-donate sa opisyal na KernelSU na mga developer para ipakita ang iyong suporta.</string>
-    <string name="about_source_code"><![CDATA[Tingnan ang source code sa %1$s<br/>Sumali sa aming %2$s channel]]></string>
     <string name="profile_default">Default</string>
     <string name="profile_template">Template</string>
     <string name="profile_custom">Custom</string>

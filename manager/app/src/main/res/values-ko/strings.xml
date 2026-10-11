@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Magisk와 충돌로 모듈을 사용할 수 없습니다!</string>
     <string name="home_support_title">지원 개발</string>
     <string name="home_support_content">KernelSU는 앞으로도 무료 오픈 소스로 제공됩니다. 지원의 뜻으로 공식 KernelSU 개발자에게 기부해 주세요.</string>
-    <string name="about_source_code"><![CDATA[%1$s에서 소스 코드 보기<br/>%2$s 채널에 참여하기]]></string>
     <string name="profile_default">기본값</string>
     <string name="profile_template">템플릿</string>
     <string name="profile_custom">사용자 지정</string>

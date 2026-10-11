@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">मॉड्यूल बंद कर दिए गए हैं क्योंकि यह मैजिक के साथ टकरा रहे है!</string>
     <string name="home_support_title">विकास का समर्थन करें</string>
     <string name="home_support_content">KernelSU मुफ़्त और खुला स्रोत रहेगा। अपना समर्थन दिखाने के लिए आधिकारिक KernelSU डेवलपर्स को दान करें।</string>
-    <string name="about_source_code"><![CDATA[%1$s पर स्रोत कोड देखें<br/>हमारे %2$s चैनल से जुड़ें]]></string>
     <string name="profile_default">डिफॉल्ट</string>
     <string name="profile_template">टेम्पलेट</string>
     <string name="profile_custom">कस्टम</string>

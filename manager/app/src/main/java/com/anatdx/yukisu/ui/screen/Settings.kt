@@ -39,6 +39,7 @@ import com.maxkeppeker.sheets.core.models.base.IconSource
 import com.maxkeppeler.sheets.list.models.ListOption
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
+import com.ramcosta.composedestinations.generated.destinations.AboutScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.AppProfileTemplateScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.FlashScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.FeatureControlScreenDestination
@@ -129,9 +130,6 @@ fun SettingScreen(navigator: DestinationsNavigator) {
         snackbarHost = { SnackbarHost(snackBarHost.hostState) },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     ) { paddingValues ->
-        val aboutDialog = rememberCustomDialog {
-            AboutDialog(it)
-        }
         val loadingDialog = rememberLoadingDialog()
 
         Column(
@@ -493,7 +491,7 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                         title = stringResource(R.string.about),
                         groupPosition = SettingsItemPosition.Only,
                         onClick = {
-                            aboutDialog.show()
+                            navigator.navigate(AboutScreenDestination)
                         }
                     )
                 }

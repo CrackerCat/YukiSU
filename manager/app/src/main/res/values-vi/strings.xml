@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Các module không khả dụng do xung đột với Magisk!</string>
     <string name="home_support_title">Hỗ trợ phát triển</string>
     <string name="home_support_content">KernelSU sẽ vẫn là nguồn mở và miễn phí. Hãy quyên góp cho các nhà phát triển KernelSU chính thức để thể hiện sự ủng hộ của bạn.</string>
-    <string name="about_source_code"><![CDATA[Xem mã nguồn tại %1$s<br/>Tham gia kênh %2$s của chúng tôi]]></string>
     <string name="profile_default">Mặc định</string>
     <string name="profile_template">Bản mẫu</string>
     <string name="profile_custom">Tuỳ chỉnh</string>

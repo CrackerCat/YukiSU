@@ -118,7 +118,6 @@
     <string name="module_magisk_conflict">Modules are unavailable due to a conflict with Magisk!</string>
     <string name="home_support_title">Support Development</string>
     <string name="home_support_content">KernelSU will remain free and open source; donate to official KernelSU developers to show your support.</string>
-    <string name="about_source_code"><![CDATA[View source code at %1$s<br/>Join our %2$s channel]]></string>
     <string name="profile" tools:ignore="MissingTranslation">App Profile</string>
     <string name="profile_default">Default</string>
     <string name="profile_template">Template</string>

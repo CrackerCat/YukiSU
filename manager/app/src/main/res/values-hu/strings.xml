@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">A modulok nem érhetők el a Magiskkel való ütközés miatt!</string>
     <string name="home_support_title">Fejlesztés támogatása</string>
     <string name="home_support_content">KernelSU továbbra is ingyenes és nyílt forráskódú marad. Adományozz a hivatalos KernelSU fejlesztőknek, hogy kifejezd támogatásodat.</string>
-    <string name="about_source_code"><![CDATA[Forráskód megtekintése itt: %1$s<br/>Csatlakozzon a(z) %2$s csatornánkhoz]]></string>
     <string name="profile_default">Alapértelmezett</string>
     <string name="profile_template">Sablon</string>
     <string name="profile_custom">Egyedi</string>

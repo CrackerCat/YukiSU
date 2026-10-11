@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Moodulid pole saadaval Magiski konflikti tõttu!</string>
     <string name="home_support_title">Toetage arendust</string>
     <string name="home_support_content">KernelSU jääb tasuta ja avatud lähtekoodiga. Annetage oma toetuse näitamiseks ametlikele KernelSU arendajatele.</string>
-    <string name="about_source_code"><![CDATA[Vaadake lähtekoodi aadressil %1$s<br/>Liituge meie kanaliga %2$s]]></string>
     <string name="profile_default">Vaikimisi</string>
     <string name="profile_template">Mall</string>
     <string name="profile_custom">Kohandatud</string>

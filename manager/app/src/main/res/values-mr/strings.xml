@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">मॉड्यूल अक्षम केले आहेत कारण ते Magisk च्या विरोधाभास आहे!</string>
     <string name="home_support_title">सपोर्ट डेव्हलपमेंट</string>
     <string name="home_support_content">KernelSU विनामूल्य आणि मुक्त स्रोत राहील. तुमचा पाठिंबा दर्शविण्यासाठी अधिकृत KernelSU विकासकांना देणगी द्या.</string>
-    <string name="about_source_code"><![CDATA[%1$s वर स्रोत कोड पहा<br/>आमच्या %2$s चॅनेलमध्ये सामील व्हा]]></string>
     <string name="profile_default">डीफॉल्ट</string>
     <string name="profile_template">साचा</string>
     <string name="profile_custom">कस्टम</string>

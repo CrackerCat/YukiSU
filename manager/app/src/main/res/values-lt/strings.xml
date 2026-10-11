@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Moduliai yra išjungti, nes jie konfliktuoja su Magisk\'s!</string>
     <string name="home_support_title">Parama plėtrai</string>
     <string name="home_support_content">KernelSU išliks nemokama ir atvirojo kodo. Aukokite oficialiems KernelSU kūrėjams, kad parodytumėte savo palaikymą.</string>
-    <string name="about_source_code"><![CDATA[Peržiūrėkite pirminį kodą adresu %1$s<br/>Prisijunkite prie mūsų %2$s kanalo]]></string>
     <string name="profile_default">Numatytas</string>
     <string name="profile_template">Šablonas</string>
     <string name="profile_custom">Pasirinktinis</string>

@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Moduļi ir atspējoti, jo tie konfliktē ar Magisk!</string>
     <string name="home_support_title">Atbalstīt attīstību</string>
     <string name="home_support_content">KernelSU paliks bezmaksas un atvērtā koda. Ziedojiet oficiālajiem KernelSU izstrādātājiem, lai parādītu savu atbalstu.</string>
-    <string name="about_source_code"><![CDATA[Skatiet pirmkodu vietnē %1$s<br/>Pievienojieties mūsu %2$s kanālam]]></string>
     <string name="profile_default">Noklusējums</string>
     <string name="profile_template">Veidne</string>
     <string name="profile_custom">Pielāgots</string>

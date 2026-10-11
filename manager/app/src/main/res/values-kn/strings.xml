@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">ಮಾಡ್ಯೂಲ್‌ಗಳನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ ಏಕೆಂದರೆ ಇದು ಮ್ಯಾಜಿಸ್ಕ್‌ನೊಂದಿಗೆ ಸಂಘರ್ಷವಾಗಿದೆ!</string>
     <string name="home_support_title">ಬೆಂಬಲ ಅಭಿವೃದ್ಧಿ</string>
     <string name="home_support_content">KernelSU ಉಚಿತ ಮತ್ತು ಮುಕ್ತ ಮೂಲವಾಗಿ ಉಳಿಯುತ್ತದೆ. ನಿಮ್ಮ ಬೆಂಬಲವನ್ನು ತೋರಿಸಲು ಅಧಿಕೃತ KernelSU ಡೆವಲಪರ್‌ಗಳಿಗೆ ದೇಣಿಗೆ ನೀಡಿ.</string>
-    <string name="about_source_code"><![CDATA[%1$s ನಲ್ಲಿ ಮೂಲ ಕೋಡ್ ವೀಕ್ಷಿಸಿ<br/>ನಮ್ಮ %2$s ಚಾನೆಲ್‌ಗೆ ಸೇರಿ]]></string>
     <string name="profile_default">ಡೀಫಾಲ್ಟ್</string>
     <string name="profile_template">ಟೆಂಪ್ಲೇಟ್</string>
     <string name="profile_custom">ಕಸ್ಟಮ್</string>

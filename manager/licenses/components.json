@@ -1,0 +1,1261 @@
+[
+  {
+    "id": "androidx",
+    "name": "AndroidX / Jetpack Compose",
+    "license": "Apache-2.0",
+    "source": "https://android.googlesource.com/platform/frameworks/support/",
+    "texts": [
+      "Apache-2.0.txt",
+      "YukiSU-modifications.txt"
+    ],
+    "artifacts": [
+      "androidx.activity:activity-compose:1.13.0",
+      "androidx.activity:activity-ktx:1.13.0",
+      "androidx.activity:activity:1.13.0",
+      "androidx.annotation:annotation-experimental:1.4.1",
+      "androidx.annotation:annotation-jvm:1.10.0",
+      "androidx.appcompat:appcompat-resources:1.8.0",
+      "androidx.appcompat:appcompat:1.8.0",
+      "androidx.arch.core:core-common:2.2.0",
+      "androidx.arch.core:core-runtime:2.2.0",
+      "androidx.autofill:autofill:1.0.0",
+      "androidx.browser:browser:1.8.0",
+      "androidx.cardview:cardview:1.0.0",
+      "androidx.collection:collection-jvm:1.5.0",
+      "androidx.collection:collection-ktx:1.5.0",
+      "androidx.compose.animation:animation-android:1.12.1",
+      "androidx.compose.animation:animation-core-android:1.12.1",
+      "androidx.compose.animation:animation-graphics-android:1.12.1",
+      "androidx.compose.foundation:foundation-android:1.12.1",
+      "androidx.compose.foundation:foundation-layout-android:1.12.1",
+      "androidx.compose.material3:material3-android:1.5.0-beta01",
+      "androidx.compose.material3:material3-ripple-android:1.5.0-beta01",
+      "androidx.compose.material:material-icons-core-android:1.7.8",
+      "androidx.compose.material:material-icons-extended-android:1.7.8",
+      "androidx.compose.material:material-ripple-android:1.12.1",
+      "androidx.compose.runtime:runtime-android:1.12.1",
+      "androidx.compose.runtime:runtime-annotation-android:1.12.1",
+      "androidx.compose.runtime:runtime-retain-android:1.12.1",
+      "androidx.compose.runtime:runtime-saveable-android:1.12.1",
+      "androidx.compose.ui:ui-android:1.12.1",
+      "androidx.compose.ui:ui-geometry-android:1.12.1",
+      "androidx.compose.ui:ui-graphics-android:1.12.1",
+      "androidx.compose.ui:ui-test-manifest:1.12.1",
+      "androidx.compose.ui:ui-text-android:1.12.1",
+      "androidx.compose.ui:ui-tooling-android:1.12.1",
+      "androidx.compose.ui:ui-tooling-data-android:1.12.1",
+      "androidx.compose.ui:ui-tooling-preview-android:1.12.1",
+      "androidx.compose.ui:ui-unit-android:1.12.1",
+      "androidx.compose.ui:ui-util-android:1.12.1",
+      "androidx.concurrent:concurrent-futures:1.1.0",
+      "androidx.constraintlayout:constraintlayout-solver:2.0.1",
+      "androidx.constraintlayout:constraintlayout:2.0.1",
+      "androidx.coordinatorlayout:coordinatorlayout:1.1.0",
+      "androidx.core:core-ktx:1.18.0",
+      "androidx.core:core-viewtree:1.0.0",
+      "androidx.core:core:1.18.0",
+      "androidx.cursoradapter:cursoradapter:1.0.0",
+      "androidx.customview:customview-poolingcontainer:1.0.0",
+      "androidx.customview:customview:1.1.0",
+      "androidx.documentfile:documentfile:1.1.0",
+      "androidx.drawerlayout:drawerlayout:1.1.1",
+      "androidx.dynamicanimation:dynamicanimation:1.1.0",
+      "androidx.emoji2:emoji2-views-helper:1.4.0",
+      "androidx.emoji2:emoji2:1.4.0",
+      "androidx.exifinterface:exifinterface:1.4.2",
+      "androidx.fragment:fragment:1.5.4",
+      "androidx.graphics:graphics-path:1.0.1",
+      "androidx.graphics:graphics-shapes-android:1.0.1",
+      "androidx.interpolator:interpolator:1.0.0",
+      "androidx.lifecycle:lifecycle-common-java8:2.11.0",
+      "androidx.lifecycle:lifecycle-common-jvm:2.11.0",
+      "androidx.lifecycle:lifecycle-livedata-core-ktx:2.11.0",
+      "androidx.lifecycle:lifecycle-livedata-core:2.11.0",
+      "androidx.lifecycle:lifecycle-livedata-ktx:2.11.0",
+      "androidx.lifecycle:lifecycle-livedata:2.11.0",
+      "androidx.lifecycle:lifecycle-process:2.11.0",
+      "androidx.lifecycle:lifecycle-runtime-android:2.11.0",
+      "androidx.lifecycle:lifecycle-runtime-compose-android:2.11.0",
+      "androidx.lifecycle:lifecycle-runtime-ktx-android:2.11.0",
+      "androidx.lifecycle:lifecycle-service:2.11.0",
+      "androidx.lifecycle:lifecycle-viewmodel-android:2.11.0",
+      "androidx.lifecycle:lifecycle-viewmodel-compose-android:2.11.0",
+      "androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0",
+      "androidx.lifecycle:lifecycle-viewmodel-savedstate-android:2.11.0",
+      "androidx.lifecycle:lifecycle-viewmodel:2.11.0",
+      "androidx.loader:loader:1.0.0",
+      "androidx.navigation:navigation-common-android:2.10.2",
+      "androidx.navigation:navigation-compose-android:2.10.2",
+      "androidx.navigation:navigation-runtime-android:2.10.2",
+      "androidx.navigationevent:navigationevent-android:1.1.2",
+      "androidx.navigationevent:navigationevent-compose-android:1.1.2",
+      "androidx.profileinstaller:profileinstaller:1.4.0",
+      "androidx.recyclerview:recyclerview:1.1.0",
+      "androidx.resourceinspection:resourceinspection-annotation:1.0.1",
+      "androidx.savedstate:savedstate-android:1.5.0",
+      "androidx.savedstate:savedstate-compose-android:1.5.0",
+      "androidx.savedstate:savedstate-ktx:1.5.0",
+      "androidx.startup:startup-runtime:1.2.0",
+      "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0",
+      "androidx.tracing:tracing:1.2.0",
+      "androidx.transition:transition:1.7.2",
+      "androidx.vectordrawable:vectordrawable-animated:1.1.0",
+      "androidx.vectordrawable:vectordrawable:1.1.0",
+      "androidx.versionedparcelable:versionedparcelable:1.1.1",
+      "androidx.viewpager2:viewpager2:1.0.0",
+      "androidx.viewpager:viewpager:1.0.0",
+      "androidx.webkit:webkit:1.17.1",
+      "androidx.window:window-core-android:1.5.0",
+      "androidx.window:window:1.5.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "yukifb",
+    "name": "YukiFB",
+    "license": "Apache-2.0",
+    "source": "https://github.com/Anatdx/YukiFB",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.anatdx:yukifb:0.1.1"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "libsu",
+    "name": "libsu",
+    "license": "Apache-2.0",
+    "source": "https://github.com/topjohnwu/libsu/tree/6.0.0",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.github.topjohnwu.libsu:core:6.0.0",
+      "com.github.topjohnwu.libsu:io:6.0.0",
+      "com.github.topjohnwu.libsu:nio:6.0.0",
+      "com.github.topjohnwu.libsu:service:6.0.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "ucrop",
+    "name": "uCrop",
+    "license": "Apache-2.0",
+    "source": "https://github.com/Yalantis/uCrop/tree/2.2.11",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.github.yalantis:ucrop:2.2.11"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "accompanist",
+    "name": "Accompanist Drawable Painter",
+    "license": "Apache-2.0",
+    "source": "https://github.com/google/accompanist",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.google.accompanist:accompanist-drawablepainter:0.37.3"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "material",
+    "name": "Material Components for Android",
+    "license": "Apache-2.0",
+    "source": "https://github.com/material-components/material-components-android/tree/1.12.0",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.google.android.material:material:1.12.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "jsr305",
+    "name": "JSR-305 annotations",
+    "license": "Apache-2.0",
+    "source": "https://github.com/findbugsproject/findbugs",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.google.code.findbugs:jsr305:3.0.2"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "gson",
+    "name": "Gson",
+    "license": "Apache-2.0",
+    "source": "https://github.com/google/gson",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.google.code.gson:gson:2.14.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "errorprone",
+    "name": "Error Prone annotations",
+    "license": "Apache-2.0",
+    "source": "https://github.com/google/error-prone",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.google.errorprone:error_prone_annotations:2.48.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "guava",
+    "name": "Guava / failureaccess / listenablefuture",
+    "license": "Apache-2.0",
+    "source": "https://github.com/google/guava/tree/v27.1",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.google.guava:failureaccess:1.0.1",
+      "com.google.guava:guava:27.1-android",
+      "com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "j2objc",
+    "name": "J2ObjC annotations",
+    "license": "Apache-2.0",
+    "source": "https://github.com/google/j2objc/tree/1.1",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.google.j2objc:j2objc-annotations:1.1"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "sheets",
+    "name": "Sheets Compose Dialogs",
+    "license": "Apache-2.0",
+    "source": "https://github.com/maxkeppeler/sheets-compose-dialogs",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.maxkeppeler.sheets-compose-dialogs:core:1.3.0",
+      "com.maxkeppeler.sheets-compose-dialogs:input:1.3.0",
+      "com.maxkeppeler.sheets-compose-dialogs:list:1.3.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "moshi",
+    "name": "Moshi",
+    "license": "Apache-2.0",
+    "source": "https://github.com/square/moshi/tree/moshi-parent-1.15.1",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.squareup.moshi:moshi:1.15.1"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "okhttp",
+    "name": "OkHttp",
+    "license": "Apache-2.0",
+    "source": "https://lysine.dev/okhttp/",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.squareup.okhttp3:logging-interceptor:4.12.0",
+      "com.squareup.okhttp3:okhttp-android:5.5.0",
+      "com.squareup.okhttp3:okhttp-dnsoverhttps:4.12.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "okio",
+    "name": "Okio",
+    "license": "Apache-2.0",
+    "source": "https://github.com/lysine-dev/okio/",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.squareup.okio:okio-jvm:3.18.1"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "retrofit",
+    "name": "Retrofit",
+    "license": "Apache-2.0",
+    "source": "https://github.com/square/retrofit/tree/2.11.0",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.squareup.retrofit2:converter-kotlinx-serialization:2.11.0",
+      "com.squareup.retrofit2:converter-moshi:2.11.0",
+      "com.squareup.retrofit2:retrofit:2.11.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "commons-codec",
+    "name": "Apache Commons Codec",
+    "license": "Apache-2.0",
+    "source": "https://commons.apache.org/proper/commons-codec/",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "commons-codec:commons-codec:1.19.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "commons-io",
+    "name": "Apache Commons IO",
+    "license": "Apache-2.0",
+    "source": "https://commons.apache.org/proper/commons-io/",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "commons-io:commons-io:2.20.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "commons-compress",
+    "name": "Apache Commons Compress",
+    "license": "Apache-2.0",
+    "source": "https://commons.apache.org/proper/commons-compress/",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.apache.commons:commons-compress:1.28.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "commons-lang",
+    "name": "Apache Commons Lang",
+    "license": "Apache-2.0",
+    "source": "https://commons.apache.org/proper/commons-lang/",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.apache.commons:commons-lang3:3.18.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "coil",
+    "name": "Coil",
+    "license": "Apache-2.0",
+    "source": "https://github.com/coil-kt/coil/tree/2.7.0",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "io.coil-kt:coil-base:2.7.0",
+      "io.coil-kt:coil-compose-base:2.7.0",
+      "io.coil-kt:coil-compose:2.7.0",
+      "io.coil-kt:coil:2.7.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "destinations",
+    "name": "Compose Destinations",
+    "license": "Apache-2.0",
+    "source": "https://github.com/raamcosta/compose-destinations/tree/2.3.0",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "io.github.raamcosta.compose-destinations:core:2.3.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "markwon",
+    "name": "Markwon",
+    "license": "Apache-2.0",
+    "source": "https://github.com/noties/Markwon/tree/v4.6.2",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "io.noties.markwon:core:4.6.2"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "appiconloader",
+    "name": "AppIconLoader",
+    "license": "Apache-2.0",
+    "source": "https://github.com/zhanghai/AppIconLoader",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "me.zhanghai.android.appiconloader:appiconloader-coil:1.5.0",
+      "me.zhanghai.android.appiconloader:appiconloader-iconloaderlib:1.5.0",
+      "me.zhanghai.android.appiconloader:appiconloader:1.5.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "kotlin",
+    "name": "Kotlin standard library / Parcelize runtime",
+    "license": "Apache-2.0",
+    "source": "https://github.com/JetBrains/kotlin",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.jetbrains.kotlin:kotlin-parcelize-runtime:2.4.21",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22",
+      "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22",
+      "org.jetbrains.kotlin:kotlin-stdlib:2.4.21"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "coroutines",
+    "name": "kotlinx.coroutines",
+    "license": "Apache-2.0",
+    "source": "https://github.com/Kotlin/kotlinx.coroutines",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0",
+      "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.11.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "datetime",
+    "name": "kotlinx-datetime",
+    "license": "Apache-2.0",
+    "source": "https://github.com/Kotlin/kotlinx-datetime/tree/v0.6.0",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.6.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "html",
+    "name": "kotlinx.html",
+    "license": "Apache-2.0",
+    "source": "https://github.com/Kotlin/kotlinx.html/tree/0.9.1",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.jetbrains.kotlinx:kotlinx-html-jvm:0.9.1"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "serialization",
+    "name": "kotlinx.serialization",
+    "license": "Apache-2.0",
+    "source": "https://github.com/Kotlin/kotlinx.serialization/tree/v1.7.3",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.7.3",
+      "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.7.3",
+      "org.jetbrains.kotlinx:kotlinx-serialization-protobuf-jvm:1.7.3"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "jetbrains-annotations",
+    "name": "JetBrains Java annotations",
+    "license": "Apache-2.0",
+    "source": "https://github.com/JetBrains/java-annotations/tree/23.0.0",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.jetbrains:annotations:23.0.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "jspecify",
+    "name": "JSpecify",
+    "license": "Apache-2.0",
+    "source": "https://github.com/jspecify/jspecify/tree/1.0.0",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.jspecify:jspecify:1.0.0"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "hiddenapibypass",
+    "name": "AndroidHiddenApiBypass",
+    "license": "Apache-2.0",
+    "source": "https://github.com/LSPosed/AndroidHiddenApiBypass",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.lsposed.hiddenapibypass:hiddenapibypass:4.3"
+    ],
+    "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "mmrl",
+    "name": "MMRL (ext, compat, platform, UI)",
+    "license": "GPL-3.0",
+    "source": "https://github.com/MMRLApp/MMRL/tree/v34242",
+    "texts": [
+      "GPL-3.0.txt",
+      "YukiSU-modifications.txt"
+    ],
+    "artifacts": [
+      "com.github.MMRLApp.MMRL:compat:v34242",
+      "com.github.MMRLApp.MMRL:ext:v34242",
+      "com.github.MMRLApp.MMRL:platform:v34242",
+      "com.github.MMRLApp.MMRL:ui:v34242"
+    ],
+    "evidence": "v34242 / b442a264b272ad8bf472f1ad487c51f3b672822f: LICENSE; platform/src/main/jni/CMakeLists.txt."
+  },
+  {
+    "id": "webuix",
+    "name": "WebUI X Portable",
+    "license": "GPL-3.0",
+    "source": "https://github.com/MMRLApp/WebUI-X-Portable/tree/v438",
+    "texts": [
+      "GPL-3.0.txt",
+      "YukiSU-modifications.txt"
+    ],
+    "artifacts": [
+      "com.github.MMRLApp.WebUI-X-Portable:hwui:438",
+      "com.github.MMRLApp.WebUI-X-Portable:webui:438"
+    ],
+    "evidence": "v438 / 1cd1e76d9438225cc76abf2b2b42f2cc35eb7490: LICENSE; webui assets inspected separately. YukiSU modifies WebColors bytecode for direct field access; MMRL ConfigFile is also patched."
+  },
+  {
+    "id": "jna",
+    "name": "Java Native Access (JNA)",
+    "license": "Apache-2.0 OR LGPL-2.1-or-later",
+    "source": "https://github.com/java-native-access/jna/tree/5.17.0",
+    "texts": [
+      "jna.txt",
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.github.MMRLApp.WebUI-X-Portable:jna:438"
+    ],
+    "version": "5.17.0 (WebUI X 438)",
+    "evidence": "libs/jna.jar META-INF/MANIFEST.MF Implementation-Version; JNA 5.17.0 LICENSE. Apache-2.0 option used; libffi listed separately."
+  },
+  {
+    "id": "libffi",
+    "name": "libffi (JNA native runtime)",
+    "license": "MIT",
+    "source": "https://github.com/java-native-access/jna/tree/5.17.0/native/libffi",
+    "texts": [
+      "libffi.txt"
+    ],
+    "version": "Bundled with JNA 5.17.0",
+    "evidence": "JNA 5.17.0 native/libffi/LICENSE; WebUI X jna AAR jni/arm64-v8a/libjnidispatch.so."
+  },
+  {
+    "id": "rikkax",
+    "name": "RikkaX ParcelableList",
+    "license": "MIT",
+    "source": "https://github.com/RikkaApps/RikkaX",
+    "texts": [
+      "rikkax.txt"
+    ],
+    "artifacts": [
+      "dev.rikka.rikkax.parcelablelist:parcelablelist:2.0.1"
+    ],
+    "evidence": "Runtime POM links to RikkaX/LICENSE; copyright retained in snapshot."
+  },
+  {
+    "id": "dexlib2",
+    "name": "dexlib2",
+    "license": "BSD-3-Clause AND Apache-2.0",
+    "source": "https://github.com/JesusFreke/smali/tree/v2.5.2",
+    "texts": [
+      "dexlib2.txt",
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "org.smali:dexlib2:2.5.2"
+    ],
+    "evidence": "smali v2.5.2 NOTICE (Ben Gruver, Google and AOSP notices)."
+  },
+  {
+    "id": "xz-java",
+    "name": "XZ for Java",
+    "license": "0BSD",
+    "source": "https://tukaani.org/xz/java.html",
+    "texts": [
+      "xz-java.txt"
+    ],
+    "artifacts": [
+      "org.tukaani:xz:1.12"
+    ],
+    "evidence": "v1.12 COPYING and runtime POM; this version is 0BSD, not the older public-domain declaration."
+  },
+  {
+    "id": "checker",
+    "name": "Checker Framework compatibility annotations",
+    "license": "MIT",
+    "source": "https://github.com/typetools/checker-framework/tree/checker-framework-2.5.2",
+    "texts": [
+      "checker.txt"
+    ],
+    "artifacts": [
+      "org.checkerframework:checker-compat-qual:2.5.2"
+    ],
+    "evidence": "2.5.2 LICENSE.txt explicitly licenses the packaged annotations under MIT; full upstream notice retained."
+  },
+  {
+    "id": "animal-sniffer",
+    "name": "Animal Sniffer annotations",
+    "license": "MIT",
+    "source": "https://github.com/mojohaus/animal-sniffer/tree/animal-sniffer-parent-1.17",
+    "texts": [
+      "animal-sniffer.txt"
+    ],
+    "artifacts": [
+      "org.codehaus.mojo:animal-sniffer-annotations:1.17"
+    ],
+    "evidence": "1.17 IgnoreJRERequirement.java copyright/license header."
+  },
+  {
+    "id": "commonmark",
+    "name": "CommonMark Java",
+    "license": "BSD-2-Clause",
+    "source": "https://github.com/commonmark/commonmark-java",
+    "texts": [
+      "commonmark.txt"
+    ],
+    "artifacts": [
+      "com.atlassian.commonmark:commonmark:0.13.0"
+    ],
+    "evidence": "License text extracted from the resolved artifact META-INF/LICENSE.txt."
+  },
+  {
+    "id": "bouncycastle",
+    "name": "Bouncy Castle",
+    "license": "MIT",
+    "source": "https://www.bouncycastle.org/",
+    "texts": [
+      "bouncycastle.txt"
+    ],
+    "artifacts": [
+      "org.bouncycastle:bcpg-jdk18on:1.86",
+      "org.bouncycastle:bcprov-jdk18on:1.86",
+      "org.bouncycastle:bcutil-jdk18on:1.86"
+    ],
+    "evidence": "License text extracted from the resolved artifact META-INF/LICENSE.md."
+  },
+  {
+    "id": "llvm-prefab",
+    "name": "LSPosed libc++ prefab",
+    "license": "Apache-2.0 WITH LLVM-exception AND MIT AND NCSA",
+    "source": "https://github.com/LSPosed/prefab-libcxx",
+    "texts": [
+      "llvm.txt"
+    ],
+    "artifacts": [
+      "org.lsposed.libcxx:libcxx:30.0.16248370"
+    ],
+    "evidence": "Runtime POM; LLVM libcxx LICENSE.TXT includes the LLVM exception and legacy MIT/NCSA notices."
+  },
+  {
+    "id": "llvm-runtime",
+    "name": "LLVM libc++, libc++abi and compiler runtime",
+    "license": "Apache-2.0 WITH LLVM-exception AND MIT AND NCSA",
+    "source": "https://android.googlesource.com/toolchain/llvm-project/",
+    "texts": [
+      "llvm.txt"
+    ],
+    "version": "Android NDK 30.0.16248370",
+    "evidence": "Manager JNI links NDK libc++_static.a and libc++abi.a; userspace also links NDK C++ and compiler runtimes. LLVM exception and legacy MIT/NCSA notices are retained. Static bionic/libm is separately listed under android-ndk-runtime."
+  },
+  {
+    "id": "magiskboot",
+    "name": "MagiskbootAlone / Magisk",
+    "license": "GPL-3.0-or-later",
+    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/9eb0d58ba72118a3fc485ff5bce6aa3f44a1ce5a",
+    "texts": [
+      "magiskboot.txt"
+    ],
+    "version": "9eb0d58ba721",
+    "evidence": "userspace/ksud/third_party/MagiskbootAlone/LICENSE; compiled into ksud through ksud_thirdparty_objs by userspace/ksud/CMakeLists.txt."
+  },
+  {
+    "id": "resetprop",
+    "name": "resetpropAlone / Magisk",
+    "license": "GPL-3.0-or-later AND Apache-2.0",
+    "source": "https://github.com/Anatdx/resetpropAlone/tree/a5989761340d1d773c166934be80187acd072e0e",
+    "texts": [
+      "resetprop.txt",
+      "Apache-2.0.txt",
+      "resetprop-NOTICE.txt"
+    ],
+    "version": "a5989761340d",
+    "evidence": "userspace/ksud/third_party/resetpropAlone/LICENSE; compiled into ksud through ksud_thirdparty_objs by userspace/ksud/CMakeLists.txt."
+  },
+  {
+    "id": "bootctl",
+    "name": "bootctlAlone / AOSP bootctl",
+    "license": "Apache-2.0",
+    "source": "https://github.com/Anatdx/bootctlAlone/tree/30becbd5ececd0ae68abd8ccae6e41466921c2f9",
+    "texts": [
+      "bootctl.txt",
+      "Apache-2.0.txt",
+      "bootctl-NOTICE.txt"
+    ],
+    "version": "30becbd5ecec",
+    "evidence": "userspace/ksud/third_party/bootctlAlone/LICENSE; compiled into ksud through ksud_thirdparty_objs by userspace/ksud/CMakeLists.txt."
+  },
+  {
+    "id": "mkbootfs",
+    "name": "mkbootfsAlone / AOSP mkbootfs",
+    "license": "Apache-2.0",
+    "source": "https://github.com/Anatdx/mkbootfsAlone/tree/d0727db42b4394b0ec99070ec5d7e539cb86e404",
+    "texts": [
+      "mkbootfs.txt",
+      "Apache-2.0.txt",
+      "mkbootfs-NOTICE.txt"
+    ],
+    "version": "d0727db42b43",
+    "evidence": "userspace/ksud/third_party/mkbootfsAlone/LICENSE; compiled into ksud through ksud_thirdparty_objs by userspace/ksud/CMakeLists.txt."
+  },
+  {
+    "id": "toybox",
+    "name": "Toybox readelf",
+    "license": "0BSD",
+    "source": "https://github.com/Anatdx/readelf_toyboxAlone/tree/4085807f0d20aacdd9b3c323ec3be0a227ea806d",
+    "texts": [
+      "toybox.txt"
+    ],
+    "version": "4085807f0d20",
+    "evidence": "userspace/ksud/third_party/readelf_toyboxAlone/LICENSE; compiled into ksud through readelf-toybox static libraries by userspace/ksud/CMakeLists.txt."
+  },
+  {
+    "id": "busybox",
+    "name": "BusyBox (ndk-busybox)",
+    "license": "GPL-2.0-only",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298",
+    "texts": [
+      "busybox.txt",
+      "BusyBox-NOTICES.txt"
+    ],
+    "version": "df3cd7f218eb",
+    "evidence": "Built independently by userspace/busybox, packaged as the Manager's libbusybox.so and installed by the Manager for module scripts; neither linked into nor embedded in ksud. Nested dietlibc/libres, glibc helpers, volume_id and TLS source imports have separate entries; complete source-file notices remain in BusyBox-NOTICES.txt."
+  },
+  {
+    "id": "lsplt",
+    "name": "LSPlt",
+    "license": "LGPL-3.0",
+    "source": "https://github.com/Anatdx/LSPlt/tree/15c945ed58648afbecaa2b44cc06e15ffc6396e2",
+    "texts": [
+      "lsplt.txt",
+      "GPL-3.0.txt"
+    ],
+    "version": "15c945ed5864",
+    "evidence": "userspace/zygisk/third_party/lsplt/LICENSE; userspace/zygisk/core/CMakeLists.txt links lsplt_static into libzygisk and libyukizncore for arm64-v8a and armeabi-v7a. These are separate ELF payloads embedded by ksud, not LSPlt objects linked into ksud itself."
+  },
+  {
+    "id": "lua",
+    "name": "Lua",
+    "license": "MIT",
+    "source": "https://github.com/Rouyashiki/lua/tree/7579fc9d7ed90240487251dfb69168f8e64e9294",
+    "texts": [
+      "lua.txt"
+    ],
+    "version": "5.5.1",
+    "evidence": "userspace/ksud/third_party/lua submodule @ 7579fc9d7ed90240487251dfb69168f8e64e9294; lua.h copyright/license; the C ABI header adaptation is applied only in the build directory."
+  },
+  {
+    "id": "mbedtls",
+    "name": "Mbed TLS",
+    "license": "Apache-2.0 OR GPL-2.0-or-later",
+    "source": "https://github.com/Rouyashiki/mbedtls/tree/ccc12be679247960cd7147073a2e51a460c1b27e",
+    "texts": [
+      "mbedtls.txt"
+    ],
+    "version": "3.6.2",
+    "evidence": "userspace/ksud/third_party/mbedtls submodule @ ccc12be679247960cd7147073a2e51a460c1b27e (upstream v3.6.2 with the framework URL redirected to Rouyashiki); LICENSE; nested framework is pinned separately in native-inputs.json. The default configuration disables Everest and p256-m implementations; their generated static archives contain no defined symbols. They do not introduce additional runtime code in this build."
+  },
+  {
+    "id": "libzip",
+    "name": "libzip",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/Rouyashiki/libzip/tree/b26af3afd67e6b01e1e38a446ecb950e47fff146",
+    "texts": [
+      "libzip.txt"
+    ],
+    "version": "1.12",
+    "evidence": "userspace/ksud/third_party/libzip submodule @ b26af3afd67e6b01e1e38a446ecb950e47fff146; CMakeLists.txt, LICENSE; userspace/ksud/cmake/ArchiveLibraries.cmake."
+  },
+  {
+    "id": "lz4",
+    "name": "LZ4",
+    "license": "BSD-2-Clause",
+    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/9eb0d58ba72118a3fc485ff5bce6aa3f44a1ce5a/external/lz4",
+    "texts": [
+      "lz4.txt",
+      "lz4-fallback.txt"
+    ],
+    "version": "MagiskbootAlone 9eb0d58ba721",
+    "evidence": "userspace/ksud/third_party/MagiskbootAlone/external/lz4/lz4.c copyright/license; KSUD MAGISKBOOT_SOURCES links the vendored copy. Offline fallback: userspace/ksud/third_party/lz4 submodule @ ebb370ca83af193212df4dcbadcc5d87bc0de2f0 (v1.10.0), https://github.com/Rouyashiki/lz4/tree/ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+  },
+  {
+    "id": "xxhash",
+    "name": "xxHash",
+    "license": "BSD-2-Clause",
+    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/9eb0d58ba72118a3fc485ff5bce6aa3f44a1ce5a/external/lz4",
+    "texts": [
+      "xxhash.txt",
+      "xxhash-fallback.txt"
+    ],
+    "version": "MagiskbootAlone 9eb0d58ba721",
+    "evidence": "userspace/ksud/third_party/MagiskbootAlone/external/lz4/xxhash.c copyright/license; KSUD MAGISKBOOT_SOURCES links the vendored copy. Offline fallback: userspace/ksud/third_party/lz4 submodule @ ebb370ca83af193212df4dcbadcc5d87bc0de2f0 (v1.10.0), https://github.com/Rouyashiki/lz4/tree/ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+  },
+  {
+    "id": "bzip2",
+    "name": "bzip2 (BusyBox)",
+    "license": "bzip2-1.0.4",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/libarchive/bz",
+    "texts": [
+      "bzip2.txt"
+    ],
+    "version": "1.0.4 (BusyBox adaptation)",
+    "evidence": "BusyBox archival/libarchive/bz/LICENSE; busybox_sources.cmake."
+  },
+  {
+    "id": "xz-embedded",
+    "name": "XZ Embedded (BusyBox / YukiZygisk)",
+    "license": "Public domain",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/libarchive/unxz",
+    "texts": [
+      "xz-embedded.txt"
+    ],
+    "version": "BusyBox df3cd7f218eb",
+    "evidence": "Public-domain decoder sources used by standalone BusyBox and yukizncore; ksud resource decoding uses liblzma."
+  },
+  {
+    "id": "selinux",
+    "name": "libselinux (BusyBox)",
+    "license": "Public domain",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/android/libselinux",
+    "texts": [
+      "libselinux.txt"
+    ],
+    "version": "BusyBox df3cd7f218eb",
+    "evidence": "ndk-busybox/CMakeLists.txt builds busybox_selinux for the standalone BusyBox executable."
+  },
+  {
+    "id": "aosp",
+    "name": "Android Open Source Project (imported code)",
+    "license": "Apache-2.0 AND BSD-2-Clause",
+    "source": "https://android.googlesource.com/platform/",
+    "texts": [
+      "Apache-2.0.txt",
+      "AOSP-NOTICE.txt"
+    ],
+    "version": "YukiSU source imports",
+    "evidence": "Retained original AOSP source headers; Bionic TLS descriptor assembly is BSD-2-Clause."
+  },
+  {
+    "id": "yukisu",
+    "name": "YukiSU / KernelSU (Manager and userspace)",
+    "license": "GPL-3.0-or-later",
+    "source": "https://github.com/Anatdx/YukiSU",
+    "texts": [
+      "GPL-3.0.txt"
+    ],
+    "version": "Bundled with this app",
+    "evidence": "docs/README.md License section, root LICENSE; includes ksud, ksuinit, integrated Kagami and YukiZygisk. Upstream: https://github.com/tiann/KernelSU"
+  },
+  {
+    "id": "kernel",
+    "name": "YukiSU / KernelSU / Kasumi kernel",
+    "license": "GPL-2.0-only",
+    "source": "https://github.com/Anatdx/YukiSU/tree/main/kernel",
+    "texts": [
+      "GPL-2.0.txt"
+    ],
+    "version": "Bundled kernel modules",
+    "evidence": "docs/README.md License section, kernel/LICENSE; kernel/kasumi is integrated source."
+  },
+  {
+    "id": "kernelpatch",
+    "name": "KernelPatch (ARM64 patching code)",
+    "license": "GPL-2.0-only",
+    "source": "https://github.com/bmax121/KernelPatch",
+    "texts": [
+      "GPL-2.0.txt",
+      "KernelPatch-NOTICE.txt"
+    ],
+    "version": "YukiSU source import",
+    "evidence": "kernel/hook/arm64/patch_memory.c retains bmax121 copyright and GPL-2.0-only SPDX identifier."
+  },
+  {
+    "id": "web-unenv",
+    "name": "unenv (WebUI JavaScript)",
+    "license": "MIT",
+    "source": "https://github.com/unjs/unenv",
+    "texts": [
+      "unenv.txt"
+    ],
+    "version": "WebUI X 438 bundle",
+    "evidence": "WebUI X v438 assets/node/buffer.mjs and process.mjs; recognizable unenv shims, Buffer, base64-js and IEEE754 codec. Upstream license snapshot; original bundle does not identify individual package versions."
+  },
+  {
+    "id": "web-buffer",
+    "name": "buffer (WebUI JavaScript)",
+    "license": "MIT",
+    "source": "https://github.com/feross/buffer",
+    "texts": [
+      "buffer.txt"
+    ],
+    "version": "WebUI X 438 bundle",
+    "evidence": "WebUI X v438 assets/node/buffer.mjs and process.mjs; recognizable unenv shims, Buffer, base64-js and IEEE754 codec. Upstream license snapshot; original bundle does not identify individual package versions."
+  },
+  {
+    "id": "web-base64-js",
+    "name": "base64-js (WebUI JavaScript)",
+    "license": "MIT",
+    "source": "https://github.com/beatgammit/base64-js",
+    "texts": [
+      "base64-js.txt"
+    ],
+    "version": "WebUI X 438 bundle",
+    "evidence": "WebUI X v438 assets/node/buffer.mjs and process.mjs; recognizable unenv shims, Buffer, base64-js and IEEE754 codec. Upstream license snapshot; original bundle does not identify individual package versions."
+  },
+  {
+    "id": "web-ieee754",
+    "name": "ieee754 (WebUI JavaScript)",
+    "license": "BSD-3-Clause",
+    "source": "https://github.com/feross/ieee754",
+    "texts": [
+      "ieee754.txt"
+    ],
+    "version": "WebUI X 438 bundle",
+    "evidence": "WebUI X v438 assets/node/buffer.mjs and process.mjs; recognizable unenv shims, Buffer, base64-js and IEEE754 codec. Upstream license snapshot; original bundle does not identify individual package versions."
+  },
+  {
+    "id": "debug-eruda",
+    "name": "Eruda (WebUI debug console)",
+    "license": "MIT",
+    "source": "https://github.com/liriliri/eruda",
+    "texts": [
+      "eruda.txt"
+    ],
+    "version": "3.4.1",
+    "evidence": "WebUI X v438 assets/eruda/eruda.mjs and eruda-editor.js; excluded from YukiSU release packaging. Eruda package metadata, editor CodeMirror.version and beautifier source signatures.",
+    "buildType": "debug"
+  },
+  {
+    "id": "debug-licia",
+    "name": "Licia (WebUI debug console)",
+    "license": "MIT",
+    "source": "https://github.com/liriliri/licia",
+    "texts": [
+      "licia.txt"
+    ],
+    "version": "WebUI X 438 bundle",
+    "evidence": "WebUI X v438 assets/eruda/eruda.mjs and eruda-editor.js; excluded from YukiSU release packaging. Eruda package metadata, editor CodeMirror.version and beautifier source signatures.",
+    "buildType": "debug"
+  },
+  {
+    "id": "debug-luna",
+    "name": "Luna (WebUI debug console)",
+    "license": "MIT",
+    "source": "https://github.com/liriliri/luna",
+    "texts": [
+      "luna.txt"
+    ],
+    "version": "WebUI X 438 bundle",
+    "evidence": "WebUI X v438 assets/eruda/eruda.mjs and eruda-editor.js; excluded from YukiSU release packaging. Eruda package metadata, editor CodeMirror.version and beautifier source signatures.",
+    "buildType": "debug"
+  },
+  {
+    "id": "debug-codemirror",
+    "name": "CodeMirror (WebUI debug console)",
+    "license": "MIT",
+    "source": "https://github.com/codemirror/codemirror5",
+    "texts": [
+      "codemirror.txt"
+    ],
+    "version": "5.65.19",
+    "evidence": "WebUI X v438 assets/eruda/eruda.mjs and eruda-editor.js; excluded from YukiSU release packaging. Eruda package metadata, editor CodeMirror.version and beautifier source signatures.",
+    "buildType": "debug"
+  },
+  {
+    "id": "debug-js-beautify",
+    "name": "JS Beautifier (WebUI debug console)",
+    "license": "MIT",
+    "source": "https://github.com/beautifier/js-beautify",
+    "texts": [
+      "js-beautify.txt"
+    ],
+    "version": "WebUI X 438 bundle",
+    "evidence": "WebUI X v438 assets/eruda/eruda.mjs and eruda-editor.js; excluded from YukiSU release packaging. Eruda package metadata, editor CodeMirror.version and beautifier source signatures.",
+    "buildType": "debug"
+  },
+  {
+    "id": "tabler",
+    "name": "Tabler Icons",
+    "license": "MIT",
+    "source": "https://github.com/tabler/tabler-icons",
+    "texts": [
+      "tabler.txt"
+    ],
+    "version": "MMRL / WebUI X resources",
+    "evidence": "MMRL v34242 README Credits; MMRL ui and WebUI X vector drawables."
+  },
+  {
+    "id": "debug-chobitsu",
+    "name": "Chobitsu (WebUI debug console)",
+    "license": "MIT",
+    "source": "https://github.com/liriliri/chobitsu",
+    "texts": [
+      "chobitsu.txt"
+    ],
+    "version": "Eruda 3.4.1 bundle",
+    "evidence": "Eruda 3.4.1 package.json; chobitsu implementation in WebUI X eruda.mjs.",
+    "buildType": "debug"
+  },
+  {
+    "id": "debug-css-loader",
+    "name": "css-loader runtime (WebUI debug editor)",
+    "license": "MIT",
+    "source": "https://github.com/webpack-contrib/css-loader/tree/v3.4.2",
+    "texts": [
+      "css-loader.txt"
+    ],
+    "version": "WebUI X 438 bundle",
+    "evidence": "eruda-editor.js module 314: css-loader runtime exports and source-map handling.",
+    "buildType": "debug"
+  },
+  {
+    "id": "liblzma",
+    "name": "liblzma (XZ Utils)",
+    "license": "0BSD",
+    "source": "https://github.com/Rouyashiki/xz/tree/d3e650e63c110e830fd5391e7f8b45df0b91d3da",
+    "texts": [
+      "liblzma.txt"
+    ],
+    "version": "5.8.4",
+    "evidence": "userspace/ksud/third_party/xz submodule @ d3e650e63c110e830fd5391e7f8b45df0b91d3da; CMakeLists.txt, COPYING, COPYING.0BSD; userspace/ksud/cmake/ArchiveLibraries.cmake."
+  },
+  {
+    "id": "libbzip2",
+    "name": "libbzip2",
+    "license": "bzip2-1.0.6",
+    "source": "https://github.com/Rouyashiki/bzip2/tree/6a8690fc8d26c815e798c588f796eabe9d684cf0",
+    "texts": [
+      "libbzip2.txt"
+    ],
+    "version": "1.0.8",
+    "evidence": "userspace/ksud/third_party/bzip2 submodule @ 6a8690fc8d26c815e798c588f796eabe9d684cf0; Makefile, LICENSE; userspace/ksud/cmake/ArchiveLibraries.cmake. The SPDX bzip2-1.0.6 identifier covers these 1.0.8 terms; it is a license identifier, not the library version."
+  },
+  {
+    "id": "siphash",
+    "name": "SipHash (libzip)",
+    "license": "CC0-1.0",
+    "version": "libzip 1.12",
+    "source": "https://github.com/Rouyashiki/libzip/blob/b26af3afd67e6b01e1e38a446ecb950e47fff146/lib/siphash.c",
+    "texts": [
+      "CC0-1.0.txt",
+      "siphash-NOTICE.txt"
+    ],
+    "evidence": "libzip/lib/CMakeLists.txt compiles siphash.c; zip_hash.c calls siphash. Both siphash.c and siphash.h carry the CC0 dedication, separate from libzip's BSD-3-Clause license."
+  },
+  {
+    "id": "public-suffix-list",
+    "name": "Public Suffix List (OkHttp)",
+    "license": "MPL-2.0",
+    "version": "OkHttp 5.5.0 bundle",
+    "source": "https://github.com/lysine-dev/okhttp/blob/a94bdf152084d11acecd44dcd09ffef203f4f0aa/okhttp/src/jvmTest/resources/okhttp3/internal/publicsuffix/public_suffix_list.dat",
+    "texts": [
+      "MPL-2.0.txt",
+      "public-suffix-NOTICE.txt"
+    ],
+    "evidence": "com.squareup.okhttp3:okhttp-android:5.5.0 assets/PublicSuffixDatabase.list; SHA-256 c75ab827afd7ffff59a51b14729c25dbfc3b45237eb40ccf02bec7b7d44304a4. The 9764 normal rules and 8 exceptions generated from the linked source reproduce both binary blocks exactly. The AAR contains no separate PSL license notice."
+  },
+  {
+    "id": "flatbuffers",
+    "name": "FlatBuffers (AndroidX Emoji2)",
+    "license": "Apache-2.0",
+    "version": "1.12.0 (Emoji2 1.4.0)",
+    "source": "https://github.com/google/flatbuffers/tree/v1.12.0",
+    "texts": [
+      "Apache-2.0.txt",
+      "flatbuffers-NOTICE.txt"
+    ],
+    "evidence": "androidx.emoji2:emoji2:1.4.0 embeds libs/repackaged.jar with androidx.emoji2.text.flatbuffer classes; Constants and MetadataList identify FLATBUFFERS_1_12_0. Notices were checked against com.google.flatbuffers:flatbuffers-java:1.12.0 sources, rather than assuming the shaded JAR is wholly AndroidX code."
+  },
+  {
+    "id": "android-ndk-runtime",
+    "name": "Android NDK runtime (bionic / libm)",
+    "license": "Multiple licenses (see NDK notices)",
+    "version": "Android NDK 30.0.16248370",
+    "source": "https://android.googlesource.com/platform/bionic/",
+    "texts": [
+      "Android-NDK-NOTICE.txt"
+    ],
+    "evidence": "yukisu_busybox and ksuinit use -static and have no ELF DT_NEEDED entries. They embed NDK libc/libm code. The complete NOTICE shipped with NDK 30.0.16248370 is retained conservatively; it also covers NDK components not necessarily linked into these executables. Dynamic OS libraries used by ksud are a separate case."
+  },
+  {
+    "id": "libres",
+    "name": "libres / dietlibc resolver (BusyBox)",
+    "license": "GPL-2.0-only",
+    "version": "libres-0.32-1 (BusyBox adaptation)",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libres",
+    "texts": [
+      "GPL-2.0.txt",
+      "libres-NOTICE.txt"
+    ],
+    "evidence": "ndk-busybox/libres/README identifies the dietlibc-derived resolver and Dan Drown's libres-0.32-1 adaptation; busybox_sources.cmake compiles its twelve C files. Distributed as part of the GPL-2.0-only BusyBox executable; no libres objects are linked into ksud."
+  },
+  {
+    "id": "glibc-busybox",
+    "name": "GNU C Library helpers (BusyBox)",
+    "license": "LGPL-2.1-or-later",
+    "version": "BusyBox df3cd7f218eb",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libbb/mntent_r.c",
+    "texts": [
+      "LGPL-2.1.txt",
+      "glibc-BusyBox-NOTICE.txt"
+    ],
+    "evidence": "Compiled glibc-derived mntent_r.c, semctl.c, ether_aton_r.c and ether_ntoa_r.c retain LGPL-2.1-or-later grants. These are source copies in BusyBox, not the Android platform's C library. The overall BusyBox distribution remains GPL-2.0-only. Compiler inputs also include the glibc-derived scsi/scsi.h, scsi/sg.h and sys/kd.h; their notices are retained."
+  },
+  {
+    "id": "volume-id",
+    "name": "volume_id filesystem probes (BusyBox)",
+    "license": "LGPL-2.1-or-later AND GPL-2.0-or-later",
+    "version": "BusyBox df3cd7f218eb",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/util-linux/volume_id",
+    "texts": [
+      "LGPL-2.1.txt",
+      "volume-id-NOTICE.txt"
+    ],
+    "evidence": "Compiled util-linux/volume_id sources retain Kay Sievers and other original notices; volume_id.c specifies LGPL-2.1-or-later. CONFIG_VOLUMEID is enabled. Per-file GPL/BSD/public-domain grants are retained in the notice snapshot; the overall BusyBox distribution remains GPL-2.0-only."
+  },
+  {
+    "id": "matrixssl-busybox",
+    "name": "MatrixSSL code (BusyBox TLS)",
+    "license": "GPL-2.0-only AND GPL-2.0-or-later",
+    "version": "3.7.2b-derived (BusyBox adaptation)",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/networking/tls_pstm.c",
+    "texts": [
+      "GPL-2.0.txt",
+      "MatrixSSL-NOTICE.txt"
+    ],
+    "evidence": "BusyBox tls_pstm*.c and tls_rsa.c identify MatrixSSL 3.7.2b-derived code. Original GPL-2.0-or-later notices and GPLv2 BusyBox modifications are retained; CONFIG_TLS is enabled."
+  },
+  {
+    "id": "wolfssl-busybox",
+    "name": "wolfSSL code (BusyBox TLS)",
+    "license": "GPL-2.0-only AND GPL-2.0-or-later",
+    "version": "3.15.3-derived (BusyBox adaptation)",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/networking/tls_fe.c",
+    "texts": [
+      "GPL-2.0.txt",
+      "wolfSSL-NOTICE.txt"
+    ],
+    "evidence": "BusyBox networking/tls_fe.c incorporates wolfssl-3.15.3/wolfcrypt/src/fe_low_mem.c under its retained GPL-2.0-or-later notice, with GPLv2 BusyBox changes; it also identifies Daniel Beer's public-domain contribution."
+  },
+  {
+    "id": "tiny-aes-busybox",
+    "name": "tiny-AES128-C code (BusyBox TLS)",
+    "license": "GPL-2.0-only AND Unlicense",
+    "version": "2014-12-08-derived (BusyBox adaptation)",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/networking/tls_aes.c",
+    "texts": [
+      "GPL-2.0.txt",
+      "tiny-AES-NOTICE.txt"
+    ],
+    "evidence": "BusyBox networking/tls_aes.c retains the original tiny-AES128-C public-domain/Unlicense text and explicitly places the expanded BusyBox implementation under GPLv2. Do not describe the modified file as entirely public domain."
+  },
+  {
+    "id": "lzo-busybox",
+    "name": "LZO / lzop (BusyBox)",
+    "license": "GPL-2.0-or-later",
+    "version": "LZO 2.03-derived (BusyBox adaptation)",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/lzop.c",
+    "texts": [
+      "GPL-2.0.txt",
+      "lzo-busybox-NOTICE.txt"
+    ],
+    "evidence": "busybox_sources.cmake compiles lzop.c and the lzo1x sources; liblzo.h identifies the lzo-2.03 import. The compiler dependency log also includes lzo1x_c.c directly. CONFIG_LZOP and CONFIG_LZOP_COMPR_HIGH are enabled; the overall BusyBox binary is GPL-2.0-only."
+  },
+  {
+    "id": "lzma-sdk-busybox",
+    "name": "LZMA SDK decoder (BusyBox adaptation)",
+    "license": "GPL-2.0-or-later",
+    "version": "LZMA SDK 4.22-derived",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/libarchive/decompress_unlzma.c",
+    "texts": [
+      "GPL-2.0.txt",
+      "lzma-sdk-busybox-NOTICE.txt"
+    ],
+    "evidence": "BusyBox decompress_unlzma.c identifies LzmaDecode.c from LZMA SDK 4.22 and explicitly licenses this adaptation GPLv2 or later. It is separate from the public-domain XZ Embedded decoder and the new 0BSD liblzma."
+  },
+  {
+    "id": "freesec-busybox",
+    "name": "FreeSec DES crypt (BusyBox)",
+    "license": "BSD-3-Clause",
+    "version": "BusyBox df3cd7f218eb",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libbb/pw_encrypt_des.c",
+    "texts": [
+      "freesec-busybox-NOTICE.txt"
+    ],
+    "evidence": "BusyBox libbb/pw_encrypt.c directly includes pw_encrypt_des.c; compiler dependency records confirm its use. The file retains David Burren's FreeSec BSD-3-Clause notice and FreeBSD adaptation attribution."
+  },
+  {
+    "id": "md5-crypt-busybox",
+    "name": "RSA MD5 / FreeBSD MD5 crypt (BusyBox)",
+    "license": "RSA-MD AND Beerware",
+    "version": "BusyBox df3cd7f218eb",
+    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libbb/pw_encrypt_md5.c",
+    "texts": [
+      "md5-crypt-busybox-NOTICE.txt"
+    ],
+    "evidence": "BusyBox libbb/pw_encrypt.c directly includes pw_encrypt_md5.c. This is derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm and FreeBSD md5_crypt; the original RSA attribution requirement and Poul-Henning Kamp's Beerware notice are reproduced in full."
+  }
+]

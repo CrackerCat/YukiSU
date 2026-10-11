@@ -46,6 +46,7 @@ ksud builds its third-party dependencies from **git submodules** in this directo
 - **Purpose**: Shared ZIP reader for modules, plugins and AK3; native XZ resource decoding.
 - **Build**: Local submodule sources compiled by `../cmake/ArchiveLibraries.cmake`.
 - **Init/update**: `git submodule update --init --recursive`
+- **Audit**: Exact revisions and license inputs are recorded in `manager/licenses/native-inputs.json` at the repository root.
 
 ### Lua
 
@@ -79,3 +80,7 @@ Submodules are declared in the root `.gitmodules`, with Mbed TLS's nested
 framework declared in its own `.gitmodules`. The ksud CMake build does not
 download dependency sources. MagiskbootAlone's separate standalone build has
 its own dependency configuration; ksud compiles its source files directly.
+
+When updating a Git tag or submodule, also review the app's
+[open-source inventory](../../../../manager/licenses/README.md), including
+the component's dependencies, copyright notices and full license texts.

@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">మాడ్యూల్‌లు Magisk వాటితో విభేదిస్తున్నందున నిలిపివేయబడ్డాయి!</string>
     <string name="home_support_title">మద్దతు అభివృద్ధి</string>
     <string name="home_support_content">KernelSU ఉచితం మరియు ఓపెన్ సోర్స్‌గా ఉంటుంది. మీ మద్దతును తెలియజేయడానికి అధికారిక KernelSU డెవలపర్‌లకు విరాళం ఇవ్వండి.</string>
-    <string name="about_source_code"><![CDATA[%1$s వద్ద సోర్స్ కోడ్‌ను చూడండి<br/>మా %2$s ఛానెల్‌లో చేరండి]]></string>
     <string name="profile_default">డిఫాల్ట్</string>
     <string name="profile_template">టెంప్లేట్</string>
     <string name="profile_custom">కస్టమ్</string>

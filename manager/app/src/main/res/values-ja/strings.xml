@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">モジュールが Magisk との競合により利用できません！</string>
     <string name="home_support_title">サポート開発</string>
     <string name="home_support_content">KernelSU は引き続き無料でオープンソースです。公式 KernelSU 開発者に寄付して、サポートを示してください。</string>
-    <string name="about_source_code"><![CDATA[ソースコードは %1$s で確認できます<br/>%2$s チャンネルにご参加ください]]></string>
     <string name="profile_default">デフォルト</string>
     <string name="profile_template">テンプレート</string>
     <string name="profile_custom">カスタム</string>

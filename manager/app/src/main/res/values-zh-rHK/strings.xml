@@ -53,7 +53,6 @@
     <string name="module_magisk_conflict">因同 Magisk 有衝突，所有模組唔可用！</string>
     <string name="home_support_title">支援開發</string>
     <string name="home_support_content">KernelSU將保持免費開源，向官方KernelSU嘅開發者捐贈以表示支援</string>
-    <string name="about_source_code"><![CDATA[喺 %1$s 查看源碼<br/>加入我哋嘅 %2$s 頻道]]></string>
     <string name="profile_default">默認</string>
     <string name="profile_template">模版</string>
     <string name="profile_custom">自定義</string>

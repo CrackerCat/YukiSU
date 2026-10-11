@@ -1,0 +1,34 @@
+userspace/ksud/third_party/ndk-busybox/archival/libarchive/unxz/xz_dec_stream.c
+
+/*
+ * .xz Stream decoder
+ *
+ * Author: Lasse Collin <lasse.collin@tukaani.org>
+ *
+ * This file has been put into the public domain.
+ * You can do whatever you want with this file.
+ */
+
+userspace/ksud/third_party/ndk-busybox/archival/libarchive/unxz/xz_dec_bcj.c
+
+/*
+ * Branch/Call/Jump (BCJ) filter decoders
+ *
+ * Authors: Lasse Collin <lasse.collin@tukaani.org>
+ *          Igor Pavlov <http://7-zip.org/>
+ *
+ * This file has been put into the public domain.
+ * You can do whatever you want with this file.
+ */
+
+userspace/ksud/third_party/ndk-busybox/archival/libarchive/unxz/xz_dec_lzma2.c
+
+/*
+ * LZMA2 decoder
+ *
+ * Authors: Lasse Collin <lasse.collin@tukaani.org>
+ *          Igor Pavlov <http://7-zip.org/>
+ *
+ * This file has been put into the public domain.
+ * You can do whatever you want with this file.
+ */

@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">مازول به دلیل تعارض با مجیسک غیرفعال شده اند\'s!</string>
     <string name="home_support_title">توسعه پشتیبانی</string>
     <string name="home_support_content">KernelSU رایگان و منبع باز باقی خواهد ماند. به توسعه دهندگان رسمی KernelSU کمک مالی کنید تا حمایت خود را نشان دهید.</string>
-    <string name="about_source_code"><![CDATA[کد منبع را در %1$s مشاهده کنید<br/>به کانال %2$s ما بپیوندید]]></string>
     <string name="profile_default">پیش‌فرض</string>
     <string name="profile_template">قالب</string>
     <string name="profile_custom">شخصی سازی شده</string>

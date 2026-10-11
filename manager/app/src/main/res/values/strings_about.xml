@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="about_telegram_group">Telegram group</string>
+    <string name="open_source_licenses">Open source licenses</string>
+    <string name="open_source_licenses_summary">Components, copyright notices and full license texts</string>
+    <string name="open_source_search">Search components or licenses</string>
+    <string name="open_source_project">Project source</string>
+    <string name="open_source_artifacts">Included components (%1$d)</string>
+    <string name="open_source_load_error">Could not load the bundled licenses.</string>
+    <string name="open_source_retry">Retry</string>
+    <string name="open_source_no_results">No matching components</string>
+</resources>

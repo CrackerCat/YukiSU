@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Konflik dengan Magisk, fungsi modul ditiadakan!</string>
     <string name="home_support_title">Mendukung Pengembangan</string>
     <string name="home_support_content">KernelSU akan tetap gratis dan open source. Donasi ke pengembang resmi KernelSU untuk menunjukkan dukungan Anda.</string>
-    <string name="about_source_code"><![CDATA[Lihat kode sumber di %1$s<br/>Gabung dengan kami di saluran %2$s]]></string>
     <string name="profile_default">Bawaan</string>
     <string name="profile_template">Templat</string>
     <string name="profile_custom">Khusus</string>

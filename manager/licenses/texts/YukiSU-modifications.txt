@@ -1,0 +1,7 @@
+YukiSU modifications to bundled libraries
+
+AndroidX Compose UI: the build instruments RectManager.recalculateRectIfDirty to guard missing parent entries in RectList.
+
+MMRL / WebUI X: the build replaces reflection in WebColors and ConfigFile.asStringMap with direct field access.
+
+The modified code and build transformations are available in the YukiSU source repository (manager/app/build.gradle.kts).

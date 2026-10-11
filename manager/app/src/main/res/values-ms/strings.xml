@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Modul dilumpuhkan kerana berkonflik dengan modul Magisk!</string>
     <string name="home_support_title">Pembangunan Sokongan</string>
     <string name="home_support_content">KernelSU akan kekal percuma dan sumber terbuka. Derma kepada pembangun KernelSU rasmi untuk menunjukkan sokongan anda.</string>
-    <string name="about_source_code"><![CDATA[Lihat kod sumber di %1$s<br/>Sertai saluran %2$s kami]]></string>
     <string name="profile_default">Lalai</string>
     <string name="profile_template">Templat</string>
     <string name="profile_custom">Tersuai</string>

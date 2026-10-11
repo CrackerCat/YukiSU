@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Modular deaktiv edilir,çünki o Magisk-in modulları ilə toqquşur!</string>
     <string name="home_support_title">İnkişafa Dəstək</string>
     <string name="home_support_content">KernelSU pulsuz və açıq mənbə olaraq qalacaq. Dəstəyinizi göstərmək üçün rəsmi KernelSU tərtibatçılarına ianə edin.</string>
-    <string name="about_source_code"><![CDATA[Mənbə koduna %1$s ünvanında baxın<br/>%2$s kanalımıza qoşulun]]></string>
     <string name="profile_default">Defolt</string>
     <string name="profile_template">Şablon</string>
     <string name="profile_custom">Özəl</string>

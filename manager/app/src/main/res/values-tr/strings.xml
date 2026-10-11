@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Magisk ile çakışma nedeniyle modüller kullanılamıyor!</string>
     <string name="home_support_title">Geliştirmeyi Destekleyin</string>
     <string name="home_support_content">KernelSU ücretsiz ve açık kaynak olarak kalacaktır. Desteğinizi göstermek için resmi KernelSU geliştiricilerine bağış yapın.</string>
-    <string name="about_source_code"><![CDATA[Kaynak kodunu %1$s adresinde görüntüleyin<br/>%2$s kanalımıza katılın]]></string>
     <string name="profile_default">Varsayılan</string>
     <string name="profile_template">Şablon</string>
     <string name="profile_custom">Özel</string>

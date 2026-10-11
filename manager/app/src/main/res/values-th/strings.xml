@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">โมดูลไม่สามารถใช้งานได้ เนื่องจากขัดแย้งกับ Magisk!</string>
     <string name="home_support_title">สนับสนุนการพัฒนา</string>
     <string name="home_support_content">KernelSU จะยังคงฟรีและเป็นโอเพ่นซอร์ส บริจาคให้กับนักพัฒนา KernelSU อย่างเป็นทางการเพื่อแสดงการสนับสนุนของคุณ</string>
-    <string name="about_source_code"><![CDATA[ดูซอร์สโค้ดได้ที่ %1$s<br/>เข้าร่วมช่อง %2$s ของเรา]]></string>
     <string name="profile_default">ค่าเริ่มต้น</string>
     <string name="profile_template">เทมเพลต</string>
     <string name="profile_custom">กำหนดเอง</string>

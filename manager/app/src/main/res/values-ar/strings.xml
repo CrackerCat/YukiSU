@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">الوحدات غير متاحة بسبب تعارضها مع Magisk!</string>
     <string name="home_support_title">دعم التطوير</string>
     <string name="home_support_content">سيظل KernelSU مجانيًا ومفتوح المصدر. تبرع لمطوري KernelSU الرسميين لإظهار دعمك.</string>
-    <string name="about_source_code"><![CDATA[أنظر إلى مصدر البرمجة في %1$s<br/>إنضم إلى قناتنا في %2$s ]]></string>
     <string name="profile_default">الإفتراضي</string>
     <string name="profile_template">نموذج</string>
     <string name="profile_custom">مُخصّص</string>

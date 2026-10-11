@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Moduły są niedostępne z powodu konfliktu z Magiskiem!</string>
     <string name="home_support_title">Wspieraj rozwój</string>
     <string name="home_support_content">KernelSU pozostanie darmowy i open source. Przekaż darowiznę oficjalnym twórcom KernelSU, aby okazać swoje wsparcie.</string>
-    <string name="about_source_code"><![CDATA[Zobacz kod źródłowy na %1$s<br/>Dołącz do naszego kanału %2$s]]></string>
     <string name="profile_default">Domyślny</string>
     <string name="profile_template">Szablon</string>
     <string name="profile_custom">Własny</string>

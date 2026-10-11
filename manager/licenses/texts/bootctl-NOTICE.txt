@@ -1,0 +1,11 @@
+userspace/ksud/third_party/bootctlAlone/src/main.cpp
+
+/*
+ * bootctl - A/B slot info and compatibility with Android boot HAL CLI.
+ * Uses /proc/cmdline for slot detection when HAL is not available.
+ *
+ * Copyright (C) 2016 The Android Open Source Project (original AOSP bootctl)
+ * Copyright (C) YukiSU - property/cmdline fallback implementation
+ *
+ * Licensed under the Apache License, Version 2.0.
+ */

@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Module su isključene jer je u sukobu sa Magisk-om!</string>
     <string name="home_support_title">Podrška razvoju</string>
     <string name="home_support_content">KernelSU ostat će besplatan i otvorenog koda. Donirajte službenim KernelSU programerima da pokažete svoju podršku.</string>
-    <string name="about_source_code"><![CDATA[Pogledajte izvorni kod na %1$s<br/>Pridružite se našem %2$s kanalu]]></string>
     <string name="profile_default">Zadano</string>
     <string name="profile_template">Šablon</string>
     <string name="profile_custom">Prilagođeno</string>

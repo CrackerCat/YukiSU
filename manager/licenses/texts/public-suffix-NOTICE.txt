@@ -1,0 +1,11 @@
+Public Suffix List
+
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+The corresponding source for the list bundled with OkHttp 5.5.0 is available at:
+https://github.com/lysine-dev/okhttp/blob/a94bdf152084d11acecd44dcd09ffef203f4f0aa/okhttp/src/jvmTest/resources/okhttp3/internal/publicsuffix/public_suffix_list.dat
+
+YukiSU does not modify the list. OkHttp stores the sorted rules and exceptions
+as two length-prefixed UTF-8 blocks in assets/PublicSuffixDatabase.list.

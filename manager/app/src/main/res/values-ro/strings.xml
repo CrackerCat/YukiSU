@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Modulele sunt dezactivate deoarece sunt în conflict cu cele ale Magisk-ului!</string>
     <string name="home_support_title">Sprijin pentru dezvoltare</string>
     <string name="home_support_content">KernelSU va rămâne gratuit și open source. Donează dezvoltatorilor oficiali KernelSU pentru a-ți arăta sprijinul.</string>
-    <string name="about_source_code"><![CDATA[Vedeți codul sursă la %1$s<br/>Alăturați-vă canalului nostru %2$s]]></string>
     <string name="profile_default">Implicit</string>
     <string name="profile_template">Șablon</string>
     <string name="profile_custom">Personalizat</string>

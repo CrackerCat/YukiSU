@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_telegram_group">TG 群組</string>
+    <string name="open_source_licenses">開源授權</string>
+    <string name="open_source_licenses_summary">開源元件、著作權聲明和授權全文</string>
+    <string name="open_source_search">搜尋元件或授權條款</string>
+    <string name="open_source_project">專案原始碼</string>
+    <string name="open_source_artifacts">包含的元件（%1$d）</string>
+    <string name="open_source_load_error">無法載入內建的授權資訊。</string>
+    <string name="open_source_retry">重試</string>
+    <string name="open_source_no_results">沒有符合的元件</string>
+</resources>

@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">מודולים מושבתים מכיוון שהם מתנגשים עם זה של Magisk!</string>
     <string name="home_support_title">תמיכה בפיתוח</string>
     <string name="home_support_content">KernelSU יישאר חופשי וקוד פתוח. תרום למפתחי KernelSU הרשמיים כדי להראות את תמיכתך.</string>
-    <string name="about_source_code"><![CDATA[צפה בקוד המקור בכתובת %1$s<br/>הצטרף לערוץ %2$s שלנו]]></string>
     <string name="profile_default">ברירת מחדל</string>
     <string name="profile_template">תבנית</string>
     <string name="profile_custom">מותאם אישית</string>

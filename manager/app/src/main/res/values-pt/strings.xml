@@ -52,7 +52,6 @@
     <string name="module_magisk_conflict">Os módulos estão desativados porque estão em conflito com os do Magisk!</string>
     <string name="home_support_title">Apoiar o desenvolvimento</string>
     <string name="home_support_content">O KernelSU continuará a ser gratuito e de código aberto. Faça um donativo aos programadores oficiais do KernelSU para mostrar o seu apoio.</string>
-    <string name="about_source_code"><![CDATA[Veja o código fonte no %1$s<br/>Entre em nosso canal no %2$s]]></string>
     <string name="profile_default">Padrão</string>
     <string name="profile_template">Modelo</string>
     <string name="profile_custom">Personalizado</string>

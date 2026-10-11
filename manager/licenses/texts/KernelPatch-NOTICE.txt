@@ -1,0 +1,3 @@
+kernel/hook/arm64/patch_memory.c
+
+/* SPDX-License-Identifier: GPL-2.0-only */
