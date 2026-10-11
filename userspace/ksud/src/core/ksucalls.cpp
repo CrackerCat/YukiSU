@@ -256,11 +256,18 @@ int uts_ksuctl(int request, void* arg) {
     return ret;
 }
 
+GetInfoCmd query_info() {
+    GetInfoCmd cmd{};
+    if (ksuctl(KSU_IOCTL_GET_INFO, &cmd) < 0 && errno == ENOTTY) {
+        if (ksuctl(KSU_IOCTL_GET_INFO_LEGACY, &cmd) == 0)
+            ksuctl(KSU_IOCTL_GET_UAPI_VERSION, &cmd.uapi_version);
+    }
+    return cmd;
+}
+
 const GetInfoCmd& get_info() {
     if (!g_info_cached) {
-        GetInfoCmd cmd{};
-        ksuctl(KSU_IOCTL_GET_INFO, &cmd);
-        g_info_cache = cmd;
+        g_info_cache = query_info();
         g_info_cached = true;
     }
     return g_info_cache;
@@ -282,9 +289,7 @@ uint32_t get_flags() {
 }
 
 uint32_t get_uapi_version() {
-    uint32_t v = 0;
-    ksuctl(KSU_IOCTL_GET_UAPI_VERSION, &v);
-    return v;
+    return query_info().uapi_version;
 }
 
 bool is_lkm() {

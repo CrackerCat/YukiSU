@@ -103,10 +103,19 @@ static struct ksu_get_info_cmd g_version = {0};
 // Reset cached info (call after SuperKey authentication)
 void reset_cached_info() { memset(&g_version, 0, sizeof(g_version)); }
 
-struct ksu_get_info_cmd get_info() {
-  if (!g_version.version) {
-    ksuctl(KSU_IOCTL_GET_INFO, &g_version);
+static int query_info(struct ksu_get_info_cmd *info) {
+  int result = ksuctl(KSU_IOCTL_GET_INFO, info);
+  if (result < 0 && errno == ENOTTY) {
+    result = ksuctl(KSU_IOCTL_GET_INFO_LEGACY, info);
+    if (result == 0)
+      ksuctl(KSU_IOCTL_GET_UAPI_VERSION, &info->uapi_version);
   }
+  return result;
+}
+
+struct ksu_get_info_cmd get_info() {
+  if (!g_version.version)
+    query_info(&g_version);
   return g_version;
 }
 
@@ -116,9 +125,9 @@ uint32_t get_version() {
 }
 
 uint32_t get_uapi_version() {
-  uint32_t v = 0;
-  ksuctl(KSU_IOCTL_GET_UAPI_VERSION, &v);
-  return v;
+  struct ksu_get_info_cmd info = {};
+  query_info(&info);
+  return info.uapi_version;
 }
 
 // UAPI contract version this manager was built against. Compared against the
@@ -155,8 +164,8 @@ bool is_safe_mode() {
 bool is_manager() {
   // Do a fresh query to avoid stale cached flags after kernel crowns manager.
   struct ksu_get_info_cmd info = {};
-  if (ksuctl(KSU_IOCTL_GET_INFO, &info) == 0 && info.version > 0) {
-    g_version = info; // keep cache coherent for subsequent calls
+  if (query_info(&info) == 0 && info.version > 0) {
+    g_version = info;
     return (info.flags & KSU_GET_INFO_FLAG_MANAGER) != 0;
   }
   return false;
@@ -492,8 +501,8 @@ bool authenticate_superkey(const char *superkey) {
     // Retry up to 5 times with increasing delays to ensure kernel state is
     // ready
     for (int retry = 0; retry < 5; retry++) {
-      struct ksu_get_info_cmd verify_cmd = {};
-      if (ioctl(fd, KSU_IOCTL_GET_INFO, &verify_cmd) == 0 &&
+      struct ksu_get_info_legacy_cmd verify_cmd = {};
+      if (ioctl(fd, KSU_IOCTL_GET_INFO_LEGACY, &verify_cmd) == 0 &&
           verify_cmd.version > 0) {
         // Check if is_manager flag is set (0x2)
         if (verify_cmd.flags & 0x2) {
@@ -512,8 +521,8 @@ bool authenticate_superkey(const char *superkey) {
       usleep(20000 << retry);
     }
     // Final check
-    struct ksu_get_info_cmd final_cmd = {};
-    if (ioctl(fd, KSU_IOCTL_GET_INFO, &final_cmd) == 0 &&
+    struct ksu_get_info_legacy_cmd final_cmd = {};
+    if (ioctl(fd, KSU_IOCTL_GET_INFO_LEGACY, &final_cmd) == 0 &&
         final_cmd.version > 0 && (final_cmd.flags & 0x2)) {
       LogDebug("authenticate_superkey: success after retries, fd=%d", fd);
       return true;
@@ -551,8 +560,8 @@ bool authenticate_superkey(const char *superkey) {
                            // check is fresh
       // Verify is_manager flag with retries
       for (int retry = 0; retry < 5; retry++) {
-        struct ksu_get_info_cmd verify_cmd = {};
-        if (ioctl(fd, KSU_IOCTL_GET_INFO, &verify_cmd) == 0 &&
+        struct ksu_get_info_legacy_cmd verify_cmd = {};
+        if (ioctl(fd, KSU_IOCTL_GET_INFO_LEGACY, &verify_cmd) == 0 &&
             verify_cmd.version > 0 && (verify_cmd.flags & 0x2)) {
           LogDebug("authenticate_superkey: reboot success, fd=%d, flags=0x%x",
                    fd, verify_cmd.flags);
@@ -581,8 +590,8 @@ bool authenticate_superkey(const char *superkey) {
         reset_cached_info(); // Clear cached info on success
         // Verify is_manager flag with retries
         for (int retry = 0; retry < 5; retry++) {
-          struct ksu_get_info_cmd verify_cmd = {};
-          if (ioctl(fd, KSU_IOCTL_GET_INFO, &verify_cmd) == 0 &&
+          struct ksu_get_info_legacy_cmd verify_cmd = {};
+          if (ioctl(fd, KSU_IOCTL_GET_INFO_LEGACY, &verify_cmd) == 0 &&
               verify_cmd.version > 0 && (verify_cmd.flags & 0x2)) {
             LogDebug("authenticate_superkey: ioctl auth success, flags=0x%x",
                      verify_cmd.flags);

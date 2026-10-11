@@ -85,10 +85,11 @@ static int do_grant_root(void __user *arg)
 	return ret;
 }
 
-static int do_get_info(void __user *arg)
+static struct ksu_get_info_cmd get_current_info(void)
 {
 	struct ksu_get_info_cmd cmd = {.version = KERNEL_SU_VERSION,
-				       .flags = 0};
+				       .flags = 0,
+				       .uapi_version = KERNEL_SU_UAPI_VERSION};
 
 	if (ksu_is_current_dynamic_manager())
 		cmd.version = KSU_DYNAMIC_MANAGER_COMPAT_VERSION;
@@ -103,6 +104,12 @@ static int do_get_info(void __user *arg)
 		cmd.flags |= KSU_GET_INFO_FLAG_LATE_LOAD;
 	}
 	cmd.features = KSU_FEATURE_MAX;
+	return cmd;
+}
+
+static int do_get_info(void __user *arg)
+{
+	struct ksu_get_info_cmd cmd = get_current_info();
 
 	if (copy_to_user(arg, &cmd, sizeof(cmd))) {
 		pr_err("get_version: copy_to_user failed\n");
@@ -110,6 +117,16 @@ static int do_get_info(void __user *arg)
 	}
 
 	return 0;
+}
+
+static int do_get_info_legacy(void __user *arg)
+{
+	struct ksu_get_info_cmd info = get_current_info();
+	struct ksu_get_info_legacy_cmd cmd = {.version = info.version,
+					      .flags = info.flags,
+					      .features = info.features};
+
+	return copy_to_user(arg, &cmd, sizeof(cmd)) ? -EFAULT : 0;
 }
 
 static int do_get_load_mode(void __user *arg)
@@ -1132,11 +1149,10 @@ static int do_disable_escape_to_root(void __user *arg)
 	return 0;
 }
 
-// Report the UAPI contract version via its own ioctl, keeping GET_INFO's number
-// and struct stable across kernel/userspace version skew.
+// Retained for YukiSU clients predating the standard GET_INFO query.
 static int do_get_uapi_version(void __user *arg)
 {
-	__u32 v = KERNEL_SU_UAPI_VERSION;
+	__u32 v = get_current_info().uapi_version;
 
 	if (copy_to_user(arg, &v, sizeof(v))) {
 		pr_err("get_uapi_version: copy_to_user failed\n");
@@ -1557,6 +1573,10 @@ static const struct ksu_ioctl_cmd_map ksu_ioctl_handlers[] = {
     {.cmd = KSU_IOCTL_GET_INFO,
      .name = "GET_INFO",
      .handler = do_get_info,
+     .perm_check = always_allow},
+    {.cmd = KSU_IOCTL_GET_INFO_LEGACY,
+     .name = "GET_INFO_LEGACY",
+     .handler = do_get_info_legacy,
      .perm_check = always_allow},
     {.cmd = KSU_IOCTL_GET_LOAD_MODE,
      .name = "GET_LOAD_MODE",

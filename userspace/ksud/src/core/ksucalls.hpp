@@ -32,6 +32,9 @@ using AddTryUmountCmd = ksu_add_try_umount_cmd;
 using DynamicManagerSign = ksu_dynamic_manager_sign;
 using DynamicManagerCmd = ksu_dynamic_manager_cmd;
 
+static_assert(sizeof(ksu_get_info_cmd) == 16);
+static_assert(sizeof(ksu_get_info_legacy_cmd) == 12);
+
 static_assert(sizeof(ksu_uts_template) == 400, "ksu_uts_template ABI drift");
 static_assert(sizeof(ksu_uts_view_config) == 816, "ksu_uts_view_config ABI drift");
 static_assert(sizeof(ksu_uts_view_status) == 832, "ksu_uts_view_status ABI drift");

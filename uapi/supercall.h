@@ -62,12 +62,7 @@ struct ksu_become_daemon_cmd {
 #define EVENT_MODULE_MOUNTED 3
 #define EVENT_SERVICES 4
 
-/*
- * UAPI contract version. Queried via the dedicated KSU_IOCTL_GET_UAPI_VERSION
- * ioctl (NOT folded into ksu_get_info_cmd) so that GET_INFO stays byte- and
- * number-stable across versions -- the manager's auth/fd handshake depends on
- * GET_INFO working even when kernel and userspace are skewed during an update.
- */
+/* GET_INFO_LEGACY retains its original layout and command number. */
 // 3: scoped su-session driver fd
 // The su prompt request/verdict ioctls are additive and feature-gated.
 // 4: bundled LKM provenance and UAPI-based version matching.
@@ -82,6 +77,13 @@ struct ksu_become_daemon_cmd {
 #define KSU_GET_INFO_FLAG_BUNDLED (1U << 4)
 
 struct ksu_get_info_cmd {
+  __u32 version;
+  __u32 flags;
+  __u32 features;
+  __u32 uapi_version;
+};
+
+struct ksu_get_info_legacy_cmd {
   __u32 version;
   __u32 flags;    // Output: KSU_GET_INFO_FLAG_* bits
   __u32 features; // Output: max feature ID supported
@@ -302,7 +304,8 @@ struct ksu_su_prompt_key {
 
 // IOCTL definitions
 #define KSU_IOCTL_GRANT_ROOT _IOC(_IOC_NONE, 'K', 1, 0)
-#define KSU_IOCTL_GET_INFO _IOC(_IOC_READ, 'K', 2, 0)
+#define KSU_IOCTL_GET_INFO _IOR('K', 2, struct ksu_get_info_cmd)
+#define KSU_IOCTL_GET_INFO_LEGACY _IOC(_IOC_READ, 'K', 2, 0)
 #define KSU_IOCTL_REPORT_EVENT _IOC(_IOC_WRITE, 'K', 3, 0)
 #define KSU_IOCTL_SET_SEPOLICY _IOC(_IOC_READ | _IOC_WRITE, 'K', 4, 0)
 #define KSU_IOCTL_CHECK_SAFEMODE _IOC(_IOC_READ, 'K', 5, 0)
