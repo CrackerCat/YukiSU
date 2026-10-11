@@ -1,0 +1,10 @@
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="module_compat_title">Module compatibility</string>
+    <string name="module_compat_summary">Set the versions reported to all module scripts. Blank or zero uses the actual value. Changes apply the next time a script runs.</string>
+    <string name="module_compat_enable">Enable version compatibility</string>
+    <string name="module_compat_ksud_code">ksud version code</string>
+    <string name="module_compat_kernel_code">Kernel version code</string>
+    <string name="module_compat_uapi">UAPI version</string>
+    <string name="module_compat_ksud_version">ksud version name (optional)</string>
+    <string name="module_compat_actual">Use actual values</string>
+</resources>

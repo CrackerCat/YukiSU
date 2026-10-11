@@ -30,7 +30,9 @@ open class WebViewInterface(
 
     @JavascriptInterface
     fun exec(cmd: String): String {
-        return withNewRootShell(true) { ShellUtils.fastCmd(this, cmd) }
+        return withNewRootShell(true) {
+            ShellUtils.fastCmd(this, "${moduleCompatShellInit()}\n$cmd")
+        }
     }
 
     @JavascriptInterface
@@ -62,6 +64,7 @@ open class WebViewInterface(
         callbackFunc: String
     ) {
         val finalCommand = buildString {
+            appendLine(moduleCompatShellInit())
             processOptions(this, options)
             append(cmd)
         }
@@ -86,6 +89,7 @@ open class WebViewInterface(
     @JavascriptInterface
     fun spawn(command: String, args: String, options: String?, callbackFunc: String) {
         val finalCommand = buildString {
+            appendLine(moduleCompatShellInit())
             processOptions(this, options)
 
             if (!TextUtils.isEmpty(args)) {

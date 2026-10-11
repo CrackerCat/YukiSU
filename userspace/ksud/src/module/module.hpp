@@ -1,5 +1,7 @@
 #pragma once
 
+#include "module_compat.hpp"
+
 #include <chrono>
 #include <map>
 #include <string>
@@ -8,8 +10,7 @@
 namespace ksud {
 
 struct CommonScriptEnv {
-    std::string kernel_ver_code;
-    std::string uapi_version;
+    ModuleVersions versions;
     std::string runtime_mode;
     std::string path;
     bool late_load{};

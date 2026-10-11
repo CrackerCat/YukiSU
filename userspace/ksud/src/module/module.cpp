@@ -538,8 +538,7 @@ bool exec_install_script(const std::string& zip_path, bool installing_metamodule
 
 CommonScriptEnv build_common_script_env() {
     CommonScriptEnv env;
-    env.kernel_ver_code = std::to_string(get_version());
-    env.uapi_version = std::to_string(uapi_version());
+    env.versions = module_script_versions();
     env.runtime_mode = runtime_mode();
     env.late_load = is_late_load();
     const auto [zygisk_value, zygisk_supported] = get_feature(KSU_FEATURE_YUKIZYGISK);
@@ -565,10 +564,7 @@ void apply_common_script_env(const CommonScriptEnv& env, const char* module_id,
     setenv("ASH_STANDALONE", "1", 1);
     setenv("KSU", "true", 1);
     setenv("YUKISU", "1", 1);
-    setenv("KSU_KERNEL_VER_CODE", env.kernel_ver_code.c_str(), 1);
-    setenv("KSU_VER_CODE", VERSION_CODE, 1);
-    setenv("KSU_VER", VERSION_NAME, 1);
-    setenv("KSU_UAPI_VER", env.uapi_version.c_str(), 1);
+    apply_module_version_env(env.versions);
     setenv("KSU_RUNTIME_MODE", env.runtime_mode.c_str(), 1);
     setenv("PATH", env.path.c_str(), 1);
 

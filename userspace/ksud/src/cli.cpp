@@ -105,10 +105,15 @@ int check_input_files(const CliArguments& cli) {
 }
 
 void print_version() {
-    printf("ksud version %s (code: %s, uapi: %u)\n", VERSION_NAME, VERSION_CODE, uapi_version());
+    const auto versions = module_cli_versions();
+    printf("ksud version %s (code: %s, uapi: %s)\n", versions.ksud_version.c_str(),
+           versions.ksud_version_code.c_str(), versions.uapi_version.c_str());
 }
 
 int cmd_module(const std::vector<std::string>& args) {
+    if (args[0] == "compat")
+        return module_compat_handle(std::vector<std::string>(args.begin() + 1, args.end()));
+
     // Switch to init mount namespace
     if (!switch_mnt_ns(1)) {
         LOGE("Failed to switch mount namespace");
@@ -201,8 +206,9 @@ int cmd_debug(const std::vector<std::string>& args) {
     } else if (subcmd == "insmod" && args.size() > 1) {
         return debug_insmod(args[1], std::vector<std::string>(args.begin() + 2, args.end()));
     } else if (subcmd == "info") {
-        printf("version: %d\n", get_version());
-        printf("uapi_version: %u\n", get_uapi_version());
+        const auto versions = module_cli_versions(true);
+        printf("version: %s\n", versions.kernel_version_code.c_str());
+        printf("uapi_version: %s\n", versions.kernel_uapi_version.c_str());
         printf("flags: 0x%x\n", get_flags());
         printf("lkm: %s\n", is_lkm() ? "true" : "false");
         printf("bundled: %s\n", is_lkm_bundled() ? "true" : "false");
@@ -210,7 +216,7 @@ int cmd_debug(const std::vector<std::string>& args) {
         printf("runtime_mode: %s\n", runtime_mode());
         return 0;
     } else if (subcmd == "version") {
-        printf("Kernel Version: %d\n", get_version());
+        printf("Kernel Version: %s\n", module_cli_versions(true).kernel_version_code.c_str());
         return 0;
     } else if (subcmd == "su") {
         const bool global_mnt = args.size() > 1 && args[1] == "-g";

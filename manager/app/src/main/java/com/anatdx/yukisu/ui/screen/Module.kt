@@ -140,6 +140,11 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
         enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
     )
     var showBottomSheet by remember { mutableStateOf(false) }
+    var showModuleCompat by rememberSaveable { mutableStateOf(false) }
+
+    if (showModuleCompat) {
+        ModuleCompatDialog(onDismiss = { showModuleCompat = false })
+    }
     val listState = rememberLazyListState()
     val fabVisible by rememberFabVisibilityState(listState)
 
@@ -585,6 +590,13 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                     mountFilter = mountFilter,
                     onMountFilter = { mountFilter = it },
                     checkingConflicts = checkingConflicts,
+                    onModuleCompat = {
+                        scope.launch {
+                            bottomSheetState.hide()
+                            showBottomSheet = false
+                            showModuleCompat = true
+                        }
+                    },
                     onCheckConflicts = {
                         if (!checkingConflicts) {
                             checkingConflicts = true
@@ -789,7 +801,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ModuleBottomSheetContent(
     viewModel: ModuleViewModel,
@@ -800,6 +812,7 @@ private fun ModuleBottomSheetContent(
     mountFilter: String,
     onMountFilter: (String) -> Unit,
     checkingConflicts: Boolean,
+    onModuleCompat: () -> Unit,
     onCheckConflicts: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -870,6 +883,12 @@ private fun ModuleBottomSheetContent(
                 )
             }
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            FilledTonalButton(
+                onClick = onModuleCompat,
+                modifier = Modifier.fillMaxWidth(),
+                shapes = if (isExpressiveUi) ButtonDefaults.shapes() else
+                    ButtonDefaults.shapes(shape = ButtonDefaults.shape, pressedShape = ButtonDefaults.shape),
+            ) { Text(stringResource(R.string.module_compat_title)) }
             ConfigChoice(stringResource(R.string.kasumi_mount_filter), mountFilter,
                 listOf("all", "auto", "kasumi", "overlay", "magic", "none", "kasumi-active"),
                 mountState != null) { value ->
