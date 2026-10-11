@@ -233,7 +233,9 @@ int ksuctl(int request, void* arg) {
 
     const int ret = ioctl(fd, request, arg);
     if (ret < 0) {
-        LOGE("ioctl failed: request=0x%x, errno=%d (%s)", request, errno, strerror(errno));
+        const int error = errno;
+        LOGE("ioctl failed: request=0x%x, errno=%d (%s)", request, error, strerror(error));
+        errno = error;
         return -1;
     }
 
