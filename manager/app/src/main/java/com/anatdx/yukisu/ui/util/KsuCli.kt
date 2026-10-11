@@ -289,22 +289,69 @@ object KsuCli {
             }
         }
 
-    suspend fun setDynamicManagerUid(uid: Int): Boolean = withContext(Dispatchers.IO) {
-        val result = getRootShell().newJob()
-            .add(ksudCmd("dynamic set-uid $uid"))
+    data class DynamicManagerResult(val success: Boolean, val error: String = "")
+
+    private fun getDynamicManagerApkErrorForUid(uid: Int): String? {
+        val stdout = ArrayList<String>()
+        val stderr = ArrayList<String>()
+        getRootShell().newJob()
+            .add(ksudCmd("dynamic get-sign --json --uid $uid"))
+            .to(stdout, stderr)
             .exec()
-        Log.i(TAG, "dynamic set-uid $uid result: ${result.isSuccess}")
-        result.isSuccess
+        val info = runCatching { JSONObject(stdout.joinToString("\n")) }.getOrNull() ?: return null
+        val detail = info.optString("manager_error_detail")
+        return when (info.optString("manager_error")) {
+            "read_failed" -> ksuApp.getString(R.string.dynamic_manager_error_read, detail)
+            "unsupported_block" -> ksuApp.getString(R.string.dynamic_manager_error_block, detail)
+            "certificate_too_large" -> ksuApp.getString(R.string.dynamic_manager_error_certificate, detail)
+            "v1_manifest" -> ksuApp.getString(R.string.dynamic_manager_error_v1)
+            "missing_v2" -> ksuApp.getString(R.string.dynamic_manager_error_no_v2)
+            "multiple_v2" -> ksuApp.getString(R.string.dynamic_manager_error_multiple_v2, detail)
+            "zip64" -> ksuApp.getString(R.string.dynamic_manager_error_zip64)
+            "invalid_v2", "invalid_signing_block", "invalid_apk" ->
+                ksuApp.getString(R.string.dynamic_manager_error_malformed)
+            else -> null
+        }
     }
 
-    suspend fun deleteDynamicManager(signature: DynamicManagerSignature): Boolean =
+    private suspend fun runDynamicManagerCommand(command: String, uid: Int? = null): DynamicManagerResult =
         withContext(Dispatchers.IO) {
-            val result = getRootShell().newJob()
-                .add(ksudCmd("dynamic del ${shellArg(signature.size)} ${shellArg(signature.hash)}"))
-                .exec()
-            Log.i(TAG, "dynamic del ${signature.size} ${signature.hash} result: ${result.isSuccess}")
-            result.isSuccess
+            val stdout = ArrayList<String>()
+            val stderr = ArrayList<String>()
+            try {
+                val result = getRootShell().newJob()
+                    .add(ksudCmd(command))
+                    .to(stdout, stderr)
+                    .exec()
+                val success = result.isSuccess && (uid == null ||
+                    getDynamicManagerFlagsForUid(uid) and Natives.DYNAMIC_MANAGER_FLAG_TRUSTED != 0)
+                Log.i(TAG, "$command exit: ${result.code}, confirmed: $success")
+                if (success) return@withContext DynamicManagerResult(true)
+
+                val apkError = uid?.let {
+                    runCatching { getDynamicManagerApkErrorForUid(it) }.getOrNull()
+                }
+                val reason = apkError ?: if (result.isSuccess) {
+                    ksuApp.getString(R.string.dynamic_manager_error_unconfirmed)
+                } else {
+                    ksuApp.getString(R.string.dynamic_manager_error_command, result.code)
+                }
+                val output = (stderr + stdout).joinToString("\n").trim().take(16000)
+                val error = listOf(reason, output).filter { it.isNotBlank() }.joinToString("\n\n")
+                Log.w(TAG, "$command failed: $error")
+                DynamicManagerResult(false, error)
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.w(TAG, "$command failed", e)
+                DynamicManagerResult(false, e.message ?: e.javaClass.simpleName)
+            }
         }
+
+    suspend fun setDynamicManagerUid(uid: Int): DynamicManagerResult =
+        runDynamicManagerCommand("dynamic set-uid $uid", uid)
+
+    suspend fun deleteDynamicManager(signature: DynamicManagerSignature): DynamicManagerResult =
+        runDynamicManagerCommand("dynamic del ${shellArg(signature.size)} ${shellArg(signature.hash)}")
 
     /**
      * Install or update the ksud daemon binary itself, without touching boot image.

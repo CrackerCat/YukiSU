@@ -133,6 +133,16 @@
     <string name="dynamic_manager_set_failed">将 %s 设为动态管理器失败</string>
     <string name="dynamic_manager_del_failed">从动态管理器中移除 %s 失败</string>
     <string name="dynamic_manager_signature_unavailable">无法提取 %s 的动态管理器签名</string>
+    <string name="dynamic_manager_error_read">无法读取 APK：%1$s</string>
+    <string name="dynamic_manager_error_block">APK 含有额外的签名数据块（%1$s）。当前内核仅接受 V2 块和 verity 填充块。</string>
+    <string name="dynamic_manager_error_certificate">V2 证书大小为 %1$s 字节，超过内核的 1024 字节限制。</string>
+    <string name="dynamic_manager_error_v1">APK 含有 META-INF/MANIFEST.MF，当前内核拒绝包含此 V1 签名元数据的 APK。</string>
+    <string name="dynamic_manager_error_no_v2">APK 没有 V2 签名。</string>
+    <string name="dynamic_manager_error_multiple_v2">APK 含有 %1$s 个 V2 块，内核要求恰好一个。</string>
+    <string name="dynamic_manager_error_zip64">APK 使用 ZIP64，当前内核不支持。</string>
+    <string name="dynamic_manager_error_malformed">APK 的 ZIP 或签名结构未通过内核的边界检查。</string>
+    <string name="dynamic_manager_error_unconfirmed">签名已保存，但内核未确认此应用为动态管理器，且未返回具体拒绝原因。</string>
+    <string name="dynamic_manager_error_command">命令执行失败，退出码为 %1$d。</string>
     <string name="allow_any_dynamic_manager">允许授权任何应用为动态管理器</string>
     <string name="allow_any_dynamic_manager_summary">实验性功能。开启后在所有应用的 App Profile 中显示动态管理器开关，而不是仅显示预置签名管理器。</string>
     <string name="require_kernel_version">需要更新内核，点击此处安装</string>

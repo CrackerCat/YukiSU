@@ -135,6 +135,16 @@
     <string name="dynamic_manager_set_failed">Failed to set %s as dynamic manager</string>
     <string name="dynamic_manager_del_failed">Failed to remove %s from dynamic managers</string>
     <string name="dynamic_manager_signature_unavailable">Unable to extract dynamic manager signature for %s</string>
+    <string name="dynamic_manager_error_read" tools:ignore="MissingTranslation">Cannot read the APK: %1$s</string>
+    <string name="dynamic_manager_error_block" tools:ignore="MissingTranslation">The APK contains an additional signing block (%1$s). The kernel accepts only V2 and verity padding blocks.</string>
+    <string name="dynamic_manager_error_certificate" tools:ignore="MissingTranslation">The V2 certificate is %1$s bytes. The kernel limit is 1024 bytes.</string>
+    <string name="dynamic_manager_error_v1" tools:ignore="MissingTranslation">The APK contains META-INF/MANIFEST.MF. The kernel rejects APKs with this V1 signing metadata.</string>
+    <string name="dynamic_manager_error_no_v2" tools:ignore="MissingTranslation">The APK has no V2 signature.</string>
+    <string name="dynamic_manager_error_multiple_v2" tools:ignore="MissingTranslation">The APK contains %1$s V2 blocks. The kernel requires exactly one.</string>
+    <string name="dynamic_manager_error_zip64" tools:ignore="MissingTranslation">The APK uses ZIP64, which the kernel does not support.</string>
+    <string name="dynamic_manager_error_malformed" tools:ignore="MissingTranslation">The APK ZIP or signature structure does not pass the kernel bounds checks.</string>
+    <string name="dynamic_manager_error_unconfirmed" tools:ignore="MissingTranslation">The signature was saved, but the kernel did not confirm this app as a dynamic manager. No specific rejection reason was returned.</string>
+    <string name="dynamic_manager_error_command" tools:ignore="MissingTranslation">The command failed with exit code %1$d.</string>
     <string name="allow_any_dynamic_manager">Allow any app as dynamic manager</string>
     <string name="allow_any_dynamic_manager_summary">Experimental. Show the dynamic manager switch for every app instead of only preset manager signatures.</string>
     <string name="require_kernel_version">Kernel update required. Tap to install.</string>

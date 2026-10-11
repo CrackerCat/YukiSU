@@ -161,11 +161,11 @@ std::string signs_to_json(const std::vector<DynamicManagerSign>& signs) {
 
 bool save_signs(const std::vector<DynamicManagerSign>& signs) {
     if (!ensure_dir_exists(WORKING_DIR)) {
-        terminal::errorf("Failed to create %s\n", WORKING_DIR);
+        terminal::file_error("create directory", WORKING_DIR, errno);
         return false;
     }
     if (!write_file(DYNAMIC_MANAGER_CONFIG_PATH, signs_to_json(signs))) {
-        terminal::errorf("Failed to write %s\n", DYNAMIC_MANAGER_CONFIG_PATH);
+        terminal::file_error("write", DYNAMIC_MANAGER_CONFIG_PATH, errno);
         return false;
     }
     chmod(DYNAMIC_MANAGER_CONFIG_PATH, 0600);
@@ -180,7 +180,8 @@ int apply_signs(const std::vector<DynamicManagerSign>& signs) {
     }
 
     if (set_dynamic_managers(signs) != 0) {
-        terminal::errorf("Failed to send dynamic manager signatures to kernel\n");
+        terminal::errorf("Failed to send dynamic manager signatures to kernel: %s (errno %d)",
+                         strerror(errno), errno);
         return 1;
     }
     return 0;
@@ -214,7 +215,10 @@ void print_apk_signature(const ApkSignatureInfo& info, bool json) {
         printf("    \"size\": \"0x%x\"\n", info.v2.size);
         printf("  },\n");
         printf("  \"v3\": %s,\n", bool_json(info.v3));
-        printf("  \"v3.1\": %s\n", bool_json(info.v31));
+        printf("  \"v3.1\": %s,\n", bool_json(info.v31));
+        printf("  \"manager_error\": %s,\n", json::escape_string(info.manager_error).c_str());
+        printf("  \"manager_error_detail\": %s\n",
+               json::escape_string(info.manager_error_detail).c_str());
         printf("}\n");
         return;
     }
@@ -229,11 +233,13 @@ void print_apk_signature(const ApkSignatureInfo& info, bool json) {
     if (!info.v2.has) {
         terminal::message(stderr, "warning", "v2 sign data not found");
     }
+    if (!info.manager_error.empty())
+        terminal::message(stderr, "warning", manager_apk_error_message(info));
 }
 
 int print_apk_signature(const std::string& apk, bool json) {
     const auto info = get_apk_signature(apk);
-    if (!info.valid) {
+    if (!info.valid && !json) {
         terminal::errorf("Failed to get APK signature: %s\n", apk.c_str());
         return 1;
     }
@@ -260,16 +266,8 @@ bool sign_from_hash_args(const std::string& size_arg, const std::string& hash_ar
 
 bool sign_from_apk(const std::string& apk, DynamicManagerSign* sign) {
     const auto info = get_apk_signature(apk);
-    if (!info.valid) {
-        terminal::errorf("Failed to get APK signature: %s\n", apk.c_str());
-        return false;
-    }
-
-    if (info.v1 || info.v3 || info.v31) {
-        printf("Warning: Found v1/v3/v3.1 sign data\n");
-    }
-    if (!info.v2.has) {
-        printf("Warning: v2 sign data not found\n");
+    if (!info.manager_error.empty()) {
+        terminal::errorf("%s: %s", apk.c_str(), manager_apk_error_message(info).c_str());
         return false;
     }
 
@@ -378,6 +376,10 @@ bool sign_from_uid(uint32_t uid, DynamicManagerSign* sign) {
     for (const auto& package_name : packages) {
         const auto paths = apk_paths_for_package(package_name, user_id);
         for (const auto& path : paths) {
+            if (!starts_with(path, "/data/app/") || !ends_with(path, "/base.apk")) {
+                terminal::errorf("APK is outside the kernel manager scan path: %s", path.c_str());
+                continue;
+            }
             DynamicManagerSign parsed{};
             if (sign_from_apk(path, &parsed)) {
                 printf("package: %s\n", package_name.c_str());
@@ -388,7 +390,7 @@ bool sign_from_uid(uint32_t uid, DynamicManagerSign* sign) {
         }
     }
 
-    printf("No APK with v2 signature found for uid: %u\n", uid);
+    terminal::errorf("No compatible manager APK found for uid: %u", uid);
     return false;
 }
 
@@ -401,19 +403,36 @@ bool apk_from_uid(uint32_t uid, std::string* package_out, std::string* apk_out) 
         return false;
     }
 
+    std::string fallback_package;
+    std::string fallback_apk;
     for (const auto& package_name : packages) {
         const auto paths = apk_paths_for_package(package_name, user_id);
         for (const auto& path : paths) {
-            const auto info = get_apk_signature(path);
-            if (info.valid && info.v2.has) {
-                *package_out = package_name;
-                *apk_out = path;
-                return true;
+            if (!ends_with(path, "/base.apk")) {
+                continue;
             }
+            if (fallback_apk.empty()) {
+                fallback_package = package_name;
+                fallback_apk = path;
+            }
+            if (!starts_with(path, "/data/app/") ||
+                !get_apk_signature(path).manager_error.empty()) {
+                continue;
+            }
+            *package_out = package_name;
+            *apk_out = path;
+            return true;
         }
     }
 
-    printf("No APK with v2 signature found for uid: %u\n", uid);
+    // Preserve diagnostics when none of the UID's APKs can be authorized.
+    if (!fallback_apk.empty()) {
+        *package_out = fallback_package;
+        *apk_out = fallback_apk;
+        return true;
+    }
+
+    terminal::errorf("No base APK found for uid: %u", uid);
     return false;
 }
 

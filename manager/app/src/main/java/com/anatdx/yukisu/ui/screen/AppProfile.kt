@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -46,6 +47,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.SwitchItem
+import com.anatdx.yukisu.ui.component.YukiAlertDialog
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.component.clickHapticFeedback
 import com.anatdx.yukisu.ui.component.profile.AppProfileConfig
@@ -89,6 +91,25 @@ fun AppProfileScreen(
     val failedToSetDynamicManager = stringResource(R.string.dynamic_manager_set_failed).format(appInfo.label)
     val failedToDelDynamicManager = stringResource(R.string.dynamic_manager_del_failed).format(appInfo.label)
     val dynamicManagerSignatureUnavailable = stringResource(R.string.dynamic_manager_signature_unavailable).format(appInfo.label)
+    var dynamicManagerError by rememberSaveable { mutableStateOf<String?>(null) }
+    var dynamicManagerErrorTitle by rememberSaveable { mutableStateOf("") }
+
+    dynamicManagerError?.let { error ->
+        YukiAlertDialog(
+            onDismissRequest = { dynamicManagerError = null },
+            title = { Text(dynamicManagerErrorTitle) },
+            text = {
+                SelectionContainer {
+                    Text(error, Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { dynamicManagerError = null }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            }
+        )
+    }
 
     val packageName = appInfo.packageName
     val profileKey = appInfo.profileKey
@@ -217,12 +238,14 @@ fun AppProfileScreen(
                     dynamicManagerBusy = true
                     try {
                         if (checked) {
-                            if (KsuCli.setDynamicManagerUid(appInfo.uid)) {
+                            val result = KsuCli.setDynamicManagerUid(appInfo.uid)
+                            if (result.success) {
                                 dynamicManagerSignature = KsuCli.getDynamicManagerSignatureForUid(appInfo.uid)
                                 dynamicManagerChecked = true
                                 superUserViewModel.refreshAppConfigurations()
                             } else {
-                                snackBarHost.showSnackbar(failedToSetDynamicManager)
+                                dynamicManagerErrorTitle = failedToSetDynamicManager
+                                dynamicManagerError = result.error
                             }
                         } else {
                             val signature = dynamicManagerSignature
@@ -231,12 +254,14 @@ fun AppProfileScreen(
                                 snackBarHost.showSnackbar(dynamicManagerSignatureUnavailable)
                                 return@launch
                             }
-                            if (KsuCli.deleteDynamicManager(signature)) {
+                            val result = KsuCli.deleteDynamicManager(signature)
+                            if (result.success) {
                                 dynamicManagerSignature = signature
                                 dynamicManagerChecked = false
                                 superUserViewModel.refreshAppConfigurations()
                             } else {
-                                snackBarHost.showSnackbar(failedToDelDynamicManager)
+                                dynamicManagerErrorTitle = failedToDelDynamicManager
+                                dynamicManagerError = result.error
                             }
                         }
                     } finally {
