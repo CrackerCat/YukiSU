@@ -41,6 +41,7 @@ static apk_sign_key_t apk_sign_keys[] = {
     {PRESET_SIZE_KOWSU, PRESET_HASH_KOWSU, 0, "KowSU"},
     {PRESET_SIZE_KSUN, PRESET_HASH_KSUN, 0, "KernelSU-Next"},
     {PRESET_SIZE_XXKSU, PRESET_HASH_XXKSU, 0, "xxKSU"},
+    {PRESET_SIZE_FINASU, PRESET_HASH_FINASU, 0, "FinaSU"},
 };
 
 static struct sdesc *init_sdesc(struct crypto_shash *alg)

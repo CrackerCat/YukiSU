@@ -47,4 +47,8 @@ typedef struct {
 #define PRESET_HASH_XXKSU                                                      \
 	"4359c171f32543394cbc23ef908c4bb94cad7c8087002ba164c8230948c21549"
 
+#define PRESET_SIZE_FINASU 0x2cc
+#define PRESET_HASH_FINASU                                                     \
+	"2d89b50aaf1db013c2b6738f973f48b62ea21a3a8d7216bfec3521065d448458"
+
 #endif /* MANAGER_SIGN_H */
