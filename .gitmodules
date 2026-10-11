@@ -19,3 +19,21 @@
 [submodule "userspace/ksud/third_party/readelf_toyboxAlone"]
 	path = userspace/ksud/third_party/readelf_toyboxAlone
 	url = https://github.com/Anatdx/readelf_toyboxAlone.git
+[submodule "userspace/ksud/third_party/libzip"]
+	path = userspace/ksud/third_party/libzip
+	url = https://github.com/Rouyashiki/libzip.git
+[submodule "userspace/ksud/third_party/xz"]
+	path = userspace/ksud/third_party/xz
+	url = https://github.com/Rouyashiki/xz.git
+[submodule "userspace/ksud/third_party/bzip2"]
+	path = userspace/ksud/third_party/bzip2
+	url = https://github.com/Rouyashiki/bzip2.git
+[submodule "userspace/ksud/third_party/lua"]
+	path = userspace/ksud/third_party/lua
+	url = https://github.com/Rouyashiki/lua.git
+[submodule "userspace/ksud/third_party/mbedtls"]
+	path = userspace/ksud/third_party/mbedtls
+	url = https://github.com/Rouyashiki/mbedtls.git
+[submodule "userspace/ksud/third_party/lz4"]
+	path = userspace/ksud/third_party/lz4
+	url = https://github.com/Rouyashiki/lz4.git
