@@ -1,6 +1,7 @@
 #include <cstring>
 #include <optional>
 #include "cli.hpp"
+#include "flash/flash_ak3.hpp"
 
 #if defined(MAGISKBOOT_ALONE_AVAILABLE) && MAGISKBOOT_ALONE_AVAILABLE
 extern int magiskboot_main(int argc, char** argv);
@@ -14,9 +15,6 @@ extern "C" int resetprop_main(int argc, char** argv);
 #if defined(MKBOOTFS_ALONE_AVAILABLE) && MKBOOTFS_ALONE_AVAILABLE
 #include <mkbootfs/mkbootfs.h>
 #endif  // #if defined(MKBOOTFS_ALONE_AVAILABLE) ...
-#if defined(NDK_BUSYBOX_AVAILABLE) && NDK_BUSYBOX_AVAILABLE
-extern "C" int busybox_main(int argc, char** argv);
-#endif  // #if defined(NDK_BUSYBOX_AVAILABLE) && N...
 #if defined(TOYBOX_READELF_AVAILABLE) && TOYBOX_READELF_AVAILABLE
 extern "C" int yukisu_toybox_main(int argc, char** argv);
 #endif  // #if defined(TOYBOX_READELF_AVAILABLE) &&...
@@ -49,6 +47,9 @@ int main(int argc, char** argv) {
         }
         return std::nullopt;
     };
+
+    if (const auto result = dispatch("ak3-unzip", ksud::flash::ak3_unzip_main))
+        return *result;
 
 #if defined(MAGISKBOOT_ALONE_AVAILABLE) && MAGISKBOOT_ALONE_AVAILABLE
     {
@@ -85,22 +86,6 @@ int main(int argc, char** argv) {
             return *r;
     }
 #endif  // #if defined(TOYBOX_READELF_AVAILABLE) &&...
-#if defined(NDK_BUSYBOX_AVAILABLE) && NDK_BUSYBOX_AVAILABLE
-    {
-        const auto r = dispatch("busybox", busybox_main);
-        if (r)
-            return *r;
-    }
-    // If invoked via a symlink whose name matches a busybox applet (e.g. "ls"),
-    // and it's not one of ksud's own tools or a .so path, delegate to busybox.
-    // Exclude "su": sucompat hijacks root shell to ksud; must not be delegated to busybox.
-    if (base && base[0] && std::strcmp(base, "ksud") != 0 && std::strcmp(base, "magiskboot") != 0 &&
-        std::strcmp(base, "bootctl") != 0 && std::strcmp(base, "resetprop") != 0 &&
-        std::strcmp(base, "mkbootfs") != 0 && std::strcmp(base, "yzctl") != 0 &&
-        std::strcmp(base, "su") != 0 && std::strstr(base, ".so") == nullptr) {
-        return busybox_main(argc, argv);
-    }
-#endif  // #if defined(NDK_BUSYBOX_AVAILABLE) && N...
 
     return ksud::cli_run(argc, argv);
 }

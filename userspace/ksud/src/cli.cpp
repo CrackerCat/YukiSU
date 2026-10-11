@@ -617,27 +617,15 @@ int cli_run(int argc, char** argv) {
         return su_main(argc, argv);
     }
 
-    // If invoked as "sh", forward to busybox sh with all arguments
-    // This handles the case where /system/bin/sh is a hardlink to ksud
-    if (basename == "sh") {
-        // Use busybox to handle shell operations
-        const char* busybox = "/data/adb/ksu/bin/busybox";
-
-        // Build argv for busybox: busybox sh [original args...]
-        std::vector<char*> new_argv;
-        new_argv.push_back(const_cast<char*>("sh"));
-        for (int i = 1; i < argc; i++) {
-            new_argv.push_back(argv[i]);
+    if (basename == "sh" || basename == "ash") {
+        struct stat current{};
+        struct stat system{};
+        if (stat("/proc/self/exe", &current) == 0 && stat("/system/bin/sh", &system) == 0 &&
+            (current.st_dev != system.st_dev || current.st_ino != system.st_ino)) {
+            execv("/system/bin/sh", argv);
         }
-        new_argv.push_back(nullptr);
-
-        // Set ASH_STANDALONE to make busybox ash work properly
-        setenv("ASH_STANDALONE", "1", 1);
-
-        execv(busybox, new_argv.data());
-        // If busybox fails, try system sh as fallback
-        execv("/system/bin/toybox", new_argv.data());
-        _exit(127);
+        terminal::error("Cannot execute the system shell");
+        return 127;
     }
 
     CliArguments cli;

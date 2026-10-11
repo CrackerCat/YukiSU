@@ -15,10 +15,6 @@
 #include "../log.hpp"
 #include "../utils.hpp"
 
-// miniz is header-only in this context or linked
-#define MINIZ_HEADER_FILE_ONLY
-#include "miniz.h"
-
 namespace ksud::flash {
 
 namespace fs = std::filesystem;

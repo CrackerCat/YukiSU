@@ -26,6 +26,25 @@ def extract_array(source: str, name: str) -> bytes:
 
 
 class EmbedAssetsTest(unittest.TestCase):
+    def test_busybox_cannot_be_embedded(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            assets = root / "assets"
+            assets.mkdir()
+            generated = root / "assets_data.cpp"
+            for name in ("busybox", "libbusybox.so"):
+                with self.subTest(name=name):
+                    binary = assets / name
+                    binary.write_bytes(b"\x7fELF")
+                    result = subprocess.run(
+                        [sys.executable, str(SCRIPT), str(assets), str(generated)],
+                        capture_output=True,
+                    )
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(b"BusyBox must be packaged by the Manager", result.stderr)
+                    self.assertFalse(generated.exists())
+                    binary.unlink()
+
     def test_assets_without_lkms_remain_zlib_only(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

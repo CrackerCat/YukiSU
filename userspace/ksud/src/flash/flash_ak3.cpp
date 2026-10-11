@@ -1,6 +1,7 @@
 #include "flash_ak3.hpp"
 
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <poll.h>
 #include <sys/file.h>
 #include <sys/prctl.h>
@@ -24,8 +25,7 @@
 #include "../utils.hpp"
 #include "flash_partition.hpp"
 
-#define MINIZ_HEADER_FILE_ONLY
-#include "miniz.h"
+#include "../archive_zip.hpp"
 
 namespace ksud::flash {
 
@@ -38,7 +38,7 @@ constexpr std::string_view kAk3Script = "anykernel.sh";
 constexpr std::string_view kAk3TempRoot = "/data/adb/ksu/tmp";
 constexpr std::string_view kAk3LockPath = "/data/adb/ksu/tmp/ak3-flash.lock";
 constexpr size_t kMaxMetadataSize = size_t{4} * 1024U * 1024U;
-constexpr mz_uint kMaxArchiveEntries = 32768U;
+constexpr uint64_t kMaxArchiveEntries = 32768U;
 
 class ScopedFd {
 public:
@@ -123,71 +123,6 @@ private:
     FILE* file_;
 };
 
-class ZipReader {
-public:
-    explicit ZipReader(const std::string& path) : fd_(open(path.c_str(), O_RDONLY | O_CLOEXEC)) {
-        if (fd_ < 0) {
-            error_ = "Cannot open package: " + std::string(strerror(errno));
-            return;
-        }
-
-        struct stat stat_buffer{};
-        if (fstat(fd_, &stat_buffer) != 0 || !S_ISREG(stat_buffer.st_mode) ||
-            stat_buffer.st_size <= 0) {
-            error_ = "Package is not a non-empty regular file";
-            return;
-        }
-
-        archive_.m_pRead = &ZipReader::read_at;
-        archive_.m_pIO_opaque = this;
-        if (!mz_zip_reader_init(&archive_, static_cast<mz_uint64>(stat_buffer.st_size), 0)) {
-            error_ = std::string("Invalid ZIP archive: ") +
-                     mz_zip_get_error_string(mz_zip_get_last_error(&archive_));
-            return;
-        }
-        initialized_ = true;
-    }
-
-    ~ZipReader() {
-        if (initialized_)
-            mz_zip_reader_end(&archive_);
-        if (fd_ >= 0)
-            close(fd_);
-    }
-
-    ZipReader(const ZipReader&) = delete;
-    ZipReader& operator=(const ZipReader&) = delete;
-    ZipReader(ZipReader&&) = delete;
-    ZipReader& operator=(ZipReader&&) = delete;
-
-    [[nodiscard]] bool valid() const { return initialized_; }
-    [[nodiscard]] const std::string& error() const { return error_; }
-    mz_zip_archive* archive() { return &archive_; }
-
-private:
-    static size_t read_at(void* opaque, mz_uint64 offset, void* buffer, size_t size) {
-        auto* self = static_cast<ZipReader*>(opaque);
-        size_t total = 0;
-        while (total < size) {
-            const ssize_t count = pread(self->fd_, static_cast<char*>(buffer) + total, size - total,
-                                        static_cast<off_t>(offset + total));
-            if (count > 0) {
-                total += static_cast<size_t>(count);
-                continue;
-            }
-            if (count < 0 && errno == EINTR)
-                continue;
-            break;
-        }
-        return total;
-    }
-
-    int fd_ = -1;
-    bool initialized_ = false;
-    mz_zip_archive archive_{};
-    std::string error_;
-};
-
 std::string trim_copy(const std::string& value) {
     const auto first = value.find_first_not_of(" \t\r\n");
     if (first == std::string::npos)
@@ -229,38 +164,17 @@ bool path_is_safe(std::string name) {
     return true;
 }
 
-std::optional<std::string> archive_filename(mz_zip_archive* archive, mz_uint index) {
-    const mz_uint length = mz_zip_reader_get_filename(archive, index, nullptr, 0);
-    if (length == 0 || length > 64U * 1024U)
-        return std::nullopt;
-    std::vector<char> buffer(static_cast<size_t>(length) + 1U, '\0');
-    if (mz_zip_reader_get_filename(archive, index, buffer.data(),
-                                   static_cast<mz_uint>(buffer.size())) == 0) {
-        return std::nullopt;
-    }
-    return std::string(buffer.data());
-}
-
-bool archive_entry_is_symlink(const mz_zip_archive_file_stat& stat) {
-    constexpr mz_uint16 kUnixHost = 3;
-    constexpr mode_t kFileTypeMask = 0170000;
-    constexpr mode_t kSymlinkType = 0120000;
-    const mz_uint16 host = static_cast<mz_uint16>(stat.m_version_made_by >> 8U);
-    const mode_t mode = static_cast<mode_t>(stat.m_external_attr >> 16U);
-    return host == kUnixHost && (mode & kFileTypeMask) == kSymlinkType;
-}
-
 struct ArchiveInspection {
     bool valid = false;
     std::string error;
-    mz_uint updater_index = 0;
-    mz_uint script_index = 0;
+    uint64_t updater_index = 0;
+    uint64_t script_index = 0;
 };
 
 ArchiveInspection validate_archive(ZipReader& reader) {
     ArchiveInspection result;
-    auto* archive = reader.archive();
-    const mz_uint count = mz_zip_reader_get_num_files(archive);
+    auto* archive = &reader;
+    const uint64_t count = archive->entry_count();
     if (count == 0 || count > kMaxArchiveEntries) {
         result.error = "Archive has an invalid number of entries";
         return result;
@@ -268,22 +182,22 @@ ArchiveInspection validate_archive(ZipReader& reader) {
 
     unsigned int updater_count = 0;
     unsigned int script_count = 0;
-    for (mz_uint index = 0; index < count; ++index) {
-        mz_zip_archive_file_stat stat{};
-        if (!mz_zip_reader_file_stat(archive, index, &stat)) {
+    for (uint64_t index = 0; index < count; ++index) {
+        ZipEntry stat{};
+        if (!archive->entry(index, stat)) {
             result.error = "Cannot read ZIP central directory";
             return result;
         }
-        const auto name = archive_filename(archive, index);
+        const auto name = std::optional<std::string>(stat.name);
         if (!name || !path_is_safe(*name)) {
             result.error = "Archive contains an unsafe path";
             return result;
         }
-        if (stat.m_is_encrypted || !stat.m_is_supported) {
+        if (stat.encrypted || !stat.supported) {
             result.error = "Archive contains an encrypted or unsupported entry";
             return result;
         }
-        if (archive_entry_is_symlink(stat)) {
+        if (stat.symlink) {
             result.error = "Archive contains symbolic links";
             return result;
         }
@@ -305,24 +219,20 @@ ArchiveInspection validate_archive(ZipReader& reader) {
     return result;
 }
 
-std::optional<std::string> extract_text(mz_zip_archive* archive, mz_uint index,
-                                        std::string* error) {
-    mz_zip_archive_file_stat stat{};
-    if (!mz_zip_reader_file_stat(archive, index, &stat)) {
+std::optional<std::string> extract_text(ZipReader* archive, uint64_t index, std::string* error) {
+    ZipEntry stat{};
+    if (!archive->entry(index, stat)) {
         *error = "Cannot read archive entry metadata";
         return std::nullopt;
     }
-    if (stat.m_uncomp_size == 0 || stat.m_uncomp_size > kMaxMetadataSize) {
+    if (stat.size == 0 || stat.size > kMaxMetadataSize) {
         *error = "Archive metadata entry has an invalid size";
         return std::nullopt;
     }
 
-    std::string content(static_cast<size_t>(stat.m_uncomp_size), '\0');
-    if (!mz_zip_reader_extract_to_mem(archive, index, content.data(), content.size(), 0)) {
-        *error = std::string("Cannot extract archive metadata: ") +
-                 mz_zip_get_error_string(mz_zip_get_last_error(archive));
-        return std::nullopt;
-    }
+    auto content = archive->read_text(index, kMaxMetadataSize);
+    if (!content)
+        *error = archive->error();
     return content;
 }
 
@@ -687,7 +597,7 @@ Ak3PackageInfo inspect_ak3_package(const std::string& zip_path) {
     }
 
     std::string error;
-    const auto script = extract_text(reader.archive(), archive.script_index, &error);
+    const auto script = extract_text(&reader, archive.script_index, &error);
     if (!script) {
         Ak3PackageInfo info;
         info.error = std::move(error);
@@ -746,8 +656,7 @@ int flash_ak3_package(const Ak3FlashConfig& config) {
     }
 
     std::string extraction_error;
-    const auto updater_text =
-        extract_text(reader.archive(), archive.updater_index, &extraction_error);
+    const auto updater_text = extract_text(&reader, archive.updater_index, &extraction_error);
     if (!updater_text) {
         emit_line(log_file, extraction_error, true);
         return 1;
@@ -773,19 +682,9 @@ int flash_ak3_package(const Ak3FlashConfig& config) {
     }
     chmod(launcher_dir.c_str(), 0700);
 
-    // The first unzip happens before AK3 has installed its bundled BusyBox.
-    // Route it through ksud's embedded BusyBox. If explicitly requested, expose
-    // ksud's mkbootfs applet only inside this extracted AK3 tools directory.
     const std::string quoted_ksud = shell_quote(*executable);
-    std::string unzip_wrapper =
-        "#!/system/bin/sh\n" + quoted_ksud + " busybox unzip \"$@\"\nstatus=$?\n";
-    if (config.use_mkbootfs) {
-        unzip_wrapper +=
-            "if [ \"$status\" -eq 0 ] && [ -n \"$AKHOME\" ] && [ -d \"$AKHOME/tools\" ]; "
-            "then\n  " +
-            quoted_ksud + " busybox ln -sf " + quoted_ksud + " \"$AKHOME/tools/mkbootfs\"\nfi\n";
-    }
-    unzip_wrapper += "exit \"$status\"\n";
+    const std::string unzip_wrapper = "#!/system/bin/sh\nexec " + quoted_ksud + " ak3-unzip " +
+                                      (config.use_mkbootfs ? "--use-mkbootfs " : "") + "\"$@\"\n";
     if (!write_executable(launcher_dir / "unzip", unzip_wrapper)) {
         emit_line(log_file, "Cannot create the AK3 unzip bridge", true);
         return 1;
@@ -864,6 +763,127 @@ int flash_ak3_package(const Ak3FlashConfig& config) {
                   true);
     }
     return 1;
+}
+
+int ak3_unzip_main(int argc, char** argv) {
+    bool overwrite = false;
+    bool use_mkbootfs = false;
+    bool options = true;
+    std::string destination = ".";
+    std::string package;
+    std::vector<std::string> patterns;
+    for (int i = 1; i < argc; ++i) {
+        const std::string argument = argv[i];
+        if (options && argument == "--use-mkbootfs") {
+            use_mkbootfs = true;
+        } else if (options && argument == "--") {
+            options = false;
+        } else if (options && argument == "-d" && i + 1 < argc) {
+            destination = argv[++i];
+        } else if (options && argument.size() > 1 && argument[0] == '-') {
+            for (size_t j = 1; j < argument.size(); ++j) {
+                if (argument[j] == 'o') {
+                    overwrite = true;
+                } else if (argument[j] != 'q') {
+                    (void)fprintf(stderr, "Unsupported AK3 unzip option: %s\n", argument.c_str());
+                    return 1;
+                }
+            }
+        } else if (package.empty()) {
+            package = argument;
+        } else {
+            patterns.push_back(argument);
+        }
+    }
+    ZipReader reader(package);
+    if (!reader.valid() || !validate_archive(reader).valid) {
+        (void)fprintf(stderr, "Invalid AK3 ZIP: %s\n", reader.error().c_str());
+        return 1;
+    }
+    ScopedFd root(open(destination.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
+    if (!root.valid())
+        return 1;
+    for (uint64_t index = 0; index < reader.entry_count(); ++index) {
+        ZipEntry entry;
+        if (!reader.entry(index, entry))
+            return 1;
+        if (!patterns.empty() &&
+            std::none_of(patterns.begin(), patterns.end(), [&](const std::string& pattern) {
+                return fnmatch(pattern.c_str(), entry.name.c_str(), 0) == 0;
+            }))
+            continue;
+        std::replace(entry.name.begin(), entry.name.end(), '\\', '/');
+        ScopedFd directory(fcntl(root.get(), F_DUPFD_CLOEXEC, 0));
+        if (!directory.valid())
+            return 1;
+        size_t start = 0;
+        while (start < entry.name.size()) {
+            const size_t slash = entry.name.find('/', start);
+            const std::string part = entry.name.substr(start, slash - start);
+            if (part.empty() || part == ".") {
+                if (slash == std::string::npos)
+                    break;
+                start = slash + 1;
+                continue;
+            }
+            if (slash != std::string::npos || entry.directory) {
+                if (mkdirat(directory.get(), part.c_str(), 0755) != 0 && errno != EEXIST)
+                    return 1;
+                ScopedFd next(openat(directory.get(), part.c_str(),
+                                     O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
+                if (!next.valid())
+                    return 1;
+                directory = std::move(next);
+            } else {
+                struct stat existing{};
+                if (fstatat(directory.get(), part.c_str(), &existing, AT_SYMLINK_NOFOLLOW) == 0 &&
+                    !overwrite)
+                    return 1;
+                const std::string temporary =
+                    ".ksud-unzip-" + std::to_string(getpid()) + "-" + std::to_string(index);
+                ScopedFd output(openat(directory.get(), temporary.c_str(),
+                                       O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC | O_NOFOLLOW, 0600));
+                if (!output.valid())
+                    return 1;
+                mode_t mode = static_cast<mode_t>(entry.attributes >> 16U) & 0777;
+                if (mode == 0)
+                    mode = 0644;
+                bool ok = reader.extract_to_fd(index, output.get(), entry.size);
+                if (ok)
+                    ok = fchmod(output.get(), mode) == 0;
+                if (ok)
+                    ok = renameat(directory.get(), temporary.c_str(), directory.get(),
+                                  part.c_str()) == 0;
+                if (!ok) {
+                    unlinkat(directory.get(), temporary.c_str(), 0);
+                    (void)fprintf(stderr, "Cannot extract %s: %s\n", entry.name.c_str(),
+                                  reader.error().c_str());
+                    return 1;
+                }
+            }
+            if (slash == std::string::npos)
+                break;
+            start = slash + 1;
+        }
+    }
+    if (use_mkbootfs) {
+        const char* akhome = getenv("AKHOME");
+        const auto executable = current_executable();
+        if (akhome == nullptr || !executable)
+            return 1;
+        ScopedFd tools(open((std::string(akhome) + "/tools").c_str(),
+                            O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW));
+        if (!tools.valid())
+            return 1;
+        const std::string temporary = ".ksud-mkbootfs-" + std::to_string(getpid());
+        if (symlinkat(executable->c_str(), tools.get(), temporary.c_str()) != 0)
+            return 1;
+        if (renameat(tools.get(), temporary.c_str(), tools.get(), "mkbootfs") != 0) {
+            unlinkat(tools.get(), temporary.c_str(), 0);
+            return 1;
+        }
+    }
+    return 0;
 }
 
 }  // namespace ksud::flash

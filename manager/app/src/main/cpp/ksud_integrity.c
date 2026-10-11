@@ -17,6 +17,7 @@
 #define KSUD_PATH "/data/adb/ksud"
 #define KSU_WORKING_DIR "/data/adb/ksu"
 #define KSU_BINARY_DIR "/data/adb/ksu/bin"
+#define BUSYBOX_PATH KSU_BINARY_DIR "/busybox"
 #define KSU_LOG_DIR "/data/adb/ksu/log"
 #define KSUD_MAX_SIZE (128ULL * 1024ULL * 1024ULL)
 
@@ -27,6 +28,7 @@ enum ksud_task_type {
   KSUD_TASK_VERIFY,
   KSUD_TASK_INSTALL,
   KSUD_TASK_REPAIR_LINKS,
+  KSUD_TASK_ENSURE_BUSYBOX,
 };
 
 enum ksud_integrity_result {
@@ -87,7 +89,7 @@ static bool has_daemon_context(int descriptor) {
   return strcmp(context, kKsuFileContext) == 0;
 }
 
-static int verify_ksud(const char *source_path) {
+static int verify_binary(const char *source_path, const char *installed_path) {
   int source = open(source_path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
   if (source < 0) {
     return -1;
@@ -101,7 +103,7 @@ static int verify_ksud(const char *source_path) {
     return -1;
   }
 
-  int installed = open(KSUD_PATH, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
+  int installed = open(installed_path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
   if (installed < 0) {
     close(source);
     return 0;
@@ -228,11 +230,14 @@ static bool copy_source_to_temp(int source, int directory,
                         sizeof(kKsuFileContext), 0) == 0 &&
               fsync(output) == 0;
   }
-  close(output);
+  if (close(output) != 0) {
+    success = false;
+  }
   return success;
 }
 
-static bool install_ksud(const char *source_path) {
+static bool install_binary(const char *source_path, const char *directory_path,
+                           const char *name, const char *installed_path) {
   int source = open(source_path, O_RDONLY | O_CLOEXEC | O_NOFOLLOW);
   if (source < 0) {
     return false;
@@ -245,16 +250,15 @@ static bool install_ksud(const char *source_path) {
   }
 
   int directory =
-      open("/data/adb", O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
+      open(directory_path, O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW);
   if (directory < 0) {
     close(source);
     return false;
   }
 
   char temporary[NAME_MAX] = {0};
-  int length =
-      snprintf(temporary, sizeof(temporary), ".ksud.yukisu.tmp.%ld.%ld",
-               (long)getpid(), syscall(__NR_gettid));
+  int length = snprintf(temporary, sizeof(temporary), ".%s.yukisu.tmp.%ld.%ld",
+                        name, (long)getpid(), syscall(__NR_gettid));
   bool success = length > 0 && (size_t)length < sizeof(temporary);
   if (success) {
     unlinkat(directory, temporary, 0);
@@ -263,7 +267,7 @@ static bool install_ksud(const char *source_path) {
   close(source);
 
   if (success) {
-    success = renameat(directory, temporary, directory, "ksud") == 0 &&
+    success = renameat(directory, temporary, directory, name) == 0 &&
               fsync(directory) == 0;
   }
   if (!success) {
@@ -274,8 +278,18 @@ static bool install_ksud(const char *source_path) {
   if (!success) {
     return false;
   }
-  (void)repair_tool_links();
-  return verify_ksud(source_path) == 1;
+  return verify_binary(source_path, installed_path) == 1;
+}
+
+static bool ensure_busybox(const char *source_path) {
+  if (verify_binary(source_path, BUSYBOX_PATH) == 1) {
+    return true;
+  }
+  if (!ensure_directory(KSU_WORKING_DIR, 0755) ||
+      !ensure_directory(KSU_BINARY_DIR, 0755)) {
+    return false;
+  }
+  return install_binary(source_path, KSU_BINARY_DIR, "busybox", BUSYBOX_PATH);
 }
 
 static void *run_ksud_task(void *opaque) {
@@ -287,7 +301,7 @@ static void *run_ksud_task(void *opaque) {
 
   switch (task->type) {
   case KSUD_TASK_VERIFY: {
-    int verified = verify_ksud(task->source);
+    int verified = verify_binary(task->source, KSUD_PATH);
     if (verified < 0) {
       task->result = KSUD_INTEGRITY_UNAVAILABLE;
     } else {
@@ -296,10 +310,17 @@ static void *run_ksud_task(void *opaque) {
     break;
   }
   case KSUD_TASK_INSTALL:
-    task->result = install_ksud(task->source) ? 1 : 0;
+    task->result =
+        install_binary(task->source, "/data/adb", "ksud", KSUD_PATH) &&
+                repair_tool_links()
+            ? 1
+            : 0;
     break;
   case KSUD_TASK_REPAIR_LINKS:
     task->result = repair_tool_links() ? 1 : 0;
+    break;
+  case KSUD_TASK_ENSURE_BUSYBOX:
+    task->result = ensure_busybox(task->source) ? 1 : 0;
     break;
   }
   return nullptr;
@@ -348,6 +369,11 @@ NativeBridge(verifyKsudDaemon, jint, jstring source_path) {
 NativeBridge(installKsudDaemon, jboolean, jstring source_path) {
   (void)clazz;
   return with_source_path(env, source_path, KSUD_TASK_INSTALL) == 1;
+}
+
+NativeBridge(ensureBusybox, jboolean, jstring source_path) {
+  (void)clazz;
+  return with_source_path(env, source_path, KSUD_TASK_ENSURE_BUSYBOX) == 1;
 }
 
 NativeBridgeNP(ensureKsudToolLinks, jboolean) {

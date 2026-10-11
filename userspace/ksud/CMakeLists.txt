@@ -1,5 +1,5 @@
 # Prefer Ninja: cmake -G Ninja .. [options] && ninja
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.20)
 
 # Android API floor: 31 (Android 12). This is a compatibility floor, not just a
 # bionic-symbol requirement -- it stops YukiSU being rebuilt against an older
@@ -36,7 +36,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL "Android" OR
     message(FATAL_ERROR "YukiSU userspace supports Android arm64-v8a only")
 endif()
 
-# Allow FetchContent deps (e.g. miniz) that use cmake_minimum_required < 3.5
+# Allow dependencies with older CMake policy requirements.
 if(NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM)
     set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Min CMake version for subprojects")
 endif()
@@ -124,27 +124,29 @@ else()
 endif()
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}${_LINKER_FLAGS}")
 
-# --- Shrink miniz: disable unused features ---
-add_compile_definitions(
-    MINIZ_NO_STDIO               # No FILE* interface needed
-    MINIZ_NO_TIME                 # No timestamp support needed
-    MINIZ_NO_ARCHIVE_WRITING_APIS # Decompression only, disable write APIs
-)
-
-# Fetch third-party dependencies
-include(FetchContent)
+foreach(source IN ITEMS lua/lua.h mbedtls/CMakeLists.txt mbedtls/framework/CMakeLists.txt lz4/lib/lz4.c)
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${source}")
+        message(FATAL_ERROR
+            "Missing native submodule source: ${source}. "
+            "Run git submodule update --init --recursive.")
+    endif()
+endforeach()
 
 # Embed upstream Lua 5.5 and expose its native module ABI.
-FetchContent_Declare(
-    lua
-    URL https://www.lua.org/ftp/lua-5.5.1.tar.gz
-    URL_HASH SHA256=1c4b4068d67061f2a2231ad2b5422e77acea1487ea9890f6320af614f4373dce
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-FetchContent_MakeAvailable(lua)
+set(lua_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/lua")
+set(LUA_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/lua")
+file(MAKE_DIRECTORY "${LUA_BUILD_DIR}")
+file(GLOB LUA_HEADERS CONFIGURE_DEPENDS "${lua_SOURCE_DIR}/*.h")
+foreach(header IN LISTS LUA_HEADERS)
+    get_filename_component(name "${header}" NAME)
+    if(NOT name STREQUAL "luaconf.h")
+        configure_file("${header}" "${LUA_BUILD_DIR}/${name}" COPYONLY)
+    endif()
+endforeach()
 
 # Lua uses C++ exceptions when compiled as C++, but its public API must retain C linkage.
-set(LUA_CONFIG_HEADER "${lua_SOURCE_DIR}/src/luaconf.h")
+set(LUA_CONFIG_HEADER "${lua_SOURCE_DIR}/luaconf.h")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${LUA_CONFIG_HEADER}")
 file(READ "${LUA_CONFIG_HEADER}" LUA_CONFIG_CONTENT)
 string(FIND "${LUA_CONFIG_CONTENT}" "YUKISU_LUA_CXX_ABI" LUA_CONFIG_PATCHED)
 if(LUA_CONFIG_PATCHED EQUAL -1)
@@ -157,47 +159,51 @@ if(LUA_CONFIG_PATCHED EQUAL -1)
     if(LUA_CONFIG_CONTENT STREQUAL LUA_CONFIG_ORIGINAL)
         message(FATAL_ERROR "Unable to preserve the Lua C ABI")
     endif()
-    file(WRITE "${LUA_CONFIG_HEADER}" "${LUA_CONFIG_CONTENT}")
 endif()
+file(CONFIGURE OUTPUT "${LUA_BUILD_DIR}/luaconf.h" CONTENT "${LUA_CONFIG_CONTENT}" @ONLY)
 
 set(LUA_SOURCES
-    ${lua_SOURCE_DIR}/src/lapi.c
-    ${lua_SOURCE_DIR}/src/lcode.c
-    ${lua_SOURCE_DIR}/src/lctype.c
-    ${lua_SOURCE_DIR}/src/ldebug.c
-    ${lua_SOURCE_DIR}/src/ldo.c
-    ${lua_SOURCE_DIR}/src/ldump.c
-    ${lua_SOURCE_DIR}/src/lfunc.c
-    ${lua_SOURCE_DIR}/src/lgc.c
-    ${lua_SOURCE_DIR}/src/llex.c
-    ${lua_SOURCE_DIR}/src/lmem.c
-    ${lua_SOURCE_DIR}/src/lobject.c
-    ${lua_SOURCE_DIR}/src/lopcodes.c
-    ${lua_SOURCE_DIR}/src/lparser.c
-    ${lua_SOURCE_DIR}/src/lstate.c
-    ${lua_SOURCE_DIR}/src/lstring.c
-    ${lua_SOURCE_DIR}/src/ltable.c
-    ${lua_SOURCE_DIR}/src/ltm.c
-    ${lua_SOURCE_DIR}/src/lundump.c
-    ${lua_SOURCE_DIR}/src/lvm.c
-    ${lua_SOURCE_DIR}/src/lzio.c
-    ${lua_SOURCE_DIR}/src/lauxlib.c
-    ${lua_SOURCE_DIR}/src/lbaselib.c
-    ${lua_SOURCE_DIR}/src/lcorolib.c
-    ${lua_SOURCE_DIR}/src/ldblib.c
-    ${lua_SOURCE_DIR}/src/liolib.c
-    ${lua_SOURCE_DIR}/src/lmathlib.c
-    ${lua_SOURCE_DIR}/src/loslib.c
-    ${lua_SOURCE_DIR}/src/lstrlib.c
-    ${lua_SOURCE_DIR}/src/ltablib.c
-    ${lua_SOURCE_DIR}/src/lutf8lib.c
-    ${lua_SOURCE_DIR}/src/loadlib.c
-    ${lua_SOURCE_DIR}/src/linit.c
+    ${LUA_BUILD_DIR}/lapi.c
+    ${LUA_BUILD_DIR}/lcode.c
+    ${LUA_BUILD_DIR}/lctype.c
+    ${LUA_BUILD_DIR}/ldebug.c
+    ${LUA_BUILD_DIR}/ldo.c
+    ${LUA_BUILD_DIR}/ldump.c
+    ${LUA_BUILD_DIR}/lfunc.c
+    ${LUA_BUILD_DIR}/lgc.c
+    ${LUA_BUILD_DIR}/llex.c
+    ${LUA_BUILD_DIR}/lmem.c
+    ${LUA_BUILD_DIR}/lobject.c
+    ${LUA_BUILD_DIR}/lopcodes.c
+    ${LUA_BUILD_DIR}/lparser.c
+    ${LUA_BUILD_DIR}/lstate.c
+    ${LUA_BUILD_DIR}/lstring.c
+    ${LUA_BUILD_DIR}/ltable.c
+    ${LUA_BUILD_DIR}/ltm.c
+    ${LUA_BUILD_DIR}/lundump.c
+    ${LUA_BUILD_DIR}/lvm.c
+    ${LUA_BUILD_DIR}/lzio.c
+    ${LUA_BUILD_DIR}/lauxlib.c
+    ${LUA_BUILD_DIR}/lbaselib.c
+    ${LUA_BUILD_DIR}/lcorolib.c
+    ${LUA_BUILD_DIR}/ldblib.c
+    ${LUA_BUILD_DIR}/liolib.c
+    ${LUA_BUILD_DIR}/lmathlib.c
+    ${LUA_BUILD_DIR}/loslib.c
+    ${LUA_BUILD_DIR}/lstrlib.c
+    ${LUA_BUILD_DIR}/ltablib.c
+    ${LUA_BUILD_DIR}/lutf8lib.c
+    ${LUA_BUILD_DIR}/loadlib.c
+    ${LUA_BUILD_DIR}/linit.c
 )
 
+foreach(source IN LISTS LUA_SOURCES)
+    get_filename_component(name "${source}" NAME)
+    configure_file("${lua_SOURCE_DIR}/${name}" "${source}" COPYONLY)
+endforeach()
 set_source_files_properties(${LUA_SOURCES} PROPERTIES LANGUAGE CXX)
 add_library(lua OBJECT ${LUA_SOURCES})
-target_include_directories(lua PUBLIC ${lua_SOURCE_DIR}/src)
+target_include_directories(lua PUBLIC "${LUA_BUILD_DIR}")
 target_compile_definitions(lua PRIVATE LUA_USE_POSIX LUA_USE_DLOPEN)
 target_compile_options(lua PRIVATE -fvisibility=default -Wno-deprecated)
 if(ANDROID)
@@ -212,23 +218,10 @@ set(ENABLE_PROGRAMS OFF CACHE BOOL "" FORCE)
 set(ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(DISABLE_PACKAGE_CONFIG_AND_INSTALL ON CACHE BOOL "" FORCE)
 set(MBEDTLS_FATAL_WARNINGS OFF CACHE BOOL "" FORCE)  # avoid -Werror vs -fno-semantic-interposition on Apple Clang
-FetchContent_Declare(
-    mbedtls
-    # The official release archive includes the framework submodule and generated files.
-    # GitHub's automatic source archives and a plain shallow clone do not.
-    URL https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.2/mbedtls-3.6.2.tar.bz2
-    URL_HASH SHA256=8b54fb9bcf4d5a7078028e0520acddefb7900b3e66fec7f7175bb5b7d85ccdca
-)
-FetchContent_MakeAvailable(mbedtls)
+set(mbedtls_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mbedtls")
+add_subdirectory("${mbedtls_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/third_party/mbedtls")
 
-# miniz - Lightweight ZIP library
-FetchContent_Declare(
-    miniz
-    GIT_REPOSITORY https://github.com/richgel999/miniz.git
-    GIT_TAG 3.0.2
-    GIT_SHALLOW TRUE
-)
-FetchContent_MakeAvailable(miniz)
+include(cmake/ArchiveLibraries.cmake)
 
 # LZ4 - prefer Magisk vendored inside MagiskbootAlone submodule (same ABI as Magisk magiskboot)
 set(LZ4_IN_MAGISKBOOT_ALONE ${CMAKE_SOURCE_DIR}/third_party/MagiskbootAlone/external/lz4)
@@ -236,14 +229,8 @@ if(EXISTS ${LZ4_IN_MAGISKBOOT_ALONE}/lz4.c)
     set(LZ4_LIB_DIR ${LZ4_IN_MAGISKBOOT_ALONE})
     message(STATUS "Using vendored LZ4 (MagiskbootAlone/external/lz4) for magiskboot: ${LZ4_LIB_DIR}")
 else()
-    FetchContent_Declare(
-        lz4
-        GIT_REPOSITORY https://github.com/lz4/lz4.git
-        GIT_TAG v1.10.0
-        GIT_SHALLOW TRUE
-    )
-    FetchContent_MakeAvailable(lz4)
-    set(LZ4_LIB_DIR ${lz4_SOURCE_DIR}/lib)
+    set(LZ4_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/lz4/lib")
+    message(STATUS "Using LZ4 submodule for magiskboot: ${LZ4_LIB_DIR}")
 endif()
 
 # Generated sources / embedded assets
@@ -259,7 +246,7 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 # readelf_toyboxAlone: a minimal Android 16 Toybox readelf applet. Its
 # subproject namespaces all Toybox-defined symbols before exposing the archive,
-# so it can coexist with the BusyBox library already welded into ksud.
+# to isolate its implementation from the other embedded tools.
 set(READELF_TOYBOX_ALONE_DIR
     ${CMAKE_SOURCE_DIR}/third_party/readelf_toyboxAlone
 )
@@ -358,16 +345,6 @@ if(EXISTS ${MKBOOTFS_ALONE_DIR}/src/mkbootfs.cpp)
     message(STATUS "mkbootfsAlone: building mkbootfs into ksud (multi-call)")
 endif()
 
-# ndk-busybox: build as static lib and link into ksud for multi-call (argv0 "busybox")
-set(NDK_BUSYBOX_DIR ${MAGISKTOOLS_ALONE_DIR}/ndk-busybox)
-if(EXISTS ${NDK_BUSYBOX_DIR}/CMakeLists.txt)
-  set(BUSYBOX_EMBEDDED 1 CACHE BOOL "Build busybox as static lib for embedding")
-  add_subdirectory(${NDK_BUSYBOX_DIR} ${CMAKE_BINARY_DIR}/ndk-busybox)
-  target_sources(busybox PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/xz_stream_adapter.c)
-  set(NDK_BUSYBOX_AVAILABLE 1)
-  message(STATUS "ndk-busybox: building busybox into ksud (multi-call)")
-endif()
-
 # Our own sources (clang-tidy will run on these only)
 set(KSUD_OUR_SOURCES
     src/main.cpp
@@ -378,6 +355,7 @@ set(KSUD_OUR_SOURCES
     src/log.cpp
     src/utils.cpp
     src/command_exec.cpp
+    src/archive_zip.cpp
     src/xz_range.c
     src/kernelsu_loader.cpp
     src/dynamic_manager.cpp
@@ -447,10 +425,8 @@ get_filename_component(REPO_ROOT "${CMAKE_SOURCE_DIR}/../.." ABSOLUTE)
 # Include directories (for both object libs and ksud)
 set(KSUD_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/src
-    ${lua_SOURCE_DIR}/src
+    ${LUA_BUILD_DIR}
     ${mbedtls_SOURCE_DIR}/include
-    ${miniz_SOURCE_DIR}
-    ${miniz_BINARY_DIR}
     ${LZ4_LIB_DIR}
     ${MKBOOTFS_ALONE_DIR}/include
     ${READELF_TOYBOX_ALONE_DIR}/include
@@ -477,9 +453,6 @@ if(MKBOOTFS_ALONE_AVAILABLE)
         MKBOOTFS_AOSP_REVISION="a3b721a32242006b59cb12bd62c9133632af3a2d"
     )
 endif()
-if(NDK_BUSYBOX_AVAILABLE)
-    list(APPEND KSUD_DEFINES NDK_BUSYBOX_AVAILABLE=1)
-endif()
 if(TOYBOX_READELF_AVAILABLE)
     list(APPEND KSUD_DEFINES TOYBOX_READELF_AVAILABLE=1)
 endif()
@@ -490,7 +463,7 @@ endif()
 # because these objects hold every definition and use of those vtables, and
 # nothing escapes the LTO unit.
 #
-# Deliberately NOT in the global CMAKE_CXX_FLAGS: FetchContent subprojects such
+# Deliberately NOT in the global CMAKE_CXX_FLAGS: third-party subprojects such
 # as mbedTLS replace CMAKE_C_FLAGS_RELEASE with their own -O2, which drops the
 # -flto=full this flag requires and makes clang reject it outright.
 set(KSUD_DEVIRT_FLAGS)
@@ -502,6 +475,7 @@ endif()
 # compilation database supplies the real target sysroot and flags to clang-tidy.
 list(APPEND KSUD_OUR_SOURCES ${REPO_ROOT}/userspace/common/cxx_slim.cpp)
 add_library(ksud_our_objs OBJECT ${KSUD_OUR_SOURCES})
+target_link_libraries(ksud_our_objs PRIVATE zip liblzma)
 add_dependencies(ksud_our_objs ksud_version)
 target_include_directories(ksud_our_objs PRIVATE ${KSUD_INCLUDE_DIRS})
 target_compile_definitions(ksud_our_objs PRIVATE ${KSUD_DEFINES})
@@ -564,24 +538,12 @@ target_compile_definitions(ksud PRIVATE ${KSUD_DEFINES})
 if(TOYBOX_READELF_AVAILABLE)
     target_link_libraries(ksud PRIVATE readelf_toybox)
 endif()
-if(NDK_BUSYBOX_AVAILABLE)
-    target_compile_definitions(ksud PRIVATE NDK_BUSYBOX_AVAILABLE=1)
-    target_link_libraries(ksud PRIVATE busybox)
-    # libselinux not in NDK; link only when found (e.g. host or custom Android sysroot)
-    find_library(SELINUX_LIB selinux)
-    if(SELINUX_LIB)
-      target_link_libraries(ksud PRIVATE selinux)
-    endif()
-    # busybox expects these wraps (from Android.mk)
-    target_link_options(ksud PRIVATE -Wl,--wrap=realpath -Wl,--wrap=rename -Wl,--wrap=renameat)
-endif()
-
 # Link libraries - Android bionic libc has built-in pthread, no separate linking needed
 if(NOT ANDROID)
     target_link_libraries(ksud PRIVATE pthread)
 endif()
 
-target_link_libraries(ksud PRIVATE lua z miniz mbedx509 mbedcrypto dl m)
+target_link_libraries(ksud PRIVATE lua z zip liblzma mbedx509 mbedcrypto dl m)
 if(ANDROID)
     target_link_options(ksud PRIVATE
         "-Wl,--export-dynamic-symbol=lua_*"

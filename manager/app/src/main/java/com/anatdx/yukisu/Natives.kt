@@ -88,6 +88,7 @@ object Natives {
 
     external fun verifyKsudDaemon(sourcePath: String): Int
     external fun installKsudDaemon(sourcePath: String): Boolean
+    external fun ensureBusybox(sourcePath: String): Boolean
     external fun ensureKsudToolLinks(): Boolean
 
     external fun uidShouldUmount(uid: Int): Boolean

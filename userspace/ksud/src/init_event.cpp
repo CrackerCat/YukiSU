@@ -291,13 +291,6 @@ int on_post_data_fs() {
     }
 
     const auto wait = ScriptWait::until(std::chrono::steady_clock::now() + BOOT_STAGE_TIMEOUT);
-    if (safe_mode) {
-        LOGW("safe mode, skip common post-fs-data.d scripts");
-    } else {
-        // Execute common post-fs-data scripts
-        exec_common_scripts("post-fs-data.d", wait);
-    }
-
     // Ensure directories exist
     ensure_dir_exists(WORKING_DIR);
     ensure_dir_exists(MODULE_DIR);
@@ -307,6 +300,13 @@ int on_post_data_fs() {
     // Ensure binaries exist (AFTER safe mode check, like Rust)
     if (ensure_binaries(true) != 0) {
         LOGW("Failed to ensure binaries");
+    }
+
+    if (safe_mode) {
+        LOGW("safe mode, skip common post-fs-data.d scripts");
+    } else {
+        // Execute common post-fs-data scripts
+        exec_common_scripts("post-fs-data.d", wait);
     }
 
     if (!restorecon())

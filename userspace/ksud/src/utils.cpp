@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include "archive_zip.hpp"
 #include "boot/boot_patch.hpp"
 #include "core/assets.hpp"
 #include "core/ksucalls.hpp"
@@ -703,21 +704,30 @@ bool touch_file(const std::filesystem::path& path) {
 }
 
 std::optional<std::string> read_zip_entry(const std::string& zip_path, const char* entry_name) {
-    struct stat status{};
-    if (stat(zip_path.c_str(), &status) != 0 || !S_ISREG(status.st_mode) || status.st_size <= 0) {
-        LOGE("zip: %s is not a non-empty regular file", zip_path.c_str());
+    ZipReader archive(zip_path);
+    if (!archive.valid()) {
+        LOGE("zip: %s", archive.error().c_str());
         return std::nullopt;
     }
-
-    const std::string absolute_path = std::filesystem::absolute(zip_path).string();
-    auto result = exec_command({BUSYBOX_PATH, "unzip", "-p", absolute_path, entry_name},
-                               std::chrono::seconds(30));
-    if (result.exit_code != 0 || result.stdout_str.empty()) {
-        LOGE("zip: cannot read %s from %s: %s", entry_name, zip_path.c_str(),
-             result.stderr_str.c_str());
+    std::optional<uint64_t> found;
+    for (uint64_t index = 0; index < archive.entry_count(); ++index) {
+        ZipEntry entry;
+        if (!archive.entry(index, entry))
+            return std::nullopt;
+        if (entry.name == entry_name) {
+            if (found)
+                return std::nullopt;
+            found = index;
+        }
+    }
+    if (!found)
+        return std::nullopt;
+    auto content = archive.read_text(*found, uint64_t{4} * 1024U * 1024U);
+    if (!content || content->empty()) {
+        LOGE("zip: cannot read %s: %s", entry_name, archive.error().c_str());
         return std::nullopt;
     }
-    return std::move(result.stdout_str);
+    return content;
 }
 
 bool append_file(const std::filesystem::path& path, const std::string& content) {

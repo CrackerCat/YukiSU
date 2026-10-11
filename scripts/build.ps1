@@ -460,9 +460,12 @@ try {
     Write-Host "    ksud: $ksudOutput ($ksudSize bytes)"
 
     Write-Host '>>> [4/5] Build Manager App ...' -ForegroundColor Cyan
+    $busyboxDirectory = Join-Path $script:RepoRoot 'userspace\busybox'
+    Build-CMakeProject -Name 'BusyBox' -SourceDirectory $busyboxDirectory -AndroidApi 31
     $managerDirectory = Join-Path $script:RepoRoot 'manager'
     $jniLibDirectory = Join-Path $managerDirectory "app\src\main\jniLibs\$script:AndroidAbi"
     Copy-RequiredFile -Source $ksudOutput -Destination (Join-Path $jniLibDirectory 'libksud.so')
+    Copy-RequiredFile -Source (Join-Path $busyboxDirectory 'build\busybox') -Destination (Join-Path $jniLibDirectory 'libbusybox.so')
 
     $signingMap = @{
         'KEYSTORE_FILE' = 'YUKISU_KEYSTORE'

@@ -61,6 +61,19 @@ private fun getKsuDaemonPath(): String {
  */
 fun getKsud(): String = getKsuDaemonPath()
 
+private fun ensureBundledBusybox(): Boolean {
+    val source = File(ksuApp.applicationInfo.nativeLibraryDir, "libbusybox.so")
+    if (!source.isFile) {
+        Log.e(TAG, "Bundled BusyBox is missing: $source")
+        return false
+    }
+    val installed = runCatching { Natives.ensureBusybox(source.absolutePath) }
+        .onFailure { Log.e(TAG, "BusyBox installation failed", it) }
+        .getOrDefault(false)
+    if (!installed) Log.e(TAG, "Failed to install or verify standalone BusyBox")
+    return installed
+}
+
 object KsuCli {
     var SHELL: Shell = createRootShell()
         private set
@@ -132,7 +145,10 @@ object KsuCli {
                 }
             } else {
                 Log.d(TAG, "ksud is up-to-date: $installedKsudVersion")
-                Natives.ensureKsudToolLinks()
+                if (!ensureBundledBusybox() || !Natives.ensureKsudToolLinks()) {
+                    Log.e(TAG, "Failed to reconcile bundled tools")
+                    return
+                }
                 if (SHELL.isRoot) {
                     refreshYukiZygiskSnapshotForNextBoot()
                 }
@@ -294,7 +310,7 @@ object KsuCli {
      * Install or update the ksud daemon binary itself, without touching boot image.
      *
      * Atomically install the manager-bundled ksud ELF at `/data/adb/ksud`,
-     * then keep the convenience applets under `/data/adb/ksu/bin` as symlinks.
+     * after installing standalone BusyBox, and repair the other applet links.
      */
     private fun installOrUpdateKsudDaemon(): Boolean {
         if (!isBundledKsudUapiCompatible()) return false
@@ -304,6 +320,7 @@ object KsuCli {
             Log.e(TAG, "installOrUpdateKsudDaemon: libksud.so not found in $nativeDir")
             return false
         }
+        if (!ensureBundledBusybox()) return false
 
         Log.i(TAG, "installOrUpdateKsudDaemon: syncing ${ksudSo.absolutePath} -> /data/adb/ksud")
         val result = runCatching { Natives.installKsudDaemon(ksudSo.absolutePath) }
@@ -1058,6 +1075,10 @@ fun getUtsViewOriginalReleaseForLog(): String? =
     readUtsTemplate("original", "original")?.release
 
 fun install() {
+    if (!ensureBundledBusybox()) {
+        Log.e(TAG, "Installation stopped because BusyBox is unavailable")
+        return
+    }
     val start = SystemClock.elapsedRealtime()
     val ksudPath = getKsuDaemonPath()
     val libadbrootPath =

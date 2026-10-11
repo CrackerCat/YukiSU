@@ -281,10 +281,20 @@ ninja
 echo "    ksud built"
 
 echo ">>> [4/5] Build Manager App ..."
+BUSYBOX_DIR="$REPO_ROOT/userspace/busybox"
+prepare_build_dir "$BUSYBOX_DIR/build"
+cmake -S "$BUSYBOX_DIR" -B "$BUSYBOX_DIR/build" -G Ninja \
+	-DCMAKE_SYSTEM_NAME=Android \
+	-DCMAKE_ANDROID_ARCH_ABI="$ANDROID_ABI" \
+	-DCMAKE_ANDROID_NDK="$ANDROID_NDK_HOME" \
+	-DCMAKE_SYSTEM_VERSION="$ANDROID_API" \
+	-DCMAKE_BUILD_TYPE=Release
+cmake --build "$BUSYBOX_DIR/build"
 MANAGER_DIR="$REPO_ROOT/manager"
 JNILIBS="$MANAGER_DIR/app/src/main/jniLibs/$ANDROID_ABI"
 mkdir -p "$JNILIBS"
 cp "$KSUD_DIR/build/ksud" "$JNILIBS/libksud.so"
+cp "$BUSYBOX_DIR/build/busybox" "$JNILIBS/libbusybox.so"
 
 # Signing is passed through env, not gradle.properties.
 if [[ -n "${YUKISU_KEYSTORE:-}" && -n "${YUKISU_KEYSTORE_PASSWORD:-}" && -n "${YUKISU_KEY_ALIAS:-}" && -n "${YUKISU_KEY_PASSWORD:-}" ]]; then

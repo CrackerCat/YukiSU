@@ -136,8 +136,6 @@ jobs:
           ./userspace/ksud/assets/libyukizncore64.so \
           ./userspace/ksud/assets/libyukizncore32.so
 
-    # busybox is built into ksud (ndk-busybox multi-call); no standalone busybox in assets
-
     # - name: Install UPX
     #   run: |
     #     UPX_VERSION="4.2.4"

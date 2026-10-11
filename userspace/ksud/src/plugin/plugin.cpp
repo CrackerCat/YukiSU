@@ -32,8 +32,7 @@
 #include <utility>
 #include <vector>
 
-#define MINIZ_HEADER_FILE_ONLY
-#include "miniz.h"
+#include "../archive_zip.hpp"
 
 namespace ksud {
 
@@ -46,12 +45,12 @@ constexpr size_t kMaxCallbackLength = 64;
 constexpr size_t kMaxConfigKeyLength = 64;
 constexpr size_t kMaxManifestSize = size_t{1024} * 1024;
 constexpr size_t kMaxConfigSize = size_t{4} * 1024 * 1024;
-constexpr mz_uint kMaxArchiveEntries = 8192U;
+constexpr uint64_t kMaxArchiveEntries = 8192U;
 constexpr size_t kMaxArchiveNameBytes = size_t{4} * 1024 * 1024;
 constexpr size_t kMaxArchiveAllocation = size_t{16} * 1024 * 1024;
-constexpr mz_uint64 kMaxArchiveFileSize = mz_uint64{64} * 1024 * 1024;
-constexpr mz_uint64 kMaxArchiveTotalSize = mz_uint64{256} * 1024 * 1024;
-constexpr mz_uint64 kMaxArchivePackageSize = kMaxArchiveTotalSize + (mz_uint64{16} * 1024 * 1024);
+constexpr uint64_t kMaxArchiveFileSize = uint64_t{64} * 1024 * 1024;
+constexpr uint64_t kMaxArchiveTotalSize = uint64_t{256} * 1024 * 1024;
+constexpr uint64_t kMaxArchivePackageSize = kMaxArchiveTotalSize + (uint64_t{16} * 1024 * 1024);
 constexpr off_t kMaxPluginLogSize = off_t{1024} * 1024;
 constexpr size_t kMaxPluginLogLineSize = size_t{64} * 1024;
 
@@ -169,107 +168,15 @@ private:
     std::string error_;
 };
 
-class ZipReader {
-public:
-    explicit ZipReader(const fs::path& path) : fd_(open(path.c_str(), O_RDONLY | O_CLOEXEC)) {
-        if (!fd_.valid()) {
-            error_ = "Cannot open plugin package: " + std::string(strerror(errno));
-            return;
-        }
-
-        struct stat status{};
-        if (fstat(fd_.get(), &status) != 0 || !S_ISREG(status.st_mode) || status.st_size <= 0) {
-            error_ = "Plugin package is not a non-empty regular file";
-            return;
-        }
-        if (static_cast<uint64_t>(status.st_size) > kMaxArchivePackageSize) {
-            error_ = "Plugin package exceeds the compressed size limit";
-            return;
-        }
-
-        archive_.m_pAlloc = &ZipReader::allocate;
-        archive_.m_pFree = &ZipReader::release;
-        archive_.m_pRealloc = &ZipReader::reallocate;
-        archive_.m_pRead = &ZipReader::read_at;
-        archive_.m_pIO_opaque = this;
-        if (!mz_zip_reader_init(&archive_, static_cast<mz_uint64>(status.st_size), 0)) {
-            error_ = std::string("Invalid ZIP archive: ") +
-                     mz_zip_get_error_string(mz_zip_get_last_error(&archive_));
-            return;
-        }
-        initialized_ = true;
-    }
-
-    ~ZipReader() {
-        if (initialized_)
-            mz_zip_reader_end(&archive_);
-    }
-
-    ZipReader(const ZipReader&) = delete;
-    ZipReader& operator=(const ZipReader&) = delete;
-    ZipReader(ZipReader&&) = delete;
-    ZipReader& operator=(ZipReader&&) = delete;
-
-    [[nodiscard]] bool valid() const { return initialized_; }
-    [[nodiscard]] const std::string& error() const { return error_; }
-    mz_zip_archive* archive() { return &archive_; }
-
-private:
-    static void* allocate(void* opaque, size_t items, size_t size) {
-        (void)opaque;
-        if (items == 0 || size == 0 || items > kMaxArchiveAllocation / size)
-            return nullptr;
-        return std::malloc(items * size);  // NOLINT(cppcoreguidelines-no-malloc)
-    }
-
-    static void release(void* opaque, void* address) {
-        (void)opaque;
-        std::free(address);  // NOLINT(cppcoreguidelines-no-malloc)
-    }
-
-    static void* reallocate(void* opaque, void* address, size_t items, size_t size) {
-        (void)opaque;
-        if (items == 0 || size == 0) {
-            std::free(address);  // NOLINT(cppcoreguidelines-no-malloc)
-            return nullptr;
-        }
-        if (items > kMaxArchiveAllocation / size)
-            return nullptr;
-        return std::realloc(address, items * size);  // NOLINT(cppcoreguidelines-no-malloc)
-    }
-
-    static size_t read_at(void* opaque, mz_uint64 offset, void* buffer, size_t size) {
-        auto* self = static_cast<ZipReader*>(opaque);
-        size_t total = 0;
-        while (total < size) {
-            const ssize_t count = pread(self->fd_.get(), static_cast<char*>(buffer) + total,
-                                        size - total, static_cast<off_t>(offset + total));
-            if (count > 0) {
-                total += static_cast<size_t>(count);
-                continue;
-            }
-            if (count < 0 && errno == EINTR)
-                continue;
-            break;
-        }
-        return total;
-    }
-
-    ScopedFd fd_;
-    bool initialized_ = false;
-    mz_zip_archive archive_{};
-    std::string error_;
-};
-
 struct ArchiveEntry {
-    mz_uint index = 0;
+    uint64_t index = 0;
     std::string name;
-    mz_zip_archive_file_stat stat{};
+    ZipEntry stat{};
 };
 
 struct InspectedArchive {
     std::vector<ArchiveEntry> entries;
-    mz_uint manifest_index = 0;
+    uint64_t manifest_index = 0;
     std::string root_prefix;
     std::string manifest;
 };
@@ -398,21 +305,6 @@ bool validate_config_fields(const plugin_json::Value& config, std::string* error
     return true;
 }
 
-std::optional<std::string> archive_filename(mz_zip_archive* archive, mz_uint index) {
-    const mz_uint length = mz_zip_reader_get_filename(archive, index, nullptr, 0);
-    if (length == 0 || length > 64U * 1024U)
-        return std::nullopt;
-    std::vector<char> buffer(static_cast<size_t>(length), '\0');
-    if (mz_zip_reader_get_filename(archive, index, buffer.data(),
-                                   static_cast<mz_uint>(buffer.size())) == 0) {
-        return std::nullopt;
-    }
-    const size_t size = static_cast<size_t>(length) - 1U;
-    if (std::memchr(buffer.data(), '\0', size) != nullptr)
-        return std::nullopt;
-    return std::string(buffer.data(), size);
-}
-
 std::optional<std::string> normalize_archive_path(std::string name) {
     if (name.empty())
         return std::nullopt;
@@ -448,38 +340,24 @@ std::optional<std::string> normalize_archive_path(std::string name) {
     return normalized;
 }
 
-bool archive_entry_is_symlink(const mz_zip_archive_file_stat& status) {
-    constexpr mz_uint16 kUnixHost = 3;
-    constexpr mode_t kFileTypeMask = 0170000;
-    constexpr mode_t kSymlinkType = 0120000;
-    const mz_uint16 host = static_cast<mz_uint16>(status.m_version_made_by >> 8U);
-    const mode_t mode = static_cast<mode_t>(status.m_external_attr >> 16U);
-    return host == kUnixHost && (mode & kFileTypeMask) == kSymlinkType;
-}
-
-std::optional<std::string> extract_archive_text(mz_zip_archive* archive, mz_uint index,
-                                                size_t max_size, std::string* error) {
-    mz_zip_archive_file_stat status{};
-    if (!mz_zip_reader_file_stat(archive, index, &status) || status.m_is_directory ||
-        status.m_uncomp_size == 0 || status.m_uncomp_size > max_size) {
+std::optional<std::string> extract_archive_text(ZipReader* archive, uint64_t index, size_t max_size,
+                                                std::string* error) {
+    ZipEntry status{};
+    if (!archive->entry(index, status) || status.directory || status.size == 0 ||
+        status.size > max_size) {
         if (error)
             *error = "Manifest has an invalid size";
         return std::nullopt;
     }
-    std::string content(static_cast<size_t>(status.m_uncomp_size), '\0');
-    if (!mz_zip_reader_extract_to_mem(archive, index, content.data(), content.size(), 0)) {
-        if (error) {
-            *error = std::string("Cannot extract manifest: ") +
-                     mz_zip_get_error_string(mz_zip_get_last_error(archive));
-        }
-        return std::nullopt;
-    }
+    auto content = archive->read_text(index, max_size);
+    if (!content && error != nullptr)
+        *error = archive->error();
     return content;
 }
 
 std::optional<InspectedArchive> inspect_archive(ZipReader* reader, std::string* error) {
-    auto* archive = reader->archive();
-    const mz_uint count = mz_zip_reader_get_num_files(archive);
+    auto* archive = reader;
+    const uint64_t count = archive->entry_count();
     if (count == 0 || count > kMaxArchiveEntries) {
         *error = "Archive has an invalid number of entries";
         return std::nullopt;
@@ -487,17 +365,17 @@ std::optional<InspectedArchive> inspect_archive(ZipReader* reader, std::string* 
 
     InspectedArchive inspected;
     std::set<std::string> names;
-    std::optional<mz_uint> root_manifest;
-    std::vector<std::pair<mz_uint, std::string>> wrapper_manifests;
-    mz_uint64 total_size = 0;
+    std::optional<uint64_t> root_manifest;
+    std::vector<std::pair<uint64_t, std::string>> wrapper_manifests;
+    uint64_t total_size = 0;
     size_t total_name_size = 0;
-    for (mz_uint index = 0; index < count; ++index) {
-        mz_zip_archive_file_stat status{};
-        if (!mz_zip_reader_file_stat(archive, index, &status)) {
+    for (uint64_t index = 0; index < count; ++index) {
+        ZipEntry status{};
+        if (!archive->entry(index, status)) {
             *error = "Cannot read ZIP central directory";
             return std::nullopt;
         }
-        const auto raw_name = archive_filename(archive, index);
+        const auto raw_name = std::optional<std::string>(status.name);
         if (raw_name && raw_name->size() > kMaxArchiveNameBytes - total_name_size) {
             *error = "Archive filenames exceed the size limit";
             return std::nullopt;
@@ -509,17 +387,17 @@ std::optional<InspectedArchive> inspect_archive(ZipReader* reader, std::string* 
             *error = "Archive contains an unsafe or duplicate path";
             return std::nullopt;
         }
-        if (status.m_is_encrypted || !status.m_is_supported || archive_entry_is_symlink(status)) {
+        if (status.encrypted || !status.supported || status.symlink) {
             *error = "Archive contains an encrypted, unsupported, or symbolic-link entry";
             return std::nullopt;
         }
-        if (!status.m_is_directory) {
-            if (status.m_uncomp_size > kMaxArchiveFileSize ||
-                total_size > kMaxArchiveTotalSize - status.m_uncomp_size) {
+        if (!status.directory) {
+            if (status.size > kMaxArchiveFileSize ||
+                total_size > kMaxArchiveTotalSize - status.size) {
                 *error = "Archive exceeds the extraction size limit";
                 return std::nullopt;
             }
-            total_size += status.m_uncomp_size;
+            total_size += status.size;
         }
 
         inspected.entries.push_back({index, *name, status});
@@ -567,31 +445,6 @@ bool write_all(int fd, const char* data, size_t size) {
         return false;
     }
     return true;
-}
-
-struct ArchiveWriteContext {
-    int descriptor;
-    mz_uint64 expected_size;
-};
-
-size_t write_archive_chunk(void* opaque, mz_uint64 offset, const void* buffer, size_t size) {
-    const auto* context = static_cast<ArchiveWriteContext*>(opaque);
-    if (offset > context->expected_size || size > context->expected_size - offset)
-        return 0;
-    size_t written = 0;
-    while (written < size) {
-        const ssize_t count =
-            pwrite(context->descriptor, static_cast<const char*>(buffer) + written, size - written,
-                   static_cast<off_t>(offset + written));
-        if (count > 0) {
-            written += static_cast<size_t>(count);
-            continue;
-        }
-        if (count < 0 && errno == EINTR)
-            continue;
-        break;
-    }
-    return written;
 }
 
 bool atomic_write(const fs::path& path, const std::string& content, std::string* error) {
@@ -840,7 +693,7 @@ bool extract_plugin(ZipReader* reader, const InspectedArchive& inspected,
     const std::string expected_entry = inspected.root_prefix + manifest.entry;
     bool entry_found = false;
     for (const auto& entry : inspected.entries) {
-        if (entry.name == expected_entry && !entry.stat.m_is_directory)
+        if (entry.name == expected_entry && !entry.stat.directory)
             entry_found = true;
     }
     if (!entry_found) {
@@ -848,7 +701,7 @@ bool extract_plugin(ZipReader* reader, const InspectedArchive& inspected,
         return false;
     }
 
-    auto* archive = reader->archive();
+    auto* archive = reader;
     for (const auto& entry : inspected.entries) {
         if (!inspected.root_prefix.empty() &&
             entry.name.compare(0, inspected.root_prefix.size(), inspected.root_prefix) != 0) {
@@ -870,7 +723,7 @@ bool extract_plugin(ZipReader* reader, const InspectedArchive& inspected,
 
         const fs::path output = stage / fs::path(relative);
         std::error_code directory_error;
-        if (entry.stat.m_is_directory) {
+        if (entry.stat.directory) {
             fs::create_directories(output, directory_error);
             if (!directory_error)
                 chmod(output.c_str(), 0755);
@@ -885,22 +738,19 @@ bool extract_plugin(ZipReader* reader, const InspectedArchive& inspected,
                 *error = std::string("Cannot create '") + relative + "': " + strerror(errno);
                 return false;
             }
-            ArchiveWriteContext write_context{output_fd.get(), entry.stat.m_uncomp_size};
             if (!directory_error &&
-                !mz_zip_reader_extract_to_callback(archive, entry.index, write_archive_chunk,
-                                                   &write_context, 0)) {
-                *error = std::string("Cannot extract '") + relative +
-                         "': " + mz_zip_get_error_string(mz_zip_get_last_error(archive));
+                !archive->extract_to_fd(entry.index, output_fd.get(), kMaxArchiveFileSize)) {
+                *error = "Cannot extract '" + relative + "': " + archive->error();
                 return false;
             }
             if (!directory_error) {
                 struct stat extracted_status{};
                 if (fstat(output_fd.get(), &extracted_status) != 0 ||
-                    static_cast<mz_uint64>(extracted_status.st_size) != entry.stat.m_uncomp_size) {
+                    static_cast<uint64_t>(extracted_status.st_size) != entry.stat.size) {
                     *error = std::string("Extracted '") + relative + "' has an invalid size";
                     return false;
                 }
-                mode_t mode = static_cast<mode_t>(entry.stat.m_external_attr >> 16U) & 0777;
+                mode_t mode = static_cast<mode_t>(entry.stat.attributes >> 16U) & 0777;
                 if (mode == 0)
                     mode = 0644;
                 if (fchmod(output_fd.get(), mode) != 0 || fsync(output_fd.get()) != 0) {
@@ -931,7 +781,8 @@ int plugin_install(const std::string& zip_path) {
         return 1;
     }
 
-    ZipReader reader(canonical);
+    ZipReader reader(canonical,
+                     {kMaxArchivePackageSize, kMaxArchiveEntries, kMaxArchiveAllocation});
     if (!reader.valid()) {
         print_error("%s\n", reader.error().c_str());
         return 1;

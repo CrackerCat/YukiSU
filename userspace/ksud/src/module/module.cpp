@@ -706,7 +706,7 @@ int module_install(const std::string& zip_path) {
     }
     // Ensure banner is output before script execution
 
-    // Refresh binary assets so installer.sh and busybox links stay in sync with the build.
+    // Refresh embedded installer assets before installing modules.
     if (ensure_binaries(false) != 0) {
         printf("! Failed to extract binary assets\n");
         return 1;

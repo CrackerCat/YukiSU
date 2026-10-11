@@ -58,6 +58,9 @@ def main() -> None:
             if path.is_file() and not path.name.startswith(".") and path.name != "su"
         )
 
+    if any(path.name in {"busybox", "libbusybox.so"} for path in files):
+        raise ValueError("BusyBox must be packaged by the Manager, not embedded in ksud")
+
     ordinary_assets = []
     lkm_assets = []
     lkm_raw = bytearray()
@@ -369,9 +372,7 @@ int ensure_binaries(bool ignore_if_exist) {
                 LOGI("Created %s symlink: %s -> %s", tag, link, DAEMON_PATH);
             }
         };
-        const std::string busybox_link = std::string(BINARY_DIR) + "busybox";
         ensure_link(DAEMON_LINK_PATH, "ksud");
-        ensure_link(busybox_link.c_str(), "busybox");
         const auto [yukizygisk_enabled, yukizygisk_supported] = get_feature(KSU_FEATURE_YUKIZYGISK);
         if (yukizygisk_supported && yukizygisk_enabled != 0) {
             const std::string yzctl_link = std::string(BINARY_DIR) + "yzctl";

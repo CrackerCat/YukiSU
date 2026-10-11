@@ -37,4 +37,6 @@ Ak3PackageInfo inspect_ak3_package(const std::string& zip_path);
  */
 int flash_ak3_package(const Ak3FlashConfig& config);
 
+int ak3_unzip_main(int argc, char** argv);
+
 }  // namespace ksud::flash

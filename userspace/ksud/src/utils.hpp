@@ -208,7 +208,7 @@ void request_reboot();
 // `touch` this codebase used it for did.
 bool touch_file(const std::filesystem::path& path);
 
-// Use the installer's BusyBox decoder for compressed ZIP metadata.
+// Read bounded ZIP metadata with complete CRC validation.
 std::optional<std::string> read_zip_entry(const std::string& zip_path, const char* entry_name);
 
 // Command execution

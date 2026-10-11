@@ -1,6 +1,8 @@
 # Third-party Libraries
 
-ksud uses **git submodules** in this directory (`userspace/ksud/third_party/`) and **FetchContent** for some dependencies (see ../CMakeLists.txt).
+ksud builds its third-party dependencies from **git submodules** in this directory
+(`userspace/ksud/third_party/`). Initialize them with
+`git submodule update --init --recursive` before configuring CMake.
 
 ## Submodules (this directory)
 
@@ -26,7 +28,7 @@ ksud uses **git submodules** in this directory (`userspace/ksud/third_party/`) a
 ### ndk-busybox
 
 - **Path**: `userspace/ksud/third_party/ndk-busybox`
-- **Purpose**: Compiled **into ksud** as multi-call. `ksu/bin/busybox` → symlink to ksud; argv0 dispatch to `busybox_main()`.
+- **Purpose**: Built independently by `userspace/busybox`, packaged as the Manager's `libbusybox.so`, and installed by the Manager at `ksu/bin/busybox` for module scripts. ksud neither builds nor embeds BusyBox.
 - **Init/update**: `git submodule update --init userspace/ksud/third_party/ndk-busybox`
 
 ### readelf_toyboxAlone
@@ -36,35 +38,44 @@ ksud uses **git submodules** in this directory (`userspace/ksud/third_party/`) a
 - **License**: 0BSD
 - **Init/update**: `git submodule update --init userspace/ksud/third_party/readelf_toyboxAlone`
 
-## FetchContent (auto-downloaded)
+### ZIP and XZ libraries
+
+- **libzip 1.12**: `libzip/`, BSD-3-Clause, https://github.com/Rouyashiki/libzip
+- **liblzma 5.8.4**: `xz/`, 0BSD, https://github.com/Rouyashiki/xz
+- **libbzip2 1.0.8**: `bzip2/`, bzip2 BSD-style license, https://github.com/Rouyashiki/bzip2
+- **Purpose**: Shared ZIP reader for modules, plugins and AK3; native XZ resource decoding.
+- **Build**: Local submodule sources compiled by `../cmake/ArchiveLibraries.cmake`.
+- **Init/update**: `git submodule update --init --recursive`
 
 ### Lua
 
 - **License**: MIT (see `lua.LICENSE`)
-- **Source**: https://www.lua.org/ftp/
-- **Version**: 5.5.1 (managed by FetchContent in CMakeLists.txt)
+- **Path**: `lua/`
+- **Source**: https://github.com/Rouyashiki/lua
+- **Version**: 5.5.1
 - **Purpose**: Embedded runtime and native-module ABI for ksud plugins
+- **Build**: Sources are copied to the build directory, where `luaconf.h` is adapted
+  to preserve the C ABI while compiling Lua as C++. The submodule stays unchanged.
 
-### PicoSHA2
+### Mbed TLS
 
-- **License**: MIT
-- **Source**: https://github.com/okdshin/PicoSHA2
-- **Version**: v1.0.1 (managed by FetchContent in CMakeLists.txt)
-- **Purpose**: SHA-256 hash calculation for APK signature verification
+- **License**: Apache-2.0 OR GPL-2.0-or-later
+- **Path**: `mbedtls/`
+- **Source**: https://github.com/Rouyashiki/mbedtls
+- **Version**: 3.6.2
+- **Purpose**: Cryptographic hashes, X.509 and RSA/ECDSA support
+- **Nested dependency**: `mbedtls/framework` uses
+  https://github.com/Rouyashiki/mbedtls-framework at the revision pinned by Mbed TLS.
+
+### LZ4 fallback
+
+LZ4 and xxHash use the BSD-2-Clause sources vendored in MagiskbootAlone.
+CMake falls back to the local `lz4/lib` submodule (v1.10.0,
+https://github.com/Rouyashiki/lz4) if that copy is absent.
 
 ### Management
 
-Dependencies are declared in `../CMakeLists.txt` using `FetchContent_Declare`.
-
-To update a dependency version, modify the `GIT_TAG` in CMakeLists.txt:
-
-```cmake
-FetchContent_Declare(
-    picosha2
-    GIT_REPOSITORY https://github.com/okdshin/PicoSHA2.git
-    GIT_TAG v1.0.1  # Update this version
-    GIT_SHALLOW TRUE
-)
-```
-
-Dependabot will automatically detect and create PRs for version updates.
+Submodules are declared in the root `.gitmodules`, with Mbed TLS's nested
+framework declared in its own `.gitmodules`. The ksud CMake build does not
+download dependency sources. MagiskbootAlone's separate standalone build has
+its own dependency configuration; ksud compiles its source files directly.

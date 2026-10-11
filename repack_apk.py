@@ -223,9 +223,14 @@ def repack_apk(
 def assert_required_libs(apk_path: Path, arches: List[str]) -> None:
     with ZipFile(apk_path, "r") as zf:
         names = set(zf.namelist())
-    missing = [arch for arch in arches if f"lib/{arch}/libksud.so" not in names]
+    missing = [
+        f"lib/{arch}/{library}"
+        for arch in arches
+        for library in ("libksud.so", "libbusybox.so")
+        if f"lib/{arch}/{library}" not in names
+    ]
     if missing:
-        raise RuntimeError("Missing libksud.so in APK for architecture(s): " + ", ".join(missing))
+        raise RuntimeError("Missing required APK binaries: " + ", ".join(missing))
 
 
 def validate_signing_args(args: argparse.Namespace) -> None:
