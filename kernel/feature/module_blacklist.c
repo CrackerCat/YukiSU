@@ -76,7 +76,7 @@ void __init ksu_module_blacklist_init(void)
 	pr_info("module_blacklist: blocking modules: %s\n", merged);
 }
 
-void __exit ksu_module_blacklist_exit(void)
+void ksu_module_blacklist_exit(void)
 {
 	// blacklisted() reads this pointer without synchronization. Keep the
 	// published heap string alive after unload; restoring NULL or freeing
