@@ -16,8 +16,10 @@ struct KsuConfigArgs {
     std::string blocked_modules;
 
     bool add_forced_feature(std::string_view input) {
-        constexpr std::array<std::string_view, 5> names = {"su_compat", "kernel_umount", "sulog",
-                                                           "adb_root", "selinux_hide"};
+        // Keep legacy feature ID 5 out of the boot override list.
+        constexpr std::array<std::string_view, 7> names = {
+            "su_compat", "kernel_umount",    "sulog", "adb_root", "selinux_hide",
+            "",          "shell_su_adb_only"};
         const auto separator = input.find('=');
         if (separator == std::string_view::npos)
             return false;
@@ -25,7 +27,7 @@ struct KsuConfigArgs {
         auto number = input.substr(separator + 1);
         std::size_t id = 0;
         for (; id < names.size(); ++id) {
-            if (name == names[id] || name == std::to_string(id))
+            if (!names[id].empty() && (name == names[id] || name == std::to_string(id)))
                 break;
         }
         if (id == names.size() || number.empty())

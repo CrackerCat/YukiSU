@@ -195,6 +195,7 @@ object Natives {
     const val FEATURE_SULOG = 2
     const val FEATURE_ADB_ROOT = 3
     const val FEATURE_SELINUX_HIDE = 4
+    const val FEATURE_SHELL_SU_ADB_ONLY = 6
     const val FEATURE_WEBVIEW_ZYGOTE_UMOUNT = 5
     const val FEATURE_ENHANCED_SECURITY = 100
     const val FEATURE_MAGISK_COMPAT = 101

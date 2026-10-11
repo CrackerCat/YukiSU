@@ -161,6 +161,7 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
     val unshareMnt = rememberFeatureToggleState(Natives.FEATURE_UNSHARE_MNT)
     val suLog = rememberFeatureToggleState(Natives.FEATURE_SULOG)
     val adbRoot = rememberFeatureToggleState(Natives.FEATURE_ADB_ROOT)
+    val shellSuAdbOnly = rememberFeatureToggleState(Natives.FEATURE_SHELL_SU_ADB_ONLY)
     val enhancedSecurity = rememberFeatureToggleState(Natives.FEATURE_ENHANCED_SECURITY)
     val magiskCompat = rememberFeatureToggleState(Natives.FEATURE_MAGISK_COMPAT)
     val defaultNoNewPrivs = rememberFeatureToggleState(Natives.FEATURE_DEFAULT_NO_NEW_PRIVS)
@@ -285,6 +286,23 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
                                 featureName = "sulog",
                                 kernelEnabled = enabled,
                                 onRuntimeSettled = FeatureControlState::updateSuLog
+                            )
+                        }
+                    )
+
+                    FeatureSwitchItem(
+                        featureId = Natives.FEATURE_SHELL_SU_ADB_ONLY,
+                        icon = Icons.Rounded.EnhancedEncryption,
+                        title = stringResource(R.string.settings_shell_su_adb_only),
+                        summary = stringResource(R.string.settings_shell_su_adb_only_summary),
+                        state = shellSuAdbOnly,
+                        onChange = { enabled ->
+                            scope.persistFeature(
+                                state = shellSuAdbOnly,
+                                featureId = Natives.FEATURE_SHELL_SU_ADB_ONLY,
+                                featureName = "shell_su_adb_only",
+                                kernelEnabled = enabled,
+                                onFailure = { snackbarHost.showSnackbar(failedMessage) }
                             )
                         }
                     )

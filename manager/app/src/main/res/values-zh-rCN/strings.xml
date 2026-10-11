@@ -286,6 +286,8 @@
     <string name="soft_reboot_kasumi_unavailable">Kasumi 正在运行，请使用完整重启。</string>
     <string name="settings_adb_root">ADB Root</string>
     <string name="settings_adb_root_summary">让 adbd 以 root 权限运行</string>
+    <string name="settings_shell_su_adb_only">限制 Shell 仅可通过 ADB 获取 Root</string>
+    <string name="settings_shell_su_adb_only_summary">授权 Shell 后，仅允许由 adbd 或 YukiSU Root 进程启动的 Shell 获取 Root。</string>
     <string name="grant_root_failed">获取 root 失败！</string>
     <string name="action">执行</string>
     <string name="close">关闭</string>

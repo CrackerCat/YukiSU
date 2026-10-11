@@ -52,6 +52,7 @@ int kernelsu_init(void);
 #include "feature/adb_root.h"
 #include "feature/hide_bootloader.h"
 #include "feature/selinux_hide.h"
+#include "feature/shell_su_adb_only.h"
 #include "feature/module_blacklist.h"
 #include "extension/uts_view.h"
 #ifdef CONFIG_KSU_YUKIZYGISK
@@ -202,6 +203,7 @@ int __init kernelsu_init(void)
 	ksu_lsm_hook_init();
 	ksu_adb_root_init();
 	ksu_selinux_hide_init();
+	ksu_shell_su_adb_only_init();
 #ifdef CONFIG_KSU_YUKIZYGISK
 	ksu_yukizygisk_init();
 #endif // #ifdef CONFIG_KSU_YUKIZYGISK
@@ -296,6 +298,7 @@ static void kernelsu_exit(void)
 	ksu_allowlist_exit();
 
 	yukisu_custom_config_exit();
+	ksu_shell_su_adb_only_exit();
 	ksu_selinux_hide_exit();
 	ksu_hide_bootloader_exit();
 #ifdef CONFIG_KSU_YUKIZYGISK

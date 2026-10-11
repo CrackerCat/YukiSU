@@ -24,7 +24,10 @@ void ksu_show_allow_list(void);
 bool __ksu_is_allow_uid(uid_t uid);
 #define ksu_is_allow_uid(uid) unlikely(__ksu_is_allow_uid(uid))
 
-// Check if the uid is in allow list, or current is ksu domain root
+// Query the grant; uid 0 retains the current root-domain check.
+bool ksu_is_uid_granted_root(uid_t uid);
+
+// Authorize current, including any shell ancestry restriction.
 bool __ksu_is_allow_uid_for_current(uid_t uid);
 #define ksu_is_allow_uid_for_current(uid)                                      \
 	unlikely(__ksu_is_allow_uid_for_current(uid))
