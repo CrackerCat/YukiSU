@@ -67,8 +67,16 @@
 #include "manager/superkey.h"
 #endif // #ifdef CONFIG_KSU_SUPERKEY
 
-#define KSU_DYNAMIC_MANAGER_COMPAT_VERSION 35023
-#define KSU_DYNAMIC_MANAGER_COMPAT_FULL_VERSION "v4.0.0-yukisucompat@YukiSU"
+static struct ksu_dynamic_manager_compat current_manager_compat(void)
+{
+	struct ksu_dynamic_manager_compat compat = {0};
+
+#ifndef CONFIG_KSU_DISABLE_MANAGER
+	if (ksu_is_current_dynamic_manager())
+		ksu_dynamic_manager_get_compat(current_uid().val, &compat);
+#endif
+	return compat;
+}
 
 static int do_grant_root(void __user *arg)
 {
@@ -90,9 +98,12 @@ static struct ksu_get_info_cmd get_current_info(void)
 	struct ksu_get_info_cmd cmd = {.version = KERNEL_SU_VERSION,
 				       .flags = 0,
 				       .uapi_version = KERNEL_SU_UAPI_VERSION};
+	struct ksu_dynamic_manager_compat compat = current_manager_compat();
 
-	if (ksu_is_current_dynamic_manager())
-		cmd.version = KSU_DYNAMIC_MANAGER_COMPAT_VERSION;
+	if (compat.version)
+		cmd.version = compat.version;
+	if (compat.uapi_version)
+		cmd.uapi_version = compat.uapi_version;
 
 	cmd.flags |= KSU_GET_INFO_FLAG_LKM;
 	if (ksu_bundled)
@@ -1012,6 +1023,37 @@ static int do_set_dynamic_managers(void __user *arg)
 #endif // #ifdef CONFIG_KSU_DISABLE_MANAGER
 }
 
+static int do_set_dynamic_manager_config(void __user *arg)
+{
+#ifdef CONFIG_KSU_DISABLE_MANAGER
+	return -EOPNOTSUPP;
+#else
+	struct ksu_dynamic_manager_config_cmd cmd;
+	struct ksu_dynamic_manager_entry *entries = NULL;
+	bool need_rescan = false;
+	int ret;
+
+	if (copy_from_user(&cmd, arg, sizeof(cmd)))
+		return -EFAULT;
+	if (cmd.version != KSU_DYNAMIC_MANAGER_CONFIG_VERSION)
+		return -EOPNOTSUPP;
+	if (cmd.count > KSU_DYNAMIC_MANAGER_MAX_SIGNS)
+		return -EINVAL;
+	if (cmd.count) {
+		entries =
+		    memdup_user((const void __user *)(uintptr_t)cmd.entries,
+				sizeof(*entries) * cmd.count);
+		if (IS_ERR(entries))
+			return PTR_ERR(entries);
+	}
+	ret = ksu_dynamic_manager_set_config(entries, cmd.count, &need_rescan);
+	kfree(entries);
+	if (!ret && need_rescan)
+		ksu_request_manager_rescan();
+	return ret;
+#endif
+}
+
 static int do_get_dynamic_managers(void __user *arg)
 {
 	struct ksu_get_dynamic_managers_cmd cmd;
@@ -1060,9 +1102,10 @@ static int do_get_full_version(void __user *arg)
 {
 	struct ksu_get_full_version_cmd cmd = {0};
 	const char *version_full = KSU_VERSION_FULL;
+	struct ksu_dynamic_manager_compat compat = current_manager_compat();
 
-	if (ksu_is_current_dynamic_manager())
-		version_full = KSU_DYNAMIC_MANAGER_COMPAT_FULL_VERSION;
+	if (compat.version_full[0])
+		version_full = compat.version_full;
 
 	strscpy(cmd.version_full, version_full, sizeof(cmd.version_full));
 
@@ -1691,6 +1734,10 @@ static const struct ksu_ioctl_cmd_map ksu_ioctl_handlers[] = {
     {.cmd = KSU_IOCTL_SET_DYNAMIC_MANAGERS,
      .name = "SET_DYNAMIC_MANAGERS",
      .handler = do_set_dynamic_managers,
+     .perm_check = manager_or_root},
+    {.cmd = KSU_IOCTL_SET_DYNAMIC_MANAGER_CONFIG,
+     .name = "SET_DYNAMIC_MANAGER_CONFIG",
+     .handler = do_set_dynamic_manager_config,
      .perm_check = manager_or_root},
     {.cmd = KSU_IOCTL_GET_DYNAMIC_MANAGERS,
      .name = "GET_DYNAMIC_MANAGERS",

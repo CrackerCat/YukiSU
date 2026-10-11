@@ -244,6 +244,25 @@ struct ksu_dynamic_manager_cmd {
   __aligned_u64 signs;
 };
 
+/* Zero/empty compatibility fields use the kernel's actual values. */
+struct ksu_dynamic_manager_compat {
+  __u32 version;
+  __u32 uapi_version;
+  char version_full[KSU_FULL_VERSION_STRING];
+};
+
+struct ksu_dynamic_manager_entry {
+  struct ksu_dynamic_manager_sign sign;
+  struct ksu_dynamic_manager_compat compat;
+};
+
+#define KSU_DYNAMIC_MANAGER_CONFIG_VERSION 1
+struct ksu_dynamic_manager_config_cmd {
+  __u32 version;
+  __u32 count;
+  __aligned_u64 entries;
+};
+
 #define KSU_DYNAMIC_MANAGER_FLAG_PRESET (1U << 0)
 #define KSU_DYNAMIC_MANAGER_FLAG_TRUSTED (1U << 1)
 
@@ -337,6 +356,8 @@ struct ksu_su_prompt_key {
 
 /* YukiSU private ioctl range */
 #define KSU_IOCTL_SET_DYNAMIC_MANAGERS _IOC(_IOC_WRITE, 'K', 240, 0)
+#define KSU_IOCTL_SET_DYNAMIC_MANAGER_CONFIG                                   \
+  _IOW('K', 240, struct ksu_dynamic_manager_config_cmd)
 #define KSU_IOCTL_GET_DYNAMIC_MANAGERS                                         \
   _IOWR('K', 241, struct ksu_get_dynamic_managers_cmd)
 #define KSU_IOCTL_MAGISK_PERSIST _IOW('K', 242, struct ksu_magisk_persist_cmd)

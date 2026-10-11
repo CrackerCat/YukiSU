@@ -47,6 +47,7 @@ import com.ramcosta.composedestinations.generated.destinations.TemplateEditorScr
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.R
+import com.anatdx.yukisu.ui.component.DynamicManagerCompatDialog
 import com.anatdx.yukisu.ui.component.ConfirmResult
 import com.anatdx.yukisu.ui.component.SwitchItem
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
@@ -146,6 +147,51 @@ fun AppProfileScreen(
         mutableStateOf<KsuCli.DynamicManagerSignature?>(null)
     }
 
+    var dynamicManagerCompat by remember(packageName, appInfo.uid) {
+        mutableStateOf<KsuCli.DynamicManagerCompat?>(null)
+    }
+
+    fun editDynamicManagerCompat() {
+        scope.launch {
+            dynamicManagerBusy = true
+            try {
+                dynamicManagerCompat = KsuCli.getDynamicManagerCompat(appInfo.uid)
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                dynamicManagerErrorTitle = failedToSetDynamicManager
+                dynamicManagerError = e.message ?: e.javaClass.simpleName
+            } finally {
+                dynamicManagerBusy = false
+            }
+        }
+    }
+
+    dynamicManagerCompat?.let { compat ->
+        DynamicManagerCompatDialog(
+            initial = compat,
+            onDismiss = { dynamicManagerCompat = null },
+            onSave = { updated ->
+                dynamicManagerCompat = null
+                scope.launch {
+                    dynamicManagerBusy = true
+                    try {
+                        val result = KsuCli.setDynamicManagerUid(appInfo.uid, updated)
+                        if (result.success) {
+                            dynamicManagerChecked = true
+                            dynamicManagerSignature = KsuCli.getDynamicManagerSignatureForUid(appInfo.uid)
+                            superUserViewModel.refreshAppConfigurations()
+                        } else {
+                            dynamicManagerErrorTitle = failedToSetDynamicManager
+                            dynamicManagerError = result.error
+                        }
+                    } finally {
+                        dynamicManagerBusy = false
+                    }
+                }
+            },
+        )
+    }
+
     LaunchedEffect(packageName, appInfo.uid) {
         val flags = KsuCli.getDynamicManagerFlagsForUid(appInfo.uid)
         dynamicManagerFlags = flags
@@ -206,7 +252,8 @@ fun AppProfileScreen(
             profile = profile,
             showDynamicManagerSwitch = showDynamicManagerSwitch,
             isDynamicManager = dynamicManagerChecked,
-            dynamicManagerEnabled = !dynamicManagerBusy,
+            dynamicManagerEnabled = !dynamicManagerBusy && dynamicManagerCompat == null,
+            onDynamicManagerCompat = ::editDynamicManagerCompat,
             onViewTemplate = {
                 getTemplateInfoById(it)?.let { info ->
                     navigator.navigate(TemplateEditorScreenDestination(info))
@@ -264,14 +311,12 @@ fun AppProfileScreen(
                             ) {
                                 return@launch
                             }
-                            val result = KsuCli.setDynamicManagerUid(appInfo.uid)
-                            if (result.success) {
-                                dynamicManagerSignature = KsuCli.getDynamicManagerSignatureForUid(appInfo.uid)
-                                dynamicManagerChecked = true
-                                superUserViewModel.refreshAppConfigurations()
-                            } else {
+                            try {
+                                dynamicManagerCompat = KsuCli.getDynamicManagerCompat(appInfo.uid)
+                            } catch (e: Exception) {
+                                if (e is CancellationException) throw e
                                 dynamicManagerErrorTitle = failedToSetDynamicManager
-                                dynamicManagerError = result.error
+                                dynamicManagerError = e.message ?: e.javaClass.simpleName
                             }
                         } else {
                             val signature = dynamicManagerSignature
@@ -299,6 +344,7 @@ fun AppProfileScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun AppProfileInner(
     modifier: Modifier = Modifier,
@@ -315,6 +361,7 @@ private fun AppProfileInner(
     onManageTemplate: () -> Unit = {},
     onProfileChange: (Natives.Profile) -> Unit,
     onDynamicManagerChange: (Boolean) -> Unit = {},
+    onDynamicManagerCompat: () -> Unit = {},
 ) {
     val isRootGranted = profile.allowSu
     val cardColors = getCardColors(MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -415,6 +462,25 @@ private fun AppProfileInner(
                         enabled = dynamicManagerEnabled,
                         onCheckedChange = onDynamicManagerChange,
                     )
+                    if (isDynamicManager) {
+                        FilledTonalButton(
+                            enabled = dynamicManagerEnabled,
+                            onClick = onDynamicManagerCompat,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                            shapes = if (isExpressiveUi) {
+                                ButtonDefaults.shapes()
+                            } else {
+                                ButtonDefaults.shapes(
+                                    shape = ButtonDefaults.shape,
+                                    pressedShape = ButtonDefaults.shape,
+                                )
+                            },
+                        ) {
+                            Text(stringResource(R.string.dynamic_manager_compat))
+                        }
+                    }
                 }
             }
 

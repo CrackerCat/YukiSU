@@ -361,8 +361,34 @@ object KsuCli {
             }
         }
 
-    suspend fun setDynamicManagerUid(uid: Int): DynamicManagerResult =
-        runDynamicManagerCommand("dynamic set-uid $uid", uid)
+    data class DynamicManagerCompat(
+        val version: Long = 0,
+        val uapiVersion: Long = 0,
+        val versionFull: String = ""
+    )
+
+    suspend fun getDynamicManagerCompat(uid: Int): DynamicManagerCompat = withContext(Dispatchers.IO) {
+        val stdout = ArrayList<String>()
+        val stderr = ArrayList<String>()
+        val result = getRootShell().newJob()
+            .add(ksudCmd("dynamic get-config --uid $uid"))
+            .to(stdout, stderr)
+            .exec()
+        check(result.isSuccess) { (stderr + stdout).joinToString("\n").ifBlank { "Exit ${result.code}" } }
+        val compat = JSONObject(stdout.joinToString("\n")).getJSONObject("compat")
+        DynamicManagerCompat(
+            compat.getLong("version"),
+            compat.getLong("uapi_version"),
+            compat.getString("version_full")
+        )
+    }
+
+    suspend fun setDynamicManagerUid(uid: Int, compat: DynamicManagerCompat): DynamicManagerResult =
+        runDynamicManagerCommand(
+            "dynamic set-uid $uid --version ${compat.version} --uapi ${compat.uapiVersion}" +
+                " --full-version ${shellArg(compat.versionFull)}",
+            uid
+        )
 
     suspend fun deleteDynamicManager(signature: DynamicManagerSignature): DynamicManagerResult =
         runDynamicManagerCommand("dynamic del ${shellArg(signature.size)} ${shellArg(signature.hash)}")

@@ -1,0 +1,8 @@
+<resources>
+    <string name="dynamic_manager_compat">兼容设置</string>
+    <string name="dynamic_manager_compat_summary">留空或填 0 使用内核真实值。设置对相同签名的应用生效。修改 UAPI 返回值不会补齐缺失功能。保存后请重新打开目标管理器。</string>
+    <string name="dynamic_manager_compat_version">内核版本码</string>
+    <string name="dynamic_manager_compat_uapi">UAPI 版本</string>
+    <string name="dynamic_manager_compat_name">内核完整版本（可选）</string>
+    <string name="dynamic_manager_compat_reset">使用真实值</string>
+</resources>

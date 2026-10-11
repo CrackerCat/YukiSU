@@ -6,11 +6,14 @@
 #include "terminal.hpp"
 #include "utils.hpp"
 
+#include <fcntl.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <algorithm>
 #include <cctype>
 #include <cerrno>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -22,7 +25,8 @@ namespace ksud {
 namespace {
 
 bool parse_size(const std::string& value, uint32_t* out) {
-    if (value.empty())
+    if (value.empty() || value.find('\0') != std::string::npos || value.front() == '-' ||
+        value.front() == '+' || std::isspace(static_cast<unsigned char>(value.front())))
         return false;
 
     char* end = nullptr;
@@ -39,7 +43,8 @@ bool parse_size(const std::string& value, uint32_t* out) {
 
 bool parse_size(const json::Value& value, uint32_t* out) {
     if (value.type == json::Type::Number) {
-        if (value.n < 0 || value.n > std::numeric_limits<uint32_t>::max()) {
+        if (!std::isfinite(value.n) || std::floor(value.n) != value.n || value.n < 0 ||
+            value.n > std::numeric_limits<uint32_t>::max()) {
             return false;
         }
         *out = static_cast<uint32_t>(value.n);
@@ -76,115 +81,167 @@ bool same_sign(const DynamicManagerSign& lhs, const DynamicManagerSign& rhs) {
     return lhs.size == rhs.size && std::strcmp(lhs.hash, rhs.hash) == 0;
 }
 
-bool contains_sign(const std::vector<DynamicManagerSign>& signs, const DynamicManagerSign& sign) {
-    return std::any_of(signs.begin(), signs.end(), [&](const DynamicManagerSign& existing) {
-        return same_sign(existing, sign);
-    });
-}
-
-bool append_sign(const json::Value& object, std::vector<DynamicManagerSign>* signs) {
-    if (object.type != json::Type::Object) {
-        return false;
+class ConfigLock {
+public:
+    ConfigLock() {
+        if (ensure_dir_exists(WORKING_DIR)) {
+            fd_ = open((std::string(DYNAMIC_MANAGER_CONFIG_PATH) + ".lock").c_str(),
+                       O_CREAT | O_RDWR | O_CLOEXEC | O_NOFOLLOW, 0600);
+            locked_ = fd_ >= 0 && flock(fd_, LOCK_EX) == 0;
+        }
     }
-
-    const auto size_it = object.o.find("size");
-    const auto hash_it = object.o.find("hash");
-    if (size_it == object.o.end() || hash_it == object.o.end()) {
-        return false;
+    ~ConfigLock() {
+        if (fd_ >= 0)
+            close(fd_);
     }
+    ConfigLock(const ConfigLock&) = delete;
+    ConfigLock& operator=(const ConfigLock&) = delete;
+    ConfigLock(ConfigLock&&) = delete;
+    ConfigLock& operator=(ConfigLock&&) = delete;
+    [[nodiscard]] bool locked() const { return locked_; }
 
-    DynamicManagerSign sign{};
-    if (!parse_size(size_it->second, &sign.size) || !normalize_hash(hash_it->second, sign.hash)) {
+private:
+    int fd_ = -1;
+    bool locked_ = false;
+};
+
+bool parse_compat(const json::Value& value, ksu_dynamic_manager_compat* compat) {
+    if (value.type != json::Type::Object)
         return false;
-    }
-
-    if (!contains_sign(*signs, sign)) {
-        signs->push_back(sign);
+    if (value.contains("version") && !parse_size(value.at("version"), &compat->version))
+        return false;
+    if (value.contains("uapi_version") &&
+        !parse_size(value.at("uapi_version"), &compat->uapi_version))
+        return false;
+    if (value.contains("version_full")) {
+        const auto& name = value.at("version_full");
+        if (name.type != json::Type::String || name.s.size() >= sizeof(compat->version_full) ||
+            name.s.find('\0') != std::string::npos)
+            return false;
+        std::strcpy(compat->version_full, name.s.c_str());
     }
     return true;
 }
 
-void append_signs(const json::Value& value, std::vector<DynamicManagerSign>* signs) {
+bool append_entries(const json::Value& value, std::vector<DynamicManagerEntry>* entries) {
     if (value.type == json::Type::Array) {
-        for (const auto& item : value.a) {
-            append_sign(item, signs);
-        }
-        return;
+        return std::all_of(value.a.begin(), value.a.end(),
+                           [&](const auto& item) { return append_entries(item, entries); });
     }
-
-    if (append_sign(value, signs)) {
-        return;
-    }
-
-    if (value.type != json::Type::Object) {
-        return;
-    }
-
-    static constexpr const char* kArrayKeys[] = {
-        "managers",
-        "dynamic_managers",
-        "signs",
-    };
-    for (const char* key : kArrayKeys) {
-        const auto it = value.o.find(key);
-        if (it != value.o.end()) {
-            append_signs(it->second, signs);
-        }
-    }
-}
-
-std::string sign_to_json(const DynamicManagerSign& sign) {
-    std::string json = "  {\n    \"size\": \"";
-    append_hex(&json, sign.size);
-    json += "\",\n    \"hash\": \"";
-    json += sign.hash;
-    json += "\"\n  }";
-    return json;
-}
-
-std::string signs_to_json(const std::vector<DynamicManagerSign>& signs) {
-    if (signs.empty()) {
-        return "[]\n";
-    }
-
-    std::string json = "[\n";
-    for (size_t i = 0; i < signs.size(); i++) {
-        json += sign_to_json(signs[i]);
-        if (i + 1 < signs.size()) {
-            json += ',';
-        }
-        json += '\n';
-    }
-    json += "]\n";
-    return json;
-}
-
-bool save_signs(const std::vector<DynamicManagerSign>& signs) {
-    if (!ensure_dir_exists(WORKING_DIR)) {
-        terminal::file_error("create directory", WORKING_DIR, errno);
+    if (value.type != json::Type::Object)
         return false;
+    if (value.contains("size") || value.contains("hash")) {
+        DynamicManagerEntry entry{};
+        if (!parse_size(value.at("size"), &entry.sign.size) || !entry.sign.size ||
+            !normalize_hash(value.at("hash"), entry.sign.hash) ||
+            (value.contains("compat") && !parse_compat(value.at("compat"), &entry.compat)))
+            return false;
+        if (entries->size() >= KSU_DYNAMIC_MANAGER_MAX_SIGNS ||
+            std::any_of(entries->begin(), entries->end(),
+                        [&](const auto& existing) { return same_sign(existing.sign, entry.sign); }))
+            return false;
+        entries->push_back(entry);
+        return true;
     }
-    if (!write_file(DYNAMIC_MANAGER_CONFIG_PATH, signs_to_json(signs))) {
-        terminal::file_error("write", DYNAMIC_MANAGER_CONFIG_PATH, errno);
-        return false;
+    for (const char* key : {"managers", "dynamic_managers", "signs"}) {
+        if (value.contains(key))
+            return append_entries(value.at(key), entries);
     }
-    chmod(DYNAMIC_MANAGER_CONFIG_PATH, 0600);
-    return true;
+    return false;
 }
 
-int apply_signs(const std::vector<DynamicManagerSign>& signs) {
-    if (signs.size() > KSU_DYNAMIC_MANAGER_MAX_SIGNS) {
-        printf("Too many dynamic manager signatures: %zu > %u\n", signs.size(),
-               KSU_DYNAMIC_MANAGER_MAX_SIGNS);
-        return 1;
-    }
+std::string entry_to_json(const DynamicManagerEntry& entry) {
+    std::string result = "{\"size\":\"";
+    append_hex(&result, entry.sign.size);
+    result += "\",\"hash\":\"";
+    result += entry.sign.hash;
+    result += "\",\"compat\":{\"version\":" + std::to_string(entry.compat.version);
+    result += ",\"uapi_version\":" + std::to_string(entry.compat.uapi_version);
+    result += ",\"version_full\":" + json::escape_string(entry.compat.version_full) + "}}";
+    return result;
+}
 
-    if (set_dynamic_managers(signs) != 0) {
-        terminal::errorf("Failed to send dynamic manager signatures to kernel: %s (errno %d)",
+std::string entries_to_json(const std::vector<DynamicManagerEntry>& entries) {
+    std::string result = "[";
+    for (const auto& entry : entries) {
+        if (result.size() > 1)
+            result += ',';
+        result += '\n';
+        result += entry_to_json(entry);
+    }
+    return result + "\n]\n";
+}
+
+std::optional<std::vector<DynamicManagerEntry>> load_config() {
+    std::error_code error;
+    const bool exists = std::filesystem::exists(DYNAMIC_MANAGER_CONFIG_PATH, error);
+    if (!error && !exists)
+        return std::vector<DynamicManagerEntry>{};
+    const auto content = read_file(DYNAMIC_MANAGER_CONFIG_PATH);
+    std::vector<DynamicManagerEntry> entries;
+    if (error || !content || !append_entries(json::parse(*content), &entries)) {
+        terminal::error("Invalid or unreadable dynamic manager configuration");
+        return std::nullopt;
+    }
+    return entries;
+}
+
+int apply_config(const std::vector<DynamicManagerEntry>& entries) {
+    if (set_dynamic_manager_config(entries) != 0) {
+        terminal::errorf("Failed to apply dynamic manager configuration: %s (errno %d)",
                          strerror(errno), errno);
         return 1;
     }
     return 0;
+}
+
+int save_config(const std::vector<DynamicManagerEntry>& entries,
+                const std::vector<DynamicManagerEntry>& previous) {
+    if (apply_config(entries) != 0)
+        return 1;
+    if (!write_file_atomic(DYNAMIC_MANAGER_CONFIG_PATH, entries_to_json(entries))) {
+        terminal::file_error("write", DYNAMIC_MANAGER_CONFIG_PATH, errno);
+        if (apply_config(previous) != 0)
+            terminal::error("Failed to restore the previous dynamic manager configuration");
+        return 1;
+    }
+    const int directory = open(WORKING_DIR, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    const bool synced = directory >= 0 && fsync(directory) == 0;
+    if (directory >= 0)
+        close(directory);
+    if (!synced) {
+        terminal::error("Failed to sync dynamic manager configuration");
+        if (!write_file_atomic(DYNAMIC_MANAGER_CONFIG_PATH, entries_to_json(previous)))
+            terminal::error("Failed to restore the persisted dynamic manager configuration");
+        if (apply_config(previous) != 0)
+            terminal::error("Failed to restore the previous dynamic manager configuration");
+        return 1;
+    }
+    return 0;
+}
+
+bool parse_compat_args(const std::vector<std::string>& args, size_t start,
+                       ksu_dynamic_manager_compat* compat) {
+    for (size_t i = start; i < args.size(); i += 2) {
+        if (i + 1 == args.size())
+            return false;
+        const auto& value = args[i + 1];
+        if (args[i] == "--version") {
+            if (!parse_size(value, &compat->version))
+                return false;
+        } else if (args[i] == "--uapi") {
+            if (!parse_size(value, &compat->uapi_version))
+                return false;
+        } else if (args[i] == "--full-version") {
+            if (value.size() >= sizeof(compat->version_full) ||
+                value.find('\0') != std::string::npos)
+                return false;
+            std::strcpy(compat->version_full, value.c_str());
+        } else {
+            return false;
+        }
+    }
+    return true;
 }
 
 void print_help() {
@@ -195,7 +252,10 @@ void print_help() {
     printf("  set-hash <size> <hash>   Persist and apply a size/hash signature\n");
     printf("  set-apk <APK>            Extract APK v2 signature, persist, and apply\n");
     printf("  set-uid <UID>            Extract signature from an installed UID's APK\n");
-    printf("  list                     List persisted dynamic manager signatures\n");
+    printf("  get-config --uid <UID>   Read the signature and compatibility settings as JSON\n");
+    printf("  list [--json]            List persisted dynamic manager settings\n");
+    printf("  Set options: --version <code> --uapi <version> --full-version <name>\n");
+    printf("  Zero/empty compatibility values use the actual kernel values.\n");
     printf("  del <size> <hash>        Delete a persisted size/hash and apply\n");
     printf("  clear                    Clear persisted signatures and apply\n");
     printf("  help                     Show this help\n");
@@ -364,7 +424,7 @@ std::vector<std::string> apk_paths_for_package(const std::string& package_name, 
     return paths;
 }
 
-bool sign_from_uid(uint32_t uid, DynamicManagerSign* sign) {
+bool sign_from_uid(uint32_t uid, DynamicManagerSign* sign, bool quiet = false) {
     constexpr uint32_t kPerUserRange = 100000;
     const uint32_t user_id = uid / kPerUserRange;
     const auto packages = packages_for_uid(uid, user_id);
@@ -382,8 +442,10 @@ bool sign_from_uid(uint32_t uid, DynamicManagerSign* sign) {
             }
             DynamicManagerSign parsed{};
             if (sign_from_apk(path, &parsed)) {
-                printf("package: %s\n", package_name.c_str());
-                printf("apk: %s\n", path.c_str());
+                if (!quiet) {
+                    printf("package: %s\n", package_name.c_str());
+                    printf("apk: %s\n", path.c_str());
+                }
                 *sign = parsed;
                 return true;
             }
@@ -436,55 +498,36 @@ bool apk_from_uid(uint32_t uid, std::string* package_out, std::string* apk_out) 
     return false;
 }
 
-int add_sign(DynamicManagerSign sign) {
-    auto signs = load_dynamic_manager_signs();
-    if (!contains_sign(signs, sign)) {
-        if (signs.size() >= KSU_DYNAMIC_MANAGER_MAX_SIGNS) {
-            printf("Too many dynamic manager signatures: %zu >= %u\n", signs.size(),
-                   KSU_DYNAMIC_MANAGER_MAX_SIGNS);
-            return 1;
-        }
-        signs.push_back(sign);
-    }
-
-    if (!save_signs(signs)) {
+int add_sign(const DynamicManagerSign& sign, const std::vector<std::string>& args,
+             size_t options_start) {
+    const auto previous = load_config();
+    if (!previous)
         return 1;
+    auto entries = *previous;
+    auto it = std::find_if(entries.begin(), entries.end(),
+                           [&](const auto& entry) { return same_sign(entry.sign, sign); });
+    if (it == entries.end()) {
+        if (entries.size() >= KSU_DYNAMIC_MANAGER_MAX_SIGNS)
+            return terminal::error("Too many dynamic manager signatures");
+        entries.push_back({sign, {}});
+        it = entries.end() - 1;
     }
-    if (apply_signs(signs) != 0) {
+    if (!parse_compat_args(args, options_start, &it->compat))
+        return terminal::error("Invalid dynamic manager compatibility options");
+    if (save_config(entries, *previous) != 0)
         return 1;
-    }
-
-    printf("size: 0x%x\n", sign.size);
-    printf("hash: %s\n", sign.hash);
+    printf("%s\n", entry_to_json(*it).c_str());
     return 0;
 }
 
 }  // namespace
 
-std::vector<DynamicManagerSign> load_dynamic_manager_signs() {
-    const auto content = read_file(DYNAMIC_MANAGER_CONFIG_PATH);
-    if (!content) {
-        return {};
-    }
-
-    std::vector<DynamicManagerSign> signs;
-    append_signs(json::parse(*content), &signs);
-
-    if (signs.size() > KSU_DYNAMIC_MANAGER_MAX_SIGNS) {
-        signs.resize(KSU_DYNAMIC_MANAGER_MAX_SIGNS);
-    }
-    return signs;
-}
-
 int load_and_apply_dynamic_managers() {
-    const auto signs = load_dynamic_manager_signs();
-    if (set_dynamic_managers(signs) != 0) {
-        LOGW("dynamic_manager: failed to send %zu signature(s) to kernel", signs.size());
-        return 1;
-    }
-
-    LOGI("dynamic_manager: loaded %zu signature(s)", signs.size());
-    return 0;
+    const ConfigLock lock;
+    if (!lock.locked())
+        return terminal::error("Failed to lock dynamic manager configuration");
+    const auto entries = load_config();
+    return entries ? apply_config(*entries) : 1;
 }
 
 int cmd_dynamic_manager(const std::vector<std::string>& args) {
@@ -548,17 +591,39 @@ int cmd_dynamic_manager(const std::vector<std::string>& args) {
         return print_apk_signature(target, json);
     }
 
-    if (subcmd == "set-hash" && args.size() == 3) {
-        DynamicManagerSign sign{};
-        return sign_from_hash_args(args[1], args[2], &sign) ? add_sign(sign) : 1;
+    const ConfigLock lock;
+    if (!lock.locked())
+        return terminal::error("Failed to lock dynamic manager configuration");
+
+    if (subcmd == "get-config" && args.size() == 3 && args[1] == "--uid") {
+        uint32_t uid = 0;
+        DynamicManagerEntry entry{};
+        if (!parse_size(args[2], &uid) || !sign_from_uid(uid, &entry.sign, true))
+            return 1;
+        const auto entries = load_config();
+        if (!entries)
+            return 1;
+        for (const auto& existing : *entries) {
+            if (same_sign(existing.sign, entry.sign)) {
+                entry = existing;
+                break;
+            }
+        }
+        printf("%s\n", entry_to_json(entry).c_str());
+        return 0;
     }
 
-    if (subcmd == "set-apk" && args.size() == 2) {
+    if (subcmd == "set-hash" && args.size() >= 3) {
         DynamicManagerSign sign{};
-        return sign_from_apk(args[1], &sign) ? add_sign(sign) : 1;
+        return sign_from_hash_args(args[1], args[2], &sign) ? add_sign(sign, args, 3) : 1;
     }
 
-    if (subcmd == "set-uid" && args.size() == 2) {
+    if (subcmd == "set-apk" && args.size() >= 2) {
+        DynamicManagerSign sign{};
+        return sign_from_apk(args[1], &sign) ? add_sign(sign, args, 2) : 1;
+    }
+
+    if (subcmd == "set-uid" && args.size() >= 2) {
         uint32_t uid = 0;
         if (!parse_size(args[1], &uid)) {
             terminal::errorf("Invalid uid: %s\n", args[1].c_str());
@@ -566,47 +631,45 @@ int cmd_dynamic_manager(const std::vector<std::string>& args) {
         }
 
         DynamicManagerSign sign{};
-        return sign_from_uid(uid, &sign) ? add_sign(sign) : 1;
+        return sign_from_uid(uid, &sign) ? add_sign(sign, args, 2) : 1;
     }
 
-    if (subcmd == "list" && args.size() == 1) {
-        const auto signs = load_dynamic_manager_signs();
-        for (const auto& sign : signs) {
-            printf("size: 0x%x\n", sign.size);
-            printf("hash: %s\n", sign.hash);
+    if (subcmd == "list" && (args.size() == 1 || (args.size() == 2 && args[1] == "--json"))) {
+        const auto entries = load_config();
+        if (!entries)
+            return 1;
+        if (args.size() == 2) {
+            printf("%s", entries_to_json(*entries).c_str());
+        } else {
+            for (const auto& entry : *entries) {
+                printf("size: 0x%x\nhash: %s\nversion: %u\nuapi: %u\nfull-version: %s\n",
+                       entry.sign.size, entry.sign.hash, entry.compat.version,
+                       entry.compat.uapi_version, entry.compat.version_full);
+            }
         }
         return 0;
     }
 
     if (subcmd == "del" && args.size() == 3) {
         DynamicManagerSign target{};
-        if (!sign_from_hash_args(args[1], args[2], &target)) {
+        if (!sign_from_hash_args(args[1], args[2], &target))
             return 1;
-        }
-
-        auto signs = load_dynamic_manager_signs();
-        const auto old_size = signs.size();
-        signs.erase(
-            std::remove_if(signs.begin(), signs.end(),
-                           [&](const DynamicManagerSign& sign) { return same_sign(sign, target); }),
-            signs.end());
-        if (signs.size() == old_size) {
-            printf("Signature not found\n");
+        const auto previous = load_config();
+        if (!previous)
             return 1;
-        }
-
-        if (!save_signs(signs)) {
-            return 1;
-        }
-        return apply_signs(signs);
+        auto entries = *previous;
+        entries.erase(
+            std::remove_if(entries.begin(), entries.end(),
+                           [&](const auto& entry) { return same_sign(entry.sign, target); }),
+            entries.end());
+        if (entries.size() == previous->size())
+            return terminal::error("Signature not found");
+        return save_config(entries, *previous);
     }
 
     if (subcmd == "clear" && args.size() == 1) {
-        const std::vector<DynamicManagerSign> signs;
-        if (!save_signs(signs)) {
-            return 1;
-        }
-        return apply_signs(signs);
+        const auto previous = load_config();
+        return previous ? save_config({}, *previous) : 1;
     }
 
     terminal::errorf("Unknown dynamic subcommand: %s\n", subcmd.c_str());

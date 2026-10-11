@@ -31,9 +31,13 @@ using NukeExt4SysfsCmd = ksu_nuke_ext4_sysfs_cmd;
 using AddTryUmountCmd = ksu_add_try_umount_cmd;
 using DynamicManagerSign = ksu_dynamic_manager_sign;
 using DynamicManagerCmd = ksu_dynamic_manager_cmd;
+using DynamicManagerEntry = ksu_dynamic_manager_entry;
 
 static_assert(sizeof(ksu_get_info_cmd) == 16);
 static_assert(sizeof(ksu_get_info_legacy_cmd) == 12);
+static_assert(sizeof(ksu_dynamic_manager_sign) == 72);
+static_assert(sizeof(ksu_dynamic_manager_entry) == 336);
+static_assert(sizeof(ksu_dynamic_manager_config_cmd) == 16);
 
 static_assert(sizeof(ksu_uts_template) == 400, "ksu_uts_template ABI drift");
 static_assert(sizeof(ksu_uts_view_config) == 816, "ksu_uts_view_config ABI drift");
@@ -105,6 +109,7 @@ int mark_refresh();
 int nuke_ext4_sysfs(const std::string& mnt);
 int set_init_pgrp();
 int set_dynamic_managers(const std::vector<DynamicManagerSign>& signs);
+int set_dynamic_manager_config(const std::vector<DynamicManagerEntry>& entries);
 
 // Umount list management
 int umount_list_wipe();

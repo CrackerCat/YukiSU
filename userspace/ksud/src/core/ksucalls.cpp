@@ -477,6 +477,25 @@ int set_dynamic_managers(const std::vector<DynamicManagerSign>& signs) {
     return ksuctl(KSU_IOCTL_SET_DYNAMIC_MANAGERS, &cmd);
 }
 
+int set_dynamic_manager_config(const std::vector<DynamicManagerEntry>& entries) {
+    ksu_dynamic_manager_config_cmd cmd{KSU_DYNAMIC_MANAGER_CONFIG_VERSION,
+                                       static_cast<uint32_t>(entries.size()),
+                                       reinterpret_cast<uint64_t>(entries.data())};
+    const int result = ksuctl(KSU_IOCTL_SET_DYNAMIC_MANAGER_CONFIG, &cmd);
+    if (result >= 0 || errno != ENOTTY)
+        return result;
+    std::vector<DynamicManagerSign> signs;
+    signs.reserve(entries.size());
+    for (const auto& entry : entries) {
+        if (entry.compat.version || entry.compat.uapi_version || entry.compat.version_full[0]) {
+            errno = EOPNOTSUPP;
+            return -1;
+        }
+        signs.push_back(entry.sign);
+    }
+    return set_dynamic_managers(signs);
+}
+
 int umount_list_wipe() {
     AddTryUmountCmd cmd = {0, 0, KSU_UMOUNT_WIPE};
     return ksuctl(KSU_IOCTL_ADD_TRY_UMOUNT, &cmd);

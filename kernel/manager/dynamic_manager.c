@@ -18,6 +18,7 @@ struct dynamic_manager_sign {
 	struct hlist_node node;
 	u32 size;
 	char hash[65];
+	struct ksu_dynamic_manager_compat compat;
 };
 
 struct dynamic_manager_app {
@@ -266,11 +267,14 @@ out:
 	mutex_unlock(&dynamic_manager_lock);
 }
 
-int ksu_dynamic_manager_set(const struct ksu_dynamic_manager_sign *signs,
-			    u32 count, bool *need_rescan)
+int ksu_dynamic_manager_set_config(
+    const struct ksu_dynamic_manager_entry *entries, u32 count,
+    bool *need_rescan)
 {
 	u32 i;
-	u32 valid_count = 0;
+	struct dynamic_manager_sign *pending[KSU_DYNAMIC_MANAGER_MAX_SIGNS] = {
+	    0};
+	int ret = -EINVAL;
 
 	if (need_rescan)
 		*need_rescan = false;
@@ -278,28 +282,44 @@ int ksu_dynamic_manager_set(const struct ksu_dynamic_manager_sign *signs,
 	if (count > KSU_DYNAMIC_MANAGER_MAX_SIGNS)
 		return -EINVAL;
 
-	mutex_lock(&dynamic_manager_lock);
-	clear_signs_locked();
-
 	for (i = 0; i < count; i++) {
 		struct dynamic_manager_sign *sign;
 		char normalized_hash[65];
+		u32 j;
 
-		if (!signs[i].size ||
-		    !normalize_hash(normalized_hash, signs[i].hash))
-			continue;
+		if (!entries[i].sign.size ||
+		    !normalize_hash(normalized_hash, entries[i].sign.hash) ||
+		    strnlen(entries[i].compat.version_full,
+			    KSU_FULL_VERSION_STRING) == KSU_FULL_VERSION_STRING)
+			goto out;
+		for (j = 0; j < i; j++) {
+			if (pending[j]->size == entries[i].sign.size &&
+			    !strcmp(pending[j]->hash, normalized_hash))
+				goto out;
+		}
 
 		sign = kzalloc(sizeof(*sign), GFP_KERNEL);
 		if (!sign) {
-			mutex_unlock(&dynamic_manager_lock);
-			return -ENOMEM;
+			ret = -ENOMEM;
+			goto out;
 		}
 
-		sign->size = signs[i].size;
+		sign->size = entries[i].sign.size;
 		strscpy(sign->hash, normalized_hash, sizeof(sign->hash));
+		sign->compat.version = entries[i].compat.version;
+		sign->compat.uapi_version = entries[i].compat.uapi_version;
+		strscpy(sign->compat.version_full,
+			entries[i].compat.version_full,
+			sizeof(sign->compat.version_full));
+		pending[i] = sign;
+	}
+
+	mutex_lock(&dynamic_manager_lock);
+	clear_signs_locked();
+	for (i = 0; i < count; i++) {
+		struct dynamic_manager_sign *sign = pending[i];
 		hash_add(dynamic_manager_signs, &sign->node,
 			 sign_key(sign->size, sign->hash));
-		valid_count++;
 	}
 
 	for (i = 0; i < HASH_SIZE(dynamic_manager_apps); i++) {
@@ -316,11 +336,53 @@ int ksu_dynamic_manager_set(const struct ksu_dynamic_manager_sign *signs,
 	rebuild_trusted_cache_locked();
 
 	/* Cached candidates do not include newly trusted signatures. */
-	if (valid_count && need_rescan)
+	if (count && need_rescan)
 		*need_rescan = true;
 
 	mutex_unlock(&dynamic_manager_lock);
 	return 0;
+out:
+	for (i = 0; i < count; i++)
+		kfree(pending[i]);
+	return ret;
+}
+
+int ksu_dynamic_manager_set(const struct ksu_dynamic_manager_sign *signs,
+			    u32 count, bool *need_rescan)
+{
+	struct ksu_dynamic_manager_entry *entries;
+	u32 i;
+	int ret;
+
+	if (count > KSU_DYNAMIC_MANAGER_MAX_SIGNS)
+		return -EINVAL;
+	entries = kcalloc(count, sizeof(*entries), GFP_KERNEL);
+	if (count && !entries)
+		return -ENOMEM;
+	for (i = 0; i < count; i++)
+		entries[i].sign = signs[i];
+	ret = ksu_dynamic_manager_set_config(entries, count, need_rescan);
+	kfree(entries);
+	return ret;
+}
+
+bool ksu_dynamic_manager_get_compat(uid_t uid,
+				    struct ksu_dynamic_manager_compat *compat)
+{
+	struct dynamic_manager_app *app;
+	struct dynamic_manager_sign *sign = NULL;
+	bool found = false;
+
+	mutex_lock(&dynamic_manager_lock);
+	app = find_app_locked(uid % PER_USER_RANGE);
+	if (app && app->trusted)
+		sign = find_sign_locked(app->size, app->hash);
+	if (sign) {
+		*compat = sign->compat;
+		found = true;
+	}
+	mutex_unlock(&dynamic_manager_lock);
+	return found;
 }
 
 bool ksu_dynamic_manager_is_trusted_sign(u32 size, const char *hash)

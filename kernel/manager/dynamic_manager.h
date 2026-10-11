@@ -6,6 +6,8 @@
 struct apk_sign_match;
 struct ksu_dynamic_manager_app;
 struct ksu_dynamic_manager_sign;
+struct ksu_dynamic_manager_entry;
+struct ksu_dynamic_manager_compat;
 
 void ksu_dynamic_manager_init(void);
 void ksu_dynamic_manager_exit(void);
@@ -20,6 +22,11 @@ void ksu_dynamic_manager_note_scanned(uid_t appid,
 				      const struct apk_sign_match *match);
 int ksu_dynamic_manager_set(const struct ksu_dynamic_manager_sign *signs,
 			    u32 count, bool *need_rescan);
+int ksu_dynamic_manager_set_config(
+    const struct ksu_dynamic_manager_entry *entries, u32 count,
+    bool *need_rescan);
+bool ksu_dynamic_manager_get_compat(uid_t uid,
+				    struct ksu_dynamic_manager_compat *compat);
 bool ksu_dynamic_manager_is_trusted_sign(u32 size, const char *hash);
 
 #endif // #ifndef __KSU_H_DYNAMIC_MANAGER

@@ -1,0 +1,8 @@
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="dynamic_manager_compat">Compatibility settings</string>
+    <string name="dynamic_manager_compat_summary">Blank or zero uses the actual kernel value. Settings apply to apps with the same signature. UAPI overrides do not add missing features. Reopen the target manager after saving.</string>
+    <string name="dynamic_manager_compat_version">Kernel version code</string>
+    <string name="dynamic_manager_compat_uapi">UAPI version</string>
+    <string name="dynamic_manager_compat_name">Full kernel version (optional)</string>
+    <string name="dynamic_manager_compat_reset">Use actual values</string>
+</resources>
