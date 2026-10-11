@@ -270,7 +270,6 @@ int ksu_dynamic_manager_set(const struct ksu_dynamic_manager_sign *signs,
 			    u32 count, bool *need_rescan)
 {
 	u32 i;
-	bool matched = false;
 	u32 valid_count = 0;
 
 	if (need_rescan)
@@ -311,13 +310,13 @@ int ksu_dynamic_manager_set(const struct ksu_dynamic_manager_sign *signs,
 			app->trusted = false;
 			if (find_sign_locked(app->size, app->hash)) {
 				app->trusted = true;
-				matched = true;
 			}
 		}
 	}
 	rebuild_trusted_cache_locked();
 
-	if (valid_count && !matched && need_rescan)
+	/* Cached candidates do not include newly trusted signatures. */
+	if (valid_count && need_rescan)
 		*need_rescan = true;
 
 	mutex_unlock(&dynamic_manager_lock);
