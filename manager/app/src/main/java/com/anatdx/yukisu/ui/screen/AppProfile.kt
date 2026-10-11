@@ -28,6 +28,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,10 +47,12 @@ import com.ramcosta.composedestinations.generated.destinations.TemplateEditorScr
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.R
+import com.anatdx.yukisu.ui.component.ConfirmResult
 import com.anatdx.yukisu.ui.component.SwitchItem
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.component.clickHapticFeedback
+import com.anatdx.yukisu.ui.component.rememberConfirmDialog
 import com.anatdx.yukisu.ui.component.profile.AppProfileConfig
 import com.anatdx.yukisu.ui.component.profile.RootProfileConfig
 import com.anatdx.yukisu.ui.component.profile.TemplateConfig
@@ -61,6 +64,7 @@ import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.util.*
 import com.anatdx.yukisu.ui.viewmodel.SuperUserViewModel
 import com.anatdx.yukisu.ui.viewmodel.getTemplateInfoById
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 /**
@@ -75,6 +79,7 @@ fun AppProfileScreen(
     appInfo: SuperUserViewModel.AppInfo,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val snackBarHost = LocalSnackbarHost.current
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = if (isExpressiveUi) {
@@ -91,6 +96,7 @@ fun AppProfileScreen(
     val failedToSetDynamicManager = stringResource(R.string.dynamic_manager_set_failed).format(appInfo.label)
     val failedToDelDynamicManager = stringResource(R.string.dynamic_manager_del_failed).format(appInfo.label)
     val dynamicManagerSignatureUnavailable = stringResource(R.string.dynamic_manager_signature_unavailable).format(appInfo.label)
+    val dynamicManagerConfirmDialog = rememberConfirmDialog()
     var dynamicManagerError by rememberSaveable { mutableStateOf<String?>(null) }
     var dynamicManagerErrorTitle by rememberSaveable { mutableStateOf("") }
 
@@ -238,6 +244,26 @@ fun AppProfileScreen(
                     dynamicManagerBusy = true
                     try {
                         if (checked) {
+                            val hasKsud = try {
+                                KsuCli.hasBundledKsud(appInfo.packageInfo.applicationInfo!!)
+                            } catch (e: Exception) {
+                                if (e is CancellationException) throw e
+                                dynamicManagerErrorTitle = failedToSetDynamicManager
+                                dynamicManagerError = resources.getString(
+                                    R.string.dynamic_manager_error_read,
+                                    e.message ?: e.javaClass.simpleName
+                                )
+                                return@launch
+                            }
+                            if (!hasKsud && dynamicManagerConfirmDialog.awaitConfirm(
+                                    title = resources.getString(R.string.set_as_dynamic_manager),
+                                    content = resources.getString(R.string.dynamic_manager_missing_ksud_warning),
+                                    confirm = resources.getString(R.string.yes),
+                                    dismiss = resources.getString(R.string.no)
+                                ) != ConfirmResult.Confirmed
+                            ) {
+                                return@launch
+                            }
                             val result = KsuCli.setDynamicManagerUid(appInfo.uid)
                             if (result.success) {
                                 dynamicManagerSignature = KsuCli.getDynamicManagerSignatureForUid(appInfo.uid)

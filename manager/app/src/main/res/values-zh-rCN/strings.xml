@@ -133,6 +133,7 @@
     <string name="dynamic_manager_set_failed">将 %s 设为动态管理器失败</string>
     <string name="dynamic_manager_del_failed">从动态管理器中移除 %s 失败</string>
     <string name="dynamic_manager_signature_unavailable">无法提取 %s 的动态管理器签名</string>
+    <string name="dynamic_manager_missing_ksud_warning">当前 APK 不包含 libksud.so，看起来不太像一个 KernelSU 管理器。确定要继续吗？</string>
     <string name="dynamic_manager_error_read">无法读取 APK：%1$s</string>
     <string name="dynamic_manager_error_block">APK 含有额外的签名数据块（%1$s）。当前内核仅接受 V2 块和 verity 填充块。</string>
     <string name="dynamic_manager_error_certificate">V2 证书大小为 %1$s 字节，超过内核的 1024 字节限制。</string>

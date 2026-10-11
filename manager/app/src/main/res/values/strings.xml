@@ -135,6 +135,7 @@
     <string name="dynamic_manager_set_failed">Failed to set %s as dynamic manager</string>
     <string name="dynamic_manager_del_failed">Failed to remove %s from dynamic managers</string>
     <string name="dynamic_manager_signature_unavailable">Unable to extract dynamic manager signature for %s</string>
+    <string name="dynamic_manager_missing_ksud_warning" tools:ignore="MissingTranslation">This APK does not contain libksud.so and may not be a KernelSU manager. Are you sure you want to continue?</string>
     <string name="dynamic_manager_error_read" tools:ignore="MissingTranslation">Cannot read the APK: %1$s</string>
     <string name="dynamic_manager_error_block" tools:ignore="MissingTranslation">The APK contains an additional signing block (%1$s). The kernel accepts only V2 and verity padding blocks.</string>
     <string name="dynamic_manager_error_certificate" tools:ignore="MissingTranslation">The V2 certificate is %1$s bytes. The kernel limit is 1024 bytes.</string>

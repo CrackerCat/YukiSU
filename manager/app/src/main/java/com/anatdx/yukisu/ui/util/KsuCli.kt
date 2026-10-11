@@ -3,6 +3,7 @@ package com.anatdx.yukisu.ui.util
 import android.annotation.SuppressLint
 import android.content.ContentResolver
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.database.Cursor
 import android.media.MediaScannerConnection
 import android.net.Uri
@@ -44,6 +45,7 @@ import java.security.MessageDigest
 import java.util.Properties
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import java.util.zip.ZipFile
 
 
 /**
@@ -261,6 +263,18 @@ object KsuCli {
         }
         return 0
     }
+
+    suspend fun hasBundledKsud(applicationInfo: ApplicationInfo): Boolean =
+        withContext(Dispatchers.IO) {
+            val apkPaths = listOf(applicationInfo.sourceDir) + applicationInfo.splitSourceDirs.orEmpty()
+            apkPaths.any { path ->
+                ZipFile(path).use { apk ->
+                    apk.entries().asSequence().any { entry ->
+                        !entry.isDirectory && entry.name.substringAfterLast('/') == "libksud.so"
+                    }
+                }
+            }
+        }
 
     suspend fun getDynamicManagerSignatureForUid(uid: Int): DynamicManagerSignature? =
         withContext(Dispatchers.IO) {
