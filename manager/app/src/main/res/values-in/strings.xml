@@ -33,7 +33,7 @@
     <string name="reboot_edl">Reboot ke EDL</string>
     <string name="about">Tentang</string>
     <string name="module_uninstall_confirm">Yakin menghapus modul %s?</string>
-    <string name="metamodule_uninstall_confirm">Apakah Anda yakin ingin menghapus modul %s? Tindakan ini akan memengaruhi semua modul, dan beberapa fitur yang disediakan metamodul (seperti pemasangan) tidak akan berfungsi lagi</string>
+    <string name="metamodule_uninstall_confirm">Yakin ingin mencopot modul %s? Tindakan ini akan memengaruhi semua modul, dan fitur tertentu yang disediakan oleh metamodul (seperti mounting) tidak tersedia.</string>
     <string name="module_uninstall_success">%s berhasil dihapus</string>
     <string name="module_uninstall_failed">Gagal menghapus: %s</string>
     <string name="module_version">Versi</string>
@@ -60,7 +60,7 @@
     <string name="profile_capabilities">Kemampuan</string>
     <string name="profile_selinux_context">Konteks SELinux</string>
     <string name="profile_umount_modules">Umount Modul</string>
-    <string name="failed_to_update_app_profile">Gagal membarui Profil pada %s</string>
+    <string name="failed_to_update_app_profile">Gagal memperbarui profil aplikasi untuk %s</string>
     <string name="set_as_dynamic_manager">Tetapkan sebagai pengelola dinamis</string>
     <string name="set_as_dynamic_manager_summary">Pertahankan tanda tangan aplikasi ini dan percayai sebagai pengelola dinamis</string>
     <string name="dynamic_manager_set_failed">Gagal menetapkan %s sebagai pengelola dinamis</string>
@@ -68,10 +68,10 @@
     <string name="dynamic_manager_signature_unavailable">Tidak dapat mengekstrak tanda tangan pengelola dinamis untuk %s</string>
     <string name="allow_any_dynamic_manager">Izinkan aplikasi apa pun sebagai pengelola dinamis</string>
     <string name="allow_any_dynamic_manager_summary">Eksperimental. Menampilkan sakelar pengelola dinamis untuk setiap aplikasi alih-alih hanya untuk tanda tangan pengelola prasetel.</string>
-    <string name="require_kernel_version">Kernel perlu diperbarui. Ketuk untuk menginstal.</string>
-    <string name="require_kernel_version_gki">Kernel perlu diperbarui.</string>
+    <string name="require_kernel_version">Kernel perlu diperbarui. Ketuk untuk memasang.</string>
+    <string name="require_kernel_version_gki">Kernel perlu diperbarui</string>
     <string name="settings_umount_modules_default">Melepas Modul secara bawaan</string>
-    <string name="settings_umount_modules_default_summary">Default global untuk pengaturan \"Lepas modul\" di App Profile. Jika diaktifkan, modifikasi modul akan dihapus untuk aplikasi tanpa profil. Pengaturan ini dinonaktifkan secara default, sehingga aplikasi baru atau tidak dikenal tetap melakukan modifikasi modul.</string>
+    <string name="settings_umount_modules_default_summary">Lepas modul untuk aplikasi tanpa profil sendiri. Nonaktif secara bawaan.</string>
     <string name="profile_umount_modules_summary">Aktifkan opsi ini agar KernelSU dapat memulihkan kembali berkas termodifikasi oleh modul pada aplikasi ini.</string>
     <string name="profile_selinux_domain">Domain</string>
     <string name="profile_selinux_rules">Aturan</string>
@@ -80,12 +80,12 @@
     <string name="module_start_downloading">Mulai mengunduh: %s</string>
     <string name="new_version_available">Tersedia versi terbaru %s, Klik untuk membarui.</string>
     <string name="launch_app">Jalankan</string>
-    <string name="force_stop_app" formatted="false">Paksa berhenti</string>
+    <string name="force_stop_app">Paksa berhenti</string>
     <string name="restart_app">Mulai ulang</string>
     <string name="failed_to_update_sepolicy">Gagal membarui aturan SELinux pada: %s</string>
     <string name="module_changelog">Catatan Perubahan</string>
-    <string name="settings_profile_template">Templat Profil Aplikasi</string>
-    <string name="settings_profile_template_summary">Atur templat Profil yang lokal dan daring</string>
+    <string name="settings_profile_template">Templat profil aplikasi</string>
+    <string name="settings_profile_template_summary">Kelola templat lokal dan daring pada profil aplikasi</string>
     <string name="app_profile_template_create">Buat templat</string>
     <string name="app_profile_template_edit">Edit templat</string>
     <string name="app_profile_template_id">ID</string>
@@ -125,7 +125,7 @@
     <string name="install_inactive_slot_warning">Gawai akan **DIPAKSA** untuk but ke slot nonaktif!
 \nHANYA gunakan setelah proses OTA selesai.
 \nLanjutkan?</string>
-    <string name="install_next">Selanjutnya</string>
+    <string name="install_next">Berikutnya</string>
     <string name="install_select_partition">Pilih partisi</string>
     <string name="install_jailbreak_title">Pemasangan via jailbreak</string>
     <string name="install_jailbreak_summary">Picu late-load langsung dari halaman pemasangan pada perangkat permissive. Jika belum ada shell root, bootstrap Magica akan digunakan sebagai gantinya.</string>
@@ -134,9 +134,9 @@
     <string name="install_jailbreak_failed">Gagal memicu late-load</string>
     <string name="advanced_options">Opsi lanjutan</string>
     <string name="allow_shell">Selalu beri root ke Shell</string>
-    <string name="allow_shell_summary">Selalu izinkan adb shell memanggil su. Jangan aktifkan kecuali benar-benar diperlukan.</string>
+    <string name="allow_shell_summary">Selalu izinkan ADB Shell untuk memanggil perintah SU. Jangan aktifkan ini kecuali benar-benar diperlukan.</string>
     <string name="enable_adb">Paksa aktifkan adb saat boot</string>
-    <string name="enable_adb_summary">Paksa aktifkan debug USB dan nonaktifkan autentikasi adb. Jangan aktifkan kecuali benar-benar diperlukan.</string>
+    <string name="enable_adb_summary">Paksa aktif debugging USB dan nonaktifkan otentikasi ADB. Jangan aktifkan ini kecuali benar-benar diperlukan.</string>
     <string name="install_upload_lkm_file">Gunakan berkas LKM lokal</string>
     <string name="install_only_support_ko_file">Hanya berkas .ko yang didukung</string>
     <string name="select_file_tip">%1$s image partisi terekomendasi</string>
@@ -497,12 +497,12 @@
     <string name="su_request_deny">Tolak</string>
     <string name="su_request_deny_hide">Tolak &amp; sembunyikan</string>
     <!-- locale-only keys -->
-    <string name="profile">Profil Aplikasi</string>
+    <string name="profile">Profil aplikasi</string>
     <string name="settings_unshare_mnt">Rapikan tampilan mount</string>
     <string name="settings_unshare_mnt_summary">Buat ulang namespace dan rapikan ID yang terlihat setelah pelepasan mount. Mulai ulang aplikasi untuk menerapkan.</string>
     <string name="home_lkm_update_available">Versi LKM bawaan yang lebih baru tersedia. Ketuk untuk memperbarui.</string>
     <string name="home_lkm_custom">Kustom</string>
-    <string name="require_manager_version">Manajer perlu diperbarui.</string>
+    <string name="require_manager_version">Manajer perlu diperbarui</string>
     <string name="no_such_module">Modul %1$s tidak ada</string>
     <string name="module_unavailable">Modul %1$s dinonaktifkan, sedang diperbarui, atau menunggu penghapusan</string>
     <string name="seccomp_status_unknown">Tidak diketahui</string>
@@ -684,7 +684,7 @@
     <string name="ci_update_error_install_failed">Tidak dapat memasang pembaruan CI.</string>
     <string name="ci_update_error_install_status">Pemasangan PackageInstaller gagal dengan kode status %1$d.</string>
     <string name="ci_update_error_stream_failed">Transfer aliran data pembaruan CI gagal.</string>
-    <string name="settings_soft_reboot">Gunakan mulai ulang lunak sebagai pengganti mulai ulang</string>
+    <string name="settings_soft_reboot">Mulai ulang lunak</string>
     <string name="settings_soft_reboot_summary">Gunakan mulai ulang lunak setelah memasang, memperbarui, mengaktifkan, menonaktifkan, atau menghapus modul.</string>
     <string name="install_direct_lkm_title">Sematkan LKM langsung ke kernel boot</string>
     <string name="install_direct_lkm_summary">Patch citra, pemasangan langsung, dan pemasangan slot OTA semuanya menggunakan boot sebagai pengganti init_boot serta membersihkan injeksi ramdisk KernelSU lama terlebih dahulu.</string>
@@ -911,7 +911,10 @@
     <string name="uts_view_unpatched_boot_title">Konfigurasi boot awal belum di-patch</string>
     <string name="uts_view_unpatched_boot_message">Anda mengubah konfigurasi global boot awal, tetapi belum mem-patch LKM. Patch sekarang?</string>
     <string name="feature_status_forced_summary">Forced by boot config</string>
-    <string name="install_block_modules">Block kernel modules</string>
-    <string name="install_block_modules_summary">Comma-separated names; leave empty to block none</string>
-    <string name="install_block_modules_invalid">Use letters, digits and underscores; up to 64 per name and 255 total</string>
+    <string name="install_block_modules">Blokir modul kernel (berisiko)</string>
+    <string name="install_block_modules_summary">Nama-nama modul yang dipisahkan koma untuk menghentikan pemuatan saat penyiapan ulang, misalnya oplus_secure_guard. Biarkan kosong jika tidak ingin memblokir apa pun.</string>
+    <string name="install_block_modules_invalid">Nama modul hanya boleh berisi huruf, angka dan garis bawah; maksimal 64 karakter per nama dan 255 karakter secara keseluruhan.</string>
+    <string name="settings_module_description_max_lines">Batas baris deskripsi modul</string>
+    <string name="settings_module_description_max_lines_summary">Deskripsi yang melebihi jumlah baris ini akan diringkas secara otomatis</string>
+    <string name="unit_lines">Baris</string>
 </resources>
