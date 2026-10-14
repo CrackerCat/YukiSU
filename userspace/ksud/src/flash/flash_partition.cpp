@@ -861,8 +861,6 @@ std::string get_kernel_version(const std::string& slot_suffix) {
         return "";
     }
 
-    LOGI("Using magiskboot: %s", magiskboot.c_str());
-
     // Unpack boot image in the workdir
     const std::string kernel_path = workdir + "/kernel";
     auto unpack_result = exec_command_magiskboot(magiskboot, {"unpack", device}, workdir);

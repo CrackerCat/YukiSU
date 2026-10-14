@@ -31,7 +31,7 @@ std::string find_magiskboot(const std::string& specified_path, const std::string
         LOGE("magiskboot (self): not executable: %s", self_path.data());
         return "";
     }
-    printf("- Using magiskboot: %s (self)\n", self_path.data());
+    printf("- Using magiskboot\n");
     return {self_path.data()};
 }
 

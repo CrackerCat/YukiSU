@@ -871,7 +871,6 @@ int boot_patch_impl(const std::vector<std::string>& args) {
         cleanup();
         return 1;
     }
-    printf("- Using magiskboot: %s\n", magiskboot.c_str());
 
     // Get or detect KMI
     std::string kmi = parsed.kmi;
@@ -1070,7 +1069,6 @@ int boot_patch_impl(const std::vector<std::string>& args) {
     // Unpack boot image (must run in workdir so output files go there)
     printf("- Unpacking boot image\n");
     (void)fflush(stdout);
-    printf("- magiskboot: %s\n", magiskboot.c_str());
     printf("- bootimage: %s\n", bootimage.c_str());
     printf("- workdir: %s\n", workdir.c_str());
 
