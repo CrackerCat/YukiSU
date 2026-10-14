@@ -708,6 +708,7 @@ android {
     namespace = "com.anatdx.yukisu"
 
     defaultConfig {
+        testInstrumentationRunner = "ui.screen.ramdisk.RamdiskFileActionsTestRunner"
         buildConfigField("String", "KSUD_BUNDLED_VERSION", "\"$ksudBundledVersion\"")
         buildConfigField("long", "CI_RUN_ID", "${ciRunId}L")
         manifestPlaceholders["ciRunId"] = "run-$ciRunId"
@@ -988,8 +989,11 @@ dependencies {
     implementation(libs.accompanist.drawablepainter)
     implementation(libs.ucrop)
     implementation(libs.yukifb)
+    implementation(libs.yukifb.hex)
 
     testImplementation(libs.kotlin.test)
     implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.junit)
 }

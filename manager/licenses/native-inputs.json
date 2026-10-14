@@ -2,8 +2,8 @@
   "files": {
     ".gitmodules": "9d112a25efe032892fc122bac82a502bd9896b4c2f458e1a43605a45365bef0a",
     "manager/app/src/main/cpp/CMakeLists.txt": "c313eb7317e7598192ad303a87284652bd7ccd1c9b49ee70740cb3b732ed4fef",
-    "manager/gradle/libs.versions.toml": "1183adcc80aaaf603fd343c7efd3c1fd43128dab00ef05946c5dea7a3e34e3ec",
-    "userspace/ksud/CMakeLists.txt": "e5144262d9a031d80daa2f1bdf0bf6d8f0c3af9fd031f20eb97febb7fad8000b",
+    "manager/gradle/libs.versions.toml": "fc2f32704803c96cc3a1867c61358572abfc393e649a3535546dc64f0416aca9",
+    "userspace/ksud/CMakeLists.txt": "d28363a6815e823c21e0d1cb95c2b57bd194b8d7cb37245d2cd9098b0a4fa55a",
     "userspace/ksud/kagami/CMakeLists.txt": "6665509167f33cd4e7984e292f2dddece3555a3e4ed955943e874c8e1149de6b",
     "userspace/ksud/third_party/MagiskbootAlone/CMakeLists.txt": "374cbad2969992ab4fa3c25cbf65b00edfedee0dbde42a8aa64ce6b2c0270c7c",
     "userspace/ksud/third_party/MagiskbootAlone/LICENSE": "9309f87b8961982f37747f6f5adeee1eda1d1f40d6db0dd6be6dbbd6d35d6276",

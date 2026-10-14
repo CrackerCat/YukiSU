@@ -40,4 +40,14 @@ class RamdiskBackPolicyTest {
         assertEquals(RamdiskBackAction.Exit, RamdiskBackContext(exitPrimed = true).action())
         assertEquals(RamdiskBackAction.ConfirmArchive, RamdiskBackContext(exitPrimed = true, archiveChanged = true).action())
     }
+
+    @Test
+    fun hexChangesConfirmBeforeArchiveExitAndBusySaveBlocksNavigation() {
+        val hex = RamdiskBackContext(hexOpen = true, hexDirty = true, archiveChanged = true)
+        assertEquals(RamdiskBackAction.ConfirmHex, hex.action())
+        assertEquals(RamdiskBackAction.ConfirmHex, hex.action(leavingScreen = true))
+        assertEquals(RamdiskBackAction.Blocked, hex.copy(busy = true).action(leavingScreen = true))
+        assertEquals(RamdiskBackAction.CloseHex, hex.copy(hexDirty = false).action())
+        assertEquals(RamdiskBackAction.ConfirmArchive, hex.copy(hexOpen = false).action(leavingScreen = true))
+    }
 }

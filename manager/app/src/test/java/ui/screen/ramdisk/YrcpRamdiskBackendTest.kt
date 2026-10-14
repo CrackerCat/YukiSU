@@ -56,6 +56,15 @@ class YrcpRamdiskBackendTest {
         }
     }
 
+
+    @Test
+    fun binaryInfoRequiresCompletePositiveRevisionRecord() {
+        assertEquals(YrcpBinaryInfo(9, 0), wirePayload { u64(9L); u64(0L) }.decodeBinaryInfo())
+        assertFailsWith<IOException> { wirePayload { u64(0L); u64(1L) }.decodeBinaryInfo() }
+        assertFailsWith<IOException> { wirePayload { u64(9L); u64(1L); byte(0) }.decodeBinaryInfo() }
+        assertFailsWith<IOException> { wirePayload { u64(9L) }.decodeBinaryInfo() }
+    }
+
     private fun nodeRecord(contentKind: Int): ByteArray =
         wirePayload {
             u64(0x0001_0000_0000_002aL)

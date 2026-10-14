@@ -1,6 +1,12 @@
 package ui.screen.ramdisk
 
 import android.util.Log
+import com.anatdx.yukifb.hex.backend.BinaryBytes
+import com.anatdx.yukifb.hex.backend.BinaryCommitter
+import com.anatdx.yukifb.hex.backend.BinaryDataSource
+import com.anatdx.yukifb.hex.backend.BinaryPiece
+import com.anatdx.yukifb.hex.backend.BinaryRevisionConflictException
+import com.anatdx.yukifb.hex.backend.BinarySaveRequest
 import com.anatdx.yukifb.backend.CopyEntriesCapability
 import com.anatdx.yukifb.backend.CreateEntryCapability
 import com.anatdx.yukifb.backend.DeleteEntriesCapability
@@ -17,6 +23,10 @@ import com.anatdx.yukifb.model.FileEntry
 import com.anatdx.yukifb.model.FileEntryType
 import com.anatdx.yukifb.model.UnixMetadata
 import com.anatdx.yukifb.model.UnixMetadataPatch
+import com.anatdx.yukifb.model.FileByteProgress
+import com.anatdx.yukifb.model.FileContentChangedException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -198,6 +208,28 @@ internal class YrcpRamdiskBackend private constructor(
         }
     }
 
+    val supportsHex: Boolean get() = session.supportsBinaryEditing
+
+    suspend fun openBinary(entryId: EntryId): BinaryDataSource =
+        YrcpBinarySource(session, entryId, session.binaryInfo(entryId.toNodeId()))
+
+    suspend fun readSnapshot(entryId: EntryId, onProgress: (FileByteProgress) -> Unit, consume: (ByteArray, Int) -> Unit) =
+        session.readSnapshot(entryId.toNodeId(), onProgress, consume)
+
+    fun binaryCommitter(entryId: EntryId, onCommitted: () -> Unit): BinaryCommitter =
+        object : BinaryCommitter {
+            override val maxSize: Long get() = session.maxContentSize
+            override suspend fun commit(request: BinarySaveRequest): BinaryDataSource {
+                val source = request.source as? YrcpBinarySource
+                    ?: throw IOException("Binary source does not belong to this session")
+                require(source.session === session && source.id == entryId)
+                val info = session.applyEdits(entryId.toNodeId(), source.info.revision, request)
+                markDirty()
+                onCommitted()
+                return YrcpBinarySource(session, entryId, info)
+            }
+        }
+
     suspend fun readElfHeader(entryId: EntryId): ElfHeaderInfo =
         session.elfHeader(entryId.toNodeId())
 
@@ -350,6 +382,24 @@ internal data class ElfHeaderInfo(
     val sectionNameIndex: Int,
 )
 
+internal data class YrcpBinaryInfo(val revision: Long, val size: Long)
+
+private class YrcpBinarySource(
+    val session: YrcpSession,
+    override val id: EntryId,
+    val info: YrcpBinaryInfo,
+) : BinaryDataSource {
+    override val revision: String = session.binarySessionId + ":" + info.revision
+    override val size: Long = info.size
+    override suspend fun read(offset: Long, length: Int): BinaryBytes {
+        require(offset in 0..size && length in 0..1024 * 1024)
+        return BinaryBytes.copyOf(session.readAtRevision(id.toNodeId(), info.revision,
+            offset, minOf(length.toLong(), size - offset).toInt()))
+    }
+}
+
+private class YrcpStatusException(message: String) : IOException(message)
+
 internal class YrcpSession private constructor(
     private val process: Process,
 ) {
@@ -359,6 +409,9 @@ internal class YrcpSession private constructor(
     private val diagnostics = ArrayDeque<String>()
     private var requestId = 1L
     private var closed = false
+    val binarySessionId: String = java.util.UUID.randomUUID().toString()
+    var supportsBinaryEditing: Boolean = false
+        private set
 
     var rootNodeId: Long = 0
         private set
@@ -387,6 +440,71 @@ internal class YrcpSession private constructor(
     ).apply {
         isDaemon = true
         start()
+    }
+
+    suspend fun binaryInfo(nodeId: Long): YrcpBinaryInfo =
+        requestBytes(OPCODE_BINARY_INFO, payloadOf { writeU64(nodeId) }).decodeBinaryInfo()
+
+    suspend fun readAtRevision(nodeId: Long, revision: Long, offset: Long, length: Int): ByteArray {
+        require(length in 0..1024 * 1024 && offset >= 0)
+        val bytes = requestBytes(OPCODE_READ_AT_REVISION, payloadOf {
+            writeU64(nodeId); writeU64(revision); writeU64(offset); writeU64(length.toLong())
+        })
+        if (bytes.size != length) throw IOException("Incomplete versioned read")
+        return bytes
+    }
+
+    suspend fun applyEdits(nodeId: Long, revision: Long, request: BinarySaveRequest): YrcpBinaryInfo {
+        require(request.size in 0..maxContentSize && request.pieces.size <= 262_144)
+        var payloadSize = 36L
+        var outputSize = 0L
+        for (piece in request.pieces) {
+            require(piece.length > 0 && piece.length <= request.size - outputSize)
+            outputSize += piece.length
+            val encodedSize = when (piece) {
+                is BinaryPiece.Original -> {
+                    require(piece.offset >= 0 && piece.offset <= request.source.size &&
+                        piece.length <= request.source.size - piece.offset)
+                    17L
+                }
+                is BinaryPiece.Inserted -> {
+                    require(piece.offset >= 0 && piece.length <= Long.MAX_VALUE - piece.offset)
+                    9L + piece.length
+                }
+            }
+            require(encodedSize <= maxContentSize + MAX_CONTROL_PAYLOAD - payloadSize)
+            payloadSize += encodedSize
+        }
+        require(outputSize == request.size)
+        return exchange(OPCODE_APPLY_EDITS, payloadSize, { output ->
+            val writer = LittleEndianOutput(output)
+            writer.writeU64(nodeId)
+            writer.writeU64(revision)
+            writer.writeU64(request.source.size)
+            writer.writeU64(request.size)
+            writer.writeU32(request.pieces.size.toLong())
+            for (piece in request.pieces) {
+                when (piece) {
+                    is BinaryPiece.Original -> {
+                        writer.writeByte(0); writer.writeU64(piece.offset); writer.writeU64(piece.length)
+                    }
+                    is BinaryPiece.Inserted -> {
+                        writer.writeByte(1); writer.writeU64(piece.length)
+                        var sent = 0L
+                        while (sent < piece.length) {
+                            val length = minOf(65536L, piece.length - sent).toInt()
+                            val bytes = request.readInserted(piece.offset + sent, length)
+                            if (bytes.size != length) throw IOException("Incomplete edit storage range")
+                            output.write(bytes.toByteArray())
+                            sent += length
+                        }
+                    }
+                }
+            }
+        }) { body ->
+            if (body.remaining != 16L) throw IOException("Invalid binary commit response")
+            body.readExactly(16).decodeBinaryInfo()
+        }
     }
 
     suspend fun stat(nodeId: Long): YrcpNode =
@@ -553,6 +671,53 @@ internal class YrcpSession private constructor(
         }
     }
 
+    suspend fun readSnapshot(nodeId: Long, onProgress: (FileByteProgress) -> Unit, consume: (ByteArray, Int) -> Unit) = withContext(Dispatchers.IO) {
+        val progress = RamdiskProgressReporter(onProgress)
+        try {
+            if (supportsBinaryEditing) {
+                val info = binaryInfo(nodeId)
+                progress.update(0, info.size)
+                var offset = 0L
+                do {
+                    currentCoroutineContext().ensureActive()
+                    val count = minOf(65536L, info.size - offset).toInt()
+                    val bytes = readAtRevision(nodeId, info.revision, offset, count)
+                    currentCoroutineContext().ensureActive()
+                    if (count > 0) consume(bytes, count)
+                    offset += count
+                    progress.update(offset, info.size)
+                } while (offset < info.size)
+            } else {
+                // A single READ response is a snapshot, with its actual length in the frame.
+                // The session mutex remains held until the response has been consumed or drained.
+                readWholeFile(nodeId) { input, size ->
+                    progress.update(0, size)
+                    val buffer = ByteArray(65536)
+                    var copied = 0L
+                    while (copied < size) {
+                        currentCoroutineContext().ensureActive()
+                        val count = input.read(buffer, 0, minOf(buffer.size.toLong(), size - copied).toInt())
+                        if (count <= 0) throw EOFException("Incomplete file snapshot")
+                        consume(buffer, count)
+                        copied += count
+                        progress.update(copied, size)
+                    }
+                }
+            }
+            currentCoroutineContext().ensureActive()
+        } catch (changed: BinaryRevisionConflictException) {
+            throw FileContentChangedException(changed)
+        }
+    }
+
+    suspend fun readWholeFile(nodeId: Long, reader: suspend (InputStream, Long) -> Unit) {
+        val payload = payloadOf { writeU64(nodeId); writeU64(0); writeU64(maxContentSize) }
+        exchange(OPCODE_READ, payload.size.toLong(), { it.write(payload) }) { body ->
+            require(body.remaining <= maxContentSize) { "File snapshot exceeds content limit" }
+            reader(body, body.remaining)
+        }
+    }
+
     suspend fun dump() {
         requestBytes(OPCODE_DUMP, ByteArray(0)).requireEmpty()
     }
@@ -594,10 +759,11 @@ internal class YrcpSession private constructor(
     private suspend fun <T> exchange(
         opcode: Int,
         payloadSize: Long,
-        writePayload: (OutputStream) -> Unit,
+        writePayload: suspend (OutputStream) -> Unit,
         readBody: suspend (LimitedInputStream) -> T,
     ): T = withContext(Dispatchers.IO) {
         mutex.lock()
+        var responseConsumed = false
         try {
             checkSession()
             require(payloadSize >= 0) { "YRCP payload size cannot be negative" }
@@ -636,7 +802,9 @@ internal class YrcpSession private constructor(
             )
             if (status != STATUS_OK.toLong()) {
                 body.drain()
-                throw IOException(
+                responseConsumed = true
+                if (status == 7L) throw BinaryRevisionConflictException()
+                throw YrcpStatusException(
                     "ksud ramdisk editor rejected opcode $opcode with status $status" +
                         diagnosticSuffix()
                 )
@@ -645,9 +813,14 @@ internal class YrcpSession private constructor(
                 readBody(body)
             } finally {
                 body.drain()
+                responseConsumed = true
             }
         } catch (error: EOFException) {
+            closeNow()
             throw IOException("ksud ramdisk editor closed the protocol stream${diagnosticSuffix()}", error)
+        } catch (error: Throwable) {
+            if (!responseConsumed) closeNow()
+            throw error
         } finally {
             mutex.unlock()
         }
@@ -675,6 +848,7 @@ internal class YrcpSession private constructor(
         maxContentSize = reader.readU64()
         reader.readU64() // Maximum entry count; the UI does not need it.
         val capabilities = reader.readU32()
+        supportsBinaryEditing = capabilities and (3L shl 16) == (3L shl 16)
         initialDirty = reader.readByte() != 0
         if (negotiatedVersion != PROTOCOL_VERSION.toLong()) {
             throw IOException("Unsupported YRCP version $negotiatedVersion")
@@ -706,13 +880,15 @@ internal class YrcpSession private constructor(
             )
                 .redirectErrorStream(false)
                 .start()
-            YrcpSession(process).also { session ->
-                try {
-                    session.hello()
-                } catch (error: Throwable) {
-                    session.closeNow()
-                    throw error
-                }
+            connect(process)
+        }
+
+        suspend fun connect(process: Process): YrcpSession = YrcpSession(process).also { session ->
+            try {
+                session.hello()
+            } catch (error: Throwable) {
+                session.closeNow()
+                throw error
             }
         }
     }
@@ -787,6 +963,15 @@ internal fun ByteArray.decodeSingleNode(): YrcpNode {
     return input.readNode().also {
         if (input.available() != 0) throw IOException("Unexpected trailing bytes after node record")
     }
+}
+
+internal fun ByteArray.decodeBinaryInfo(): YrcpBinaryInfo {
+    if (size != 16) throw IOException("Invalid binary info size")
+    val reader = LittleEndianInput(ByteArrayInputStream(this))
+    val revision = reader.readU64()
+    val length = reader.readU64()
+    if (revision == 0L) throw IOException("Invalid binary revision")
+    return YrcpBinaryInfo(revision, length)
 }
 
 internal fun ByteArray.decodeElfHeaderInfo(): ElfHeaderInfo {
@@ -1172,3 +1357,7 @@ private const val FILE_TYPE_SOCKET = 0xC000L
 
 private const val CONTENT_KIND_ELF = 1
 internal const val ELF_MIME_TYPE = "application/x-elf"
+
+private const val OPCODE_BINARY_INFO = 18
+private const val OPCODE_READ_AT_REVISION = 19
+private const val OPCODE_APPLY_EDITS = 20

@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <new>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -49,12 +50,15 @@ constexpr std::uint32_t kCapabilityImplicitDirectories = 1U << 12U;
 constexpr std::uint32_t kCapabilityMultipleRamdisks = 1U << 13U;
 constexpr std::uint32_t kCapabilityContentTypes = 1U << 14U;
 constexpr std::uint32_t kCapabilityElfHeader = 1U << 15U;
+constexpr std::uint32_t kCapabilityVersionedRead = 1U << 16U;
+constexpr std::uint32_t kCapabilityApplyEdits = 1U << 17U;
+constexpr std::uint32_t kMaximumEditSegments = 262144U;
 constexpr std::uint32_t kCapabilities =
     kCapabilityRead | kCapabilityReplace | kCapabilityCreateFile | kCapabilityCreateDirectory |
     kCapabilityCreateSymbolicLink | kCapabilityCreateHardLink | kCapabilityCopy | kCapabilityMove |
     kCapabilityRemove | kCapabilityUpdateMetadata | kCapabilityAtomicDump | kCapabilityRangedRead |
     kCapabilityImplicitDirectories | kCapabilityMultipleRamdisks | kCapabilityContentTypes |
-    kCapabilityElfHeader;
+    kCapabilityElfHeader | kCapabilityVersionedRead | kCapabilityApplyEdits;
 constexpr unsigned kDocumentIdShift = 48U;
 constexpr std::uint64_t kLocalNodeIdMask = (std::uint64_t{1} << kDocumentIdShift) - 1U;
 constexpr std::size_t kMaximumDocumentCount = std::numeric_limits<std::uint16_t>::max() - 1U;
@@ -77,6 +81,9 @@ enum class Opcode : std::uint8_t {
     CLOSE = 15,
     LIST_RAMDISKS = 16,
     ELF_HEADER = 17,
+    BINARY_INFO = 18,
+    READ_AT_REVISION = 19,
+    APPLY_EDITS = 20,
 };
 
 enum class ContentKind : std::uint8_t {
@@ -92,6 +99,7 @@ enum class Status : std::uint8_t {
     IO_ERROR = 4,
     LIMIT_EXCEEDED = 5,
     UNSUPPORTED_VERSION = 6,
+    REVISION_CONFLICT = 7,
 };
 
 enum class HeaderReadResult : std::uint8_t {
@@ -115,6 +123,7 @@ struct SessionDocument {
     std::uint64_t packed_size = 0;
     FileFormat compression = FileFormat::UNKNOWN;
     bool is_vendor = false;
+    std::uint64_t revision = 1;
 };
 
 struct ResolvedNode {
@@ -488,21 +497,28 @@ bool send_invalid_response(PayloadReader& reader, int output_fd, const FrameHead
 }
 
 bool handle_read(std::vector<SessionDocument>& documents, PayloadReader& reader, int output_fd,
-                 const FrameHeader& request) {
+                 const FrameHeader& request, bool versioned = false) {
     std::uint64_t encoded_id = 0;
     std::uint64_t offset = 0;
     std::uint64_t requested_length = 0;
-    if (!reader.read_u64(encoded_id) || !reader.read_u64(offset) ||
-        !reader.read_u64(requested_length) || !require_empty(reader)) {
+    std::uint64_t revision = 0;
+    if (!reader.read_u64(encoded_id) || (versioned && !reader.read_u64(revision)) ||
+        !reader.read_u64(offset) || !reader.read_u64(requested_length) || !require_empty(reader)) {
         return send_invalid_response(reader, output_fd, request);
     }
     const auto resolved = resolve_node(documents, encoded_id);
     if (!resolved) {
         return send_response(output_fd, request, Status::NOT_FOUND);
     }
+    if (versioned && (revision == 0 || revision != documents[resolved->document_index].revision)) {
+        return send_response(output_fd, request, Status::REVISION_CONFLICT);
+    }
     const auto node = resolved->document->stat(resolved->local_id);
     if (!node) {
         return send_response(output_fd, request, Status::NOT_FOUND);
+    }
+    if (versioned && (node->mode & S_IFMT) != S_IFREG) {
+        return send_response(output_fd, request, Status::INVALID_REQUEST);
     }
     if (offset > node->size) {
         return send_invalid_response(reader, output_fd, request);
@@ -523,12 +539,112 @@ bool handle_read(std::vector<SessionDocument>& documents, PayloadReader& reader,
                                             });
 }
 
+bool handle_apply_edits(std::vector<SessionDocument>& documents, bool& dirty, PayloadReader& reader,
+                        int output_fd, const FrameHeader& request) {
+    std::uint64_t id = 0;
+    std::uint64_t revision = 0;
+    std::uint64_t original_size = 0;
+    std::uint64_t result_size = 0;
+    std::uint32_t segment_count = 0;
+    if (!reader.read_u64(id) || !reader.read_u64(revision) || !reader.read_u64(original_size) ||
+        !reader.read_u64(result_size) || !reader.read_u32(segment_count)) {
+        return send_invalid_response(reader, output_fd, request);
+    }
+    const auto reject = [&](Status status) {
+        return reader.drain() && send_response(output_fd, request, status);
+    };
+    if (result_size > kCpioDefaultMaxContentSize || segment_count > kMaximumEditSegments) {
+        return reject(Status::LIMIT_EXCEEDED);
+    }
+    const auto resolved = resolve_node(documents, id);
+    if (!resolved)
+        return reject(Status::NOT_FOUND);
+    auto& session = documents[resolved->document_index];
+    if (revision == 0 || revision != session.revision)
+        return reject(Status::REVISION_CONFLICT);
+    if (session.revision == std::numeric_limits<std::uint64_t>::max())
+        return reject(Status::LIMIT_EXCEEDED);
+    const auto node = resolved->document->stat(resolved->local_id);
+    if (!node)
+        return reject(Status::NOT_FOUND);
+    if ((node->mode & S_IFMT) != S_IFREG)
+        return reject(Status::INVALID_REQUEST);
+    if (original_size != node->size)
+        return reject(Status::REVISION_CONFLICT);
+
+    std::uint32_t consumed_segments = 0;
+    std::uint8_t kind = 0;
+    std::uint64_t source_offset = 0;
+    std::uint64_t segment_remaining = 0;
+    std::uint64_t produced = 0;
+    Status failure = Status::INVALID_REQUEST;
+    // CpioDocument publishes only after this producer reaches a fully validated EOF.
+    const auto source = [&](std::uint8_t* output, std::size_t capacity) -> ssize_t {
+        if (segment_remaining == 0) {
+            if (consumed_segments == segment_count) {
+                return produced == result_size && reader.remaining() == 0 ? 0 : -1;
+            }
+            if (!reader.read_u8(kind) || kind > 1 ||
+                (kind == 0 && !reader.read_u64(source_offset)) ||
+                !reader.read_u64(segment_remaining) || segment_remaining == 0 ||
+                segment_remaining > result_size - produced)
+                return -1;
+            if (kind == 0 && (source_offset > original_size ||
+                              segment_remaining > original_size - source_offset))
+                return -1;
+            if (kind == 1 && segment_remaining > reader.remaining())
+                return -1;
+            ++consumed_segments;
+        }
+        const auto count =
+            static_cast<std::size_t>(std::min<std::uint64_t>(capacity, segment_remaining));
+        if (kind == 0) {
+            std::size_t copied = 0;
+            const bool read =
+                resolved->document->read_content(resolved->local_id, source_offset, count,
+                                                 [&](const std::uint8_t* bytes, std::size_t size) {
+                                                     if (size > count - copied)
+                                                         return false;
+                                                     std::copy_n(bytes, size, output + copied);
+                                                     copied += size;
+                                                     return true;
+                                                 });
+            if (!read || copied != count) {
+                failure = Status::IO_ERROR;
+                return -1;
+            }
+            source_offset += count;
+        } else if (!reader.read_bytes(output, count)) {
+            failure = Status::IO_ERROR;
+            return -1;
+        }
+        produced += count;
+        segment_remaining -= count;
+        return static_cast<ssize_t>(count);
+    };
+    bool success = false;
+    // Prepare the response before publication so allocation failure cannot mask a successful edit.
+    std::vector<std::uint8_t> body;
+    try {
+        append_u64(body, session.revision + 1);
+        append_u64(body, result_size);
+        success = resolved->document->replace_content(resolved->local_id, source);
+    } catch (const std::bad_alloc&) {
+        return reject(Status::LIMIT_EXCEEDED);
+    }
+    if (!success)
+        return reject(failure);
+    ++session.revision;
+    dirty = true;
+    return send_response(output_fd, request, Status::OK, body);
+}
+
 template <typename DumpAction>
 bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& dump_action,
                     bool& dirty, bool& should_close, PayloadReader& reader, int output_fd,
                     const FrameHeader& request) {
     if (request.opcode < static_cast<std::uint16_t>(Opcode::HELLO) ||
-        request.opcode > static_cast<std::uint16_t>(Opcode::ELF_HEADER)) {
+        request.opcode > static_cast<std::uint16_t>(Opcode::APPLY_EDITS)) {
         return send_invalid_response(reader, output_fd, request);
     }
     const auto opcode = static_cast<Opcode>(request.opcode);
@@ -600,6 +716,33 @@ bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& d
     case Opcode::READ:
         return handle_read(documents, reader, output_fd, request);
 
+    case Opcode::BINARY_INFO: {
+        std::uint64_t id = 0;
+        if (!reader.read_u64(id) || !require_empty(reader)) {
+            return send_invalid_response(reader, output_fd, request);
+        }
+        const auto resolved = resolve_node(documents, id);
+        if (!resolved)
+            return send_response(output_fd, request, Status::NOT_FOUND);
+        const auto node = resolved->document->stat(resolved->local_id);
+        if (!node)
+            return send_response(output_fd, request, Status::NOT_FOUND);
+        if ((node->mode & S_IFMT) != S_IFREG)
+            return send_invalid_response(reader, output_fd, request);
+        const auto revision = documents[resolved->document_index].revision;
+        if (revision == 0)
+            return send_response(output_fd, request, Status::LIMIT_EXCEEDED);
+        append_u64(body, revision);
+        append_u64(body, node->size);
+        return send_response(output_fd, request, Status::OK, body);
+    }
+
+    case Opcode::READ_AT_REVISION:
+        return handle_read(documents, reader, output_fd, request, true);
+
+    case Opcode::APPLY_EDITS:
+        return handle_apply_edits(documents, dirty, reader, output_fd, request);
+
     case Opcode::REPLACE: {
         std::uint64_t id = 0;
         if (!reader.read_u64(id)) {
@@ -614,6 +757,8 @@ bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& d
         if (!reader.drain()) {
             return false;
         }
+        if (success)
+            ++documents[resolved->document_index].revision;
         dirty = dirty || success;
         return send_response(output_fd, request, mutation_status(success));
     }
@@ -639,6 +784,8 @@ bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& d
         if (!reader.drain()) {
             return false;
         }
+        if (success)
+            ++documents[parent->document_index].revision;
         dirty = dirty || success;
         if (success && !append_node_id(body, parent->document_index, created_id)) {
             return send_response(output_fd, request, Status::LIMIT_EXCEEDED);
@@ -661,6 +808,8 @@ bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& d
         const bool success =
             parent && parent->document->create_directory(parent->local_id, name, permissions, uid,
                                                          gid, &created_id);
+        if (success)
+            ++documents[parent->document_index].revision;
         dirty = dirty || success;
         if (success && !append_node_id(body, parent->document_index, created_id)) {
             return send_response(output_fd, request, Status::LIMIT_EXCEEDED);
@@ -682,6 +831,8 @@ bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& d
         CpioNodeId created_id = kCpioRootNodeId;
         const bool success = parent && parent->document->create_symbolic_link(
                                            parent->local_id, name, target, uid, gid, &created_id);
+        if (success)
+            ++documents[parent->document_index].revision;
         dirty = dirty || success;
         if (success && !append_node_id(body, parent->document_index, created_id)) {
             return send_response(output_fd, request, Status::LIMIT_EXCEEDED);
@@ -703,6 +854,8 @@ bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& d
         const bool success = parent && target && parent->document_index == target->document_index &&
                              parent->document->create_hard_link(parent->local_id, name,
                                                                 target->local_id, &created_id);
+        if (success)
+            ++documents[parent->document_index].revision;
         dirty = dirty || success;
         if (success && !append_node_id(body, parent->document_index, created_id)) {
             return send_response(output_fd, request, Status::LIMIT_EXCEEDED);
@@ -728,6 +881,8 @@ bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& d
                  ? source->document->copy(source->local_id, destination->local_id, name,
                                           &created_id)
                  : source->document->move(source->local_id, destination->local_id, name));
+        if (success)
+            ++documents[source->document_index].revision;
         dirty = dirty || success;
         if (success && opcode == Opcode::COPY &&
             !append_node_id(body, source->document_index, created_id)) {
@@ -746,6 +901,8 @@ bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& d
         const auto resolved = resolve_node(documents, id);
         const bool success =
             resolved && resolved->document->remove(resolved->local_id, recursive != 0);
+        if (success)
+            ++documents[resolved->document_index].revision;
         dirty = dirty || success;
         return send_response(output_fd, request, mutation_status(success));
     }
@@ -788,6 +945,8 @@ bool handle_request(std::vector<SessionDocument>& documents, const DumpAction& d
         const auto resolved = resolve_node(documents, id);
         const bool success =
             resolved && resolved->document->update_metadata(resolved->local_id, patch);
+        if (success)
+            ++documents[resolved->document_index].revision;
         dirty = dirty || success;
         return send_response(output_fd, request, mutation_status(success));
     }

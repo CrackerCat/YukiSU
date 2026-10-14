@@ -1,4 +1,6 @@
 [versions]
+androidx-test-runner = "1.7.0"
+androidx-test-junit = "1.3.0"
 accompanist-drawablepainter = "0.37.3"
 agp = "9.4.1"
 gson = "2.14.0"
@@ -30,7 +32,7 @@ ndk = "30.0.16248370"
 foundation = "1.12.1"
 bouncycastle = "1.86"
 ucrop = "2.2.11"
-yukifb = "0.1.2"
+yukifb = "0.2.0"
 appcompat = "1.8.0"
 exifinterface = "1.4.2"
 transition = "1.7.2"
@@ -50,6 +52,8 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 lsplugin-cmaker = { id = "org.lsposed.lsplugin.cmaker", version.ref = "cmaker" }
 
 [libraries]
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
+androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-junit" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 accompanist-drawablepainter = { module = "com.google.accompanist:accompanist-drawablepainter", version.ref = "accompanist-drawablepainter" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
@@ -115,4 +119,5 @@ mmrl-hidden-api = { group = "com.github.MMRLApp.MMRL", name = "hidden-api", vers
 androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
 bouncycastle-bcpg = { group = "org.bouncycastle", name = "bcpg-jdk18on", version.ref = "bouncycastle" }
 ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucrop" }
-yukifb = { module = "com.anatdx:yukifb", version.ref = "yukifb" }
+yukifb = { module = "com.rouyashiki:yukifb", version.ref = "yukifb" }
+yukifb-hex = { module = "com.rouyashiki:yukifb-hex", version.ref = "yukifb" }

@@ -1020,4 +1020,6 @@
     <string name="partition_avb_apply">应用更改</string>
     <string name="partition_avb_saved">已保存并回读确认。下次启动此槽位时生效。</string>
     <string name="partition_avb_failed">无法确认 VBMeta 状态：%1$s。请刷新后再操作。</string>
+
+    <string name="ramdisk_editor_open_text">文本编辑器</string>
 </resources>

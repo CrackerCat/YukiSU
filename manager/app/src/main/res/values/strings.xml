@@ -1026,4 +1026,6 @@
     <string name="partition_avb_apply" tools:ignore="MissingTranslation">Apply change</string>
     <string name="partition_avb_saved" tools:ignore="MissingTranslation">Saved and read back successfully. Reboot into this slot for the change to take effect.</string>
     <string name="partition_avb_failed" tools:ignore="MissingTranslation">Unable to confirm VBMeta state: %1$s. Refresh before making another change.</string>
+
+    <string name="ramdisk_editor_open_text" tools:ignore="MissingTranslation">Text editor</string>
 </resources>

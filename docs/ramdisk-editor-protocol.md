@@ -46,6 +46,7 @@ Every response payload starts with a `u32` status:
 | 4 | I/O error |
 | 5 | configured limit exceeded |
 | 6 | unsupported protocol version |
+| 7 | source revision conflict |
 
 A string is encoded as `u32 length` followed by exactly that many bytes.
 Strings are UTF-8 at the Android boundary. An absent optional string uses
@@ -108,6 +109,9 @@ the text-decoding path.
 | 15 | CLOSE | empty | empty, then the process exits |
 | 16 | LIST_RAMDISKS | empty | `u32 count`, then ramdisk fragment records |
 | 17 | ELF_HEADER | `u64 id` | one versioned, structured ELF header record |
+| 18 | BINARY_INFO | `u64 id` | `u64 revision`, `u64 size` |
+| 19 | READ_AT_REVISION | `u64 id`, `u64 revision`, `u64 offset`, `u64 length` | raw file bytes |
+| 20 | APPLY_EDITS | edit plan below | `u64 new_revision`, `u64 size` |
 
 The `HELLO` capability mask uses these bits:
 
@@ -129,6 +133,8 @@ The `HELLO` capability mask uses these bits:
 | 13 | multiple ramdisk fragments |
 | 14 | node content types |
 | 15 | structured ELF header inspection |
+| 16 | BINARY_INFO and READ_AT_REVISION |
+| 17 | APPLY_EDITS |
 
 The metadata mask uses bit `1` for permission bits, `2` for UID, `4` for GID,
 and `8` for mtime. Values occur in that order when their bits are present.
@@ -174,3 +180,72 @@ second ELF parser in `ksud` is involved.
 
 For streamed requests, the frame payload size is authoritative. A producer
 must finish writing the complete frame before waiting for its response.
+
+
+## Revision-bound binary editing
+
+These commands retain the v3 framing, HELLO layout and node record. New clients
+negotiate bits 16 and 17 before enabling editing; older clients can continue
+using READ and REPLACE. Binary editing accepts regular files only.
+
+Each ramdisk fragment owns a session-local revision starting at 1. Every
+successful document mutation increments it, including legacy writes, metadata,
+creation, removal, rename and hard-link alias updates. DUMP does not mutate the
+in-memory document revision. Reopening a process starts a new revision namespace;
+clients must include a session identity in their opaque revision tokens.
+
+READ_AT_REVISION checks the revision before sending any bytes. Reads are clipped
+at EOF, just like READ; an offset beyond EOF is invalid. An unrelated change in
+the same fragment also invalidates the old revision. BINARY_INFO returns the
+current fragment revision and selected file length.
+
+APPLY_EDITS contains:
+
+```text
+u64 id
+u64 expected_revision
+u64 original_size
+u64 result_size
+u32 segment_count
+segment[segment_count]
+```
+
+Each segment is either:
+
+```text
+u8 kind = 0
+u64 offset_in_original
+u64 length
+```
+
+or:
+
+```text
+u8 kind = 1
+u64 length
+u8 literal_bytes[length]
+```
+
+Segments concatenate in wire order; original ranges may repeat or appear in any
+source order. Lengths must be positive. An empty result uses zero segments. The
+sum of lengths must equal result_size. The existing content limit is 512 MiB,
+the segment limit is 262144, and the request frame limit remains 512 MiB + 16 MiB.
+The server checks ranges by subtraction to avoid overflow.
+
+The server supplies original and literal bytes to CpioDocument::replace_content.
+Publication occurs only after the complete plan, exact result length and frame
+end are validated. This preserves node metadata and hard-link content sharing.
+Version conflicts, invalid ranges, trailing data, truncated input and allocation
+failures cannot publish a partial replacement. A rejected complete request is
+drained before its error response; an incomplete or unreadable frame terminates
+the connection. A broken connection after publication has an unknown outcome,
+so clients must discard that session rather than retry the same transaction.
+
+Clients must finish writing an entire request before reading its response. In
+particular, a save producer must read inserted bytes from independent scratch
+storage, never issue a nested READ on the same serialized session. Original
+ranges are resolved by the server. The server constructs replacement content in
+memory; these operations do not raise the CPIO backend's size or memory limits.
+
+Hex Save changes the in-memory document. DUMP and the existing image export
+workflow remain responsible for rebuilding and persisting the boot image.

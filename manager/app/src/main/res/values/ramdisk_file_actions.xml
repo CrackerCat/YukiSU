@@ -1,0 +1,7 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- This feature initially ships English and Simplified Chinese; other locales use English. -->
+    <string name="ramdisk_external_changed" tools:ignore="MissingTranslation">The file changed during export. Try again.</string>
+    <string name="ramdisk_external_no_space" tools:ignore="MissingTranslation">Not enough storage to prepare a temporary copy.</string>
+    <string name="ramdisk_external_no_app" tools:ignore="MissingTranslation">No installed app can handle this file.</string>
+    <string name="ramdisk_external_failed" tools:ignore="MissingTranslation">Could not prepare or open the file. Check available storage and try again.</string>
+</resources>

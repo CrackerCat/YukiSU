@@ -114,14 +114,27 @@
     "id": "yukifb",
     "name": "YukiFB",
     "license": "Apache-2.0",
-    "source": "https://github.com/Anatdx/YukiFB",
+    "source": "https://github.com/Rouyashiki/YukiFB",
     "texts": [
       "Apache-2.0.txt"
     ],
     "artifacts": [
-      "com.anatdx:yukifb:0.1.2"
+      "com.rouyashiki:yukifb:0.2.0"
     ],
     "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
+  },
+  {
+    "id": "yukifb-hex",
+    "name": "YukiFB Hex",
+    "license": "Apache-2.0",
+    "source": "https://github.com/Rouyashiki/YukiFB",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "artifacts": [
+      "com.rouyashiki:yukifb-hex:0.2.0"
+    ],
+    "evidence": "Maven Central POM declares Apache-2.0; the repository LICENSE is embedded in the AAR and collected during every build."
   },
   {
     "id": "libsu",

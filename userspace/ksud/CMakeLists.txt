@@ -500,12 +500,13 @@ target_include_directories(ksud_our_objs PRIVATE ${KSUD_INCLUDE_DIRS})
 target_compile_definitions(ksud_our_objs PRIVATE ${KSUD_DEFINES})
 target_compile_features(ksud_our_objs PUBLIC cxx_std_17)
 # Most daemon code neither throws nor catches. Compile it without exception
-# landing pads/unwind metadata, then opt the Lua/C++ API boundary back in: it
-# translates native exceptions into Lua errors. Source options are appended
+# landing pads/unwind metadata. Lua translates native exceptions into script
+# errors; the ramdisk editor preserves its document on allocation failure. Source options are appended
 # after target options, so -fexceptions wins for that translation unit.
 target_compile_options(ksud_our_objs PRIVATE ${KSUD_DEVIRT_FLAGS} -fno-exceptions)
 set_source_files_properties(
     src/plugin/lua_engine.cpp
+    src/boot/ramdisk_editor.cpp
     PROPERTIES COMPILE_OPTIONS -fexceptions
 )
 yukisu_enable_clang_tidy(ksud_our_objs CXX)

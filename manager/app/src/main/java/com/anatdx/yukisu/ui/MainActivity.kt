@@ -71,6 +71,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ui.screen.moreSettings.util.LocaleHelper
+import ui.screen.ramdisk.RamdiskExternalFiles
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     private lateinit var superUserViewModel: SuperUserViewModel
@@ -102,6 +104,9 @@ class MainActivity : ComponentActivity() {
             window.isNavigationBarContrastEnforced = false
 
             super.onCreate(savedInstanceState)
+            lifecycleScope.launch(Dispatchers.IO) {
+                RamdiskExternalFiles(File(cacheDir, "ramdisk_external")).cleanExpired()
+            }
             resetTaskDescriptionToAppName()
             ThemeManager.loadUiStyle(this)
 
