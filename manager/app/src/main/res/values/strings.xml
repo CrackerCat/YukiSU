@@ -682,7 +682,7 @@
     <string name="ramdisk_editor_choose_encoding_title" tools:ignore="MissingTranslation">%s encoding</string>
     <string name="ramdisk_editor_choose_encoding_message" tools:ignore="MissingTranslation">The encoding could not be detected. Choose how to decode this file.</string>
     <string name="ramdisk_editor_elf_summary_title" tools:ignore="MissingTranslation">ELF header summary</string>
-    <string name="ramdisk_editor_elf_summary_description" tools:ignore="MissingTranslation">Decoded through the structured readelf_toyboxAlone API built into ksud. This view is read-only.</string>
+    <string name="ramdisk_editor_elf_summary_description" tools:ignore="MissingTranslation">Read-only file information</string>
     <string name="ramdisk_editor_elf_field_file_size" tools:ignore="MissingTranslation">File size</string>
     <string name="ramdisk_editor_elf_field_magic" tools:ignore="MissingTranslation">Magic</string>
     <string name="ramdisk_editor_elf_field_class" tools:ignore="MissingTranslation">Class</string>
@@ -1004,4 +1004,13 @@
     <string name="install_block_modules_list" tools:ignore="MissingTranslation">Modules to block</string>
     <string name="install_block_modules_summary">Comma-separated names; leave empty to block none</string>
     <string name="install_block_modules_invalid">Use letters, digits and underscores; up to 64 per name and 255 total</string>
+    <string name="ramdisk_editor_importing" tools:ignore="MissingTranslation">Importing file…</string>
+    <string name="ramdisk_editor_exporting" tools:ignore="MissingTranslation">Exporting file…</string>
+    <string name="ramdisk_editor_rebuilding" tools:ignore="MissingTranslation">Rebuilding image…</string>
+    <string name="ramdisk_editor_saving" tools:ignore="MissingTranslation">Saving file…</string>
+    <string name="ramdisk_editor_opening" tools:ignore="MissingTranslation">Opening file…</string>
+    <string name="ramdisk_editor_elf_identity" tools:ignore="MissingTranslation">File identity</string>
+    <string name="ramdisk_editor_elf_entry_flags" tools:ignore="MissingTranslation">Entry and flags</string>
+    <string name="ramdisk_editor_elf_layout" tools:ignore="MissingTranslation">Header layout</string>
+    <string name="ramdisk_editor_exporting_image" tools:ignore="MissingTranslation">Exporting image…</string>
 </resources>

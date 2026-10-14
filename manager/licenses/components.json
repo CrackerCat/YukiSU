@@ -119,7 +119,7 @@
       "Apache-2.0.txt"
     ],
     "artifacts": [
-      "com.anatdx:yukifb:0.1.1"
+      "com.anatdx:yukifb:0.1.2"
     ],
     "evidence": "Resolved runtime POM license (including Maven parent POMs); artifact LICENSE/NOTICE files are collected during every build."
   },

@@ -679,7 +679,7 @@
     <string name="ramdisk_editor_choose_encoding_title">%s 的编码</string>
     <string name="ramdisk_editor_choose_encoding_message">无法自动识别编码，请选择此文件的解码方式。</string>
     <string name="ramdisk_editor_elf_summary_title">ELF 文件头摘要</string>
-    <string name="ramdisk_editor_elf_summary_description">通过内置在 ksud 中的 readelf_toyboxAlone 结构化 API 解码；此视图只读。</string>
+    <string name="ramdisk_editor_elf_summary_description">只读文件信息</string>
     <string name="ramdisk_editor_elf_field_file_size">文件大小</string>
     <string name="ramdisk_editor_elf_field_magic">魔数</string>
     <string name="ramdisk_editor_elf_field_class">位数类别</string>
@@ -998,4 +998,13 @@
     <string name="install_block_modules_list">要屏蔽的模块</string>
     <string name="install_block_modules_summary">名称以逗号分隔；留空则不阻止任何模块</string>
     <string name="install_block_modules_invalid">仅限字母、数字和下划线；每项最多 64 个字符，总计最多 255 个</string>
+    <string name="ramdisk_editor_importing">正在导入文件…</string>
+    <string name="ramdisk_editor_exporting">正在导出文件…</string>
+    <string name="ramdisk_editor_rebuilding">正在重建镜像…</string>
+    <string name="ramdisk_editor_saving">正在保存文件…</string>
+    <string name="ramdisk_editor_opening">正在打开文件…</string>
+    <string name="ramdisk_editor_elf_identity">文件标识</string>
+    <string name="ramdisk_editor_elf_entry_flags">入口与标志</string>
+    <string name="ramdisk_editor_elf_layout">头部布局</string>
+    <string name="ramdisk_editor_exporting_image">正在导出镜像…</string>
 </resources>

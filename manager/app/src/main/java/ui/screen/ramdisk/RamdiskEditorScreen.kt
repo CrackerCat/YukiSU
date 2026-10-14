@@ -6,13 +6,13 @@ import android.net.Uri
 import android.os.SystemClock
 import android.provider.OpenableColumns
 import android.text.format.Formatter
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -32,17 +33,21 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -53,54 +58,102 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.anatdx.yukifb.backend.FileContentSource
 import com.anatdx.yukifb.model.EntryId
 import com.anatdx.yukifb.model.FileEntry
 import com.anatdx.yukifb.model.FileEntryType
 import com.anatdx.yukifb.model.TextFileEncoding
 import com.anatdx.yukifb.state.FileBrowserAction
+import com.anatdx.yukifb.state.FileBrowserController
 import com.anatdx.yukifb.state.TextFileEditorState
-import com.anatdx.yukifb.state.rememberFileBrowserController
 import com.anatdx.yukifb.ui.FileBrowser
+import com.anatdx.yukifb.ui.FileBrowserPreview
+import com.anatdx.yukifb.ui.FileBrowserBackHandler
+import com.anatdx.yukifb.ui.FileBrowserPresentationState
 import com.anatdx.yukifb.ui.TextFileEditor
+import com.anatdx.yukifb.ui.YukiFBBackHandler
+import com.anatdx.yukifb.ui.YukiFBProvider
+import com.anatdx.yukifb.ui.YukiFBScene
+import com.anatdx.yukifb.ui.YukiFBStyle
+import com.anatdx.yukifb.ui.YukiFBThemeDefaults
+import com.anatdx.yukifb.ui.rememberYukiFBBackState
 import com.anatdx.yukisu.R
+import com.anatdx.yukisu.ui.activity.util.LocalPredictiveBackEnabled
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
 import com.anatdx.yukisu.ui.component.YukiIcon
+import com.anatdx.yukisu.ui.theme.BackgroundLayer
+import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
+import com.anatdx.yukisu.ui.util.LocalNavigationLeaveGuard
 import com.anatdx.yukisu.ui.util.SnackbarController
-import com.anatdx.yukisu.ui.util.rememberSnackbarController
 import com.anatdx.yukisu.ui.util.getKsud
+import com.anatdx.yukisu.ui.util.rememberSnackbarController
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
+import com.ramcosta.composedestinations.generated.destinations.RamdiskEditorScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import ui.screen.partition.PartitionManagerHelper
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import ui.screen.partition.PartitionManagerHelper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Destination<RootGraph>
 @Composable
 fun RamdiskEditorScreen(
+    navigator: DestinationsNavigator,
+    partitionName: String,
+    targetSlot: String?,
+) {
+    val scheme = MaterialTheme.colorScheme
+    val alpha = CardConfig.cardAlpha
+    val colors = YukiFBThemeDefaults.colors().copy(
+        background = Color.Transparent,
+        listContainer = scheme.surfaceContainer.copy(alpha = alpha),
+        selectedContainer = scheme.secondaryContainer.copy(alpha = alpha),
+        topBar = (if (CardConfig.isCustomBackgroundEnabled) scheme.surfaceContainerLow else scheme.background).copy(alpha = alpha),
+        bottomBar = scheme.surfaceContainerHigh.copy(alpha = alpha),
+        editor = scheme.surfaceContainerLowest.copy(alpha = alpha),
+    )
+    YukiFBProvider(
+        sceneBackground = { BackgroundLayer() },
+        style = if (isExpressiveUi) YukiFBStyle.Expressive else YukiFBStyle.Classic,
+        colors = colors,
+        icon = { vector, description, modifier, tint -> YukiIcon(vector, description, modifier, tint) },
+    ) {
+        RamdiskEditorContent(navigator, partitionName, targetSlot)
+    }
+}
+
+@Composable
+private fun RamdiskEditorContent(
     navigator: DestinationsNavigator,
     partitionName: String,
     targetSlot: String?,
@@ -119,6 +172,7 @@ fun RamdiskEditorScreen(
     var importGeneration by remember { mutableIntStateOf(0) }
     var isImporting by remember { mutableStateOf(false) }
     var isExportingFile by remember { mutableStateOf(false) }
+    var isExportingImage by remember { mutableStateOf(false) }
     var isDumping by remember { mutableStateOf(false) }
     var hasRebuiltImage by remember { mutableStateOf(false) }
     var hasUnexportedImage by remember { mutableStateOf(false) }
@@ -129,6 +183,9 @@ fun RamdiskEditorScreen(
     var isSavingTextFile by remember { mutableStateOf(false) }
     var textOperationJob by remember { mutableStateOf<Job?>(null) }
     var discardPrompt by remember { mutableStateOf<DiscardPrompt?>(null) }
+    var pendingExit by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val predictiveBack = LocalPredictiveBackEnabled.current
+    val leaveGuard = LocalNavigationLeaveGuard.current
     val sessionOperationJobs = remember { mutableSetOf<Job>() }
 
     fun launchTextOperation(block: suspend () -> Unit) {
@@ -168,12 +225,14 @@ fun RamdiskEditorScreen(
         importGeneration = 0
         isImporting = false
         isExportingFile = false
+        isExportingImage = false
         isOpeningFile = false
         isSavingTextFile = false
         isDumping = false
         hasRebuiltImage = false
         hasUnexportedImage = false
         discardPrompt = null
+        pendingExit = null
         loadState = RamdiskEditorLoadState.Loading
         selectedFragmentIndex = null
         loadState = try {
@@ -286,9 +345,10 @@ fun RamdiskEditorScreen(
         contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
     ) { uri: Uri? ->
         val outputImage = (loadState as? RamdiskEditorLoadState.Ready)?.image?.outputImage
-        if (uri != null && outputImage?.isFile == true) {
+        if (uri != null && outputImage?.isFile == true && !isExportingImage) {
+            isExportingImage = true
             launchSessionOperation {
-                runCatching {
+                val failure = try {
                     withContext(Dispatchers.IO) {
                         context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
                             outputImage.inputStream().buffered().use { input ->
@@ -298,16 +358,24 @@ fun RamdiskEditorScreen(
                             resources.getString(R.string.ramdisk_editor_document_open_failed)
                         )
                     }
-                }.onSuccess {
                     hasUnexportedImage = false
+                    null
+                } catch (error: CancellationException) {
+                    throw error
+                } catch (error: Throwable) {
+                    error
+                } finally {
+                    isExportingImage = false
+                }
+                if (failure == null) {
                     snackbarHost.showSnackbar(
                         resources.getString(R.string.ramdisk_editor_export_success)
                     )
-                }.onFailure { error ->
+                } else {
                     snackbarHost.showSnackbar(
                         resources.getString(
                             R.string.ramdisk_editor_export_failed,
-                            error.message ?: resources.getString(R.string.partition_unknown),
+                            failure.message ?: resources.getString(R.string.partition_unknown),
                         )
                     )
                 }
@@ -340,10 +408,60 @@ fun RamdiskEditorScreen(
             val dirty by image.dirty.collectAsState()
             val multipleRamdisks = image.fragments.size > 1
             var lastRootBackAt by remember(image) { mutableLongStateOf(0L) }
+            val hostBack = rememberYukiFBBackState()
+            val browserSessions = remember(image) { mutableMapOf<Int, RamdiskBrowserSession>() }
+            DisposableEffect(image) {
+                onDispose { browserSessions.values.forEach { it.scope.cancel() } }
+            }
+            LaunchedEffect(lastRootBackAt) {
+                if (lastRootBackAt != 0L) {
+                    delay(ROOT_EXIT_CONFIRM_INTERVAL_MILLIS)
+                    lastRootBackAt = 0L
+                }
+            }
+            val hostBusy = isImporting || isExportingFile || isExportingImage || isOpeningFile || isSavingTextFile || isDumping
+
+            fun requestScreenExit(navigate: () -> Unit) {
+                val decision = RamdiskBackContext(
+                    busy = hostBusy || browserSessions.values.any {
+                        it.controller.state.value.let { page -> page.isBusy || page.isLoading }
+                    },
+                    textOpen = openedTextFile != null,
+                    textDirty = openedTextFile?.state?.hasUnsavedChanges == true,
+                    archiveChanged = dirty || hasUnexportedImage,
+                ).action(leavingScreen = true)
+                when (decision) {
+                    RamdiskBackAction.Blocked -> Unit
+                    RamdiskBackAction.ConfirmText -> {
+                        pendingExit = { requestScreenExit(navigate) }
+                        discardPrompt = DiscardPrompt.TEXT_FILE
+                    }
+                    RamdiskBackAction.ConfirmArchive -> {
+                        pendingExit = navigate
+                        discardPrompt = DiscardPrompt.ARCHIVE
+                    }
+                    else -> navigate()
+                }
+            }
+            val leaveInterceptor = rememberUpdatedState<(() -> Unit, () -> Unit) -> Unit> { navigate, intercepted ->
+                if (hostBusy || dirty || hasUnexportedImage || openedTextFile?.state?.hasUnsavedChanges == true ||
+                    browserSessions.values.any { it.controller.state.value.let { page -> page.isBusy || page.isLoading } }) {
+                    // The predictive transaction is cancelled before showing a dialog.
+                    // A confirmed exit starts a fresh pop, not the cancelled continuation.
+                    intercepted()
+                    requestScreenExit { navigator.popBackStack() }
+                } else navigate()
+            }
+            DisposableEffect(image, leaveGuard) {
+                leaveGuard.register(image, RamdiskEditorScreenDestination.route) { navigate, intercepted ->
+                    leaveInterceptor.value(navigate, intercepted)
+                }
+                onDispose { leaveGuard.unregister(image) }
+            }
 
             fun requestEditorExit() {
-                if (dirty || hasUnexportedImage) {
-                    discardPrompt = DiscardPrompt.ARCHIVE
+                if (hostBusy || dirty || hasUnexportedImage) {
+                    requestScreenExit { navigator.popBackStack() }
                     return
                 }
                 val now = SystemClock.elapsedRealtime()
@@ -367,7 +485,7 @@ fun RamdiskEditorScreen(
             }
 
             fun rebuildImage() {
-                if (!dirty || isDumping) return
+                if (!dirty || hostBusy) return
                 launchSessionOperation {
                     isDumping = true
                     runCatching { image.dump() }
@@ -399,320 +517,393 @@ fun RamdiskEditorScreen(
                 lastRootBackAt = 0L
             }
 
-            if (multipleRamdisks && selectedFragmentIndex == null) {
-                BackHandler(onBack = ::requestEditorExit)
-                RamdiskFragmentSelector(
-                    partitionName = partitionName,
-                    fragments = image.fragments,
-                    dirty = dirty,
-                    hasRebuiltImage = hasRebuiltImage,
-                    isDumping = isDumping,
-                    snackbarHost = snackbarHost,
-                    onBack = ::requestEditorExit,
-                    onSelect = { selectedFragmentIndex = it.fragment.index },
-                    onDump = ::rebuildImage,
-                    onExportImage = exportImage,
-                )
-            } else {
-                val backend = image.fragments.getOrElse(selectedFragmentIndex ?: 0) {
-                    image.fragments.first()
-                }
-                val browserController = rememberFileBrowserController(
-                    backend = backend,
-                    initialDirectory = backend.rootEntry,
-                )
-                val browserState by browserController.state.collectAsState()
-
-                LaunchedEffect(importGeneration, backend) {
-                    if (importGeneration > 0) {
-                        browserController.dispatch(FileBrowserAction.Refresh)
+            val selectorVisible = multipleRamdisks && selectedFragmentIndex == null
+            val sceneKey = listOf(selectedFragmentIndex, openedTextFile?.entry?.id, openedElfFile?.entry?.id)
+            val sceneLevel = if (selectorVisible) 0 else if (openedTextFile != null || openedElfFile != null) 2 else 1
+            val previousLevel = remember(image) { intArrayOf(sceneLevel) }
+            val sceneDirection = remember(sceneKey) {
+                (if (sceneLevel < previousLevel[0]) -1 else 1).also { previousLevel[0] = sceneLevel }
+            }
+            YukiFBScene(
+                sceneKey = sceneKey, modifier = Modifier.fillMaxSize(), direction = sceneDirection,
+                backState = hostBack,
+                backPreview = if (openedTextFile != null || openedElfFile != null) {
+                    {
+                        val backend = image.fragments.getOrElse(selectedFragmentIndex ?: 0) { image.fragments.first() }
+                        browserSessions[backend.fragment.index]?.let { session ->
+                            val preview by session.controller.state.collectAsState()
+                            FileBrowserPreview(
+                                preview, session.presentation, modifier = Modifier.fillMaxSize(),
+                                showCloseButton = true, importEnabled = true,
+                                topBarActions = {
+                                    RamdiskImageActions(dirty, hasRebuiltImage, isDumping, {}, {})
+                                },
+                            )
+                        }
                     }
-                }
-
-                LaunchedEffect(
-                    browserState.currentDirectory.id,
-                    browserState.selectedIds,
-                    browserState.search != null,
-                ) {
-                    lastRootBackAt = 0L
-                }
-
-                fun handleBrowserBack() {
-                    val editor = openedTextFile
-                    when {
-                        (editor != null || openedElfFile != null) &&
-                            (isOpeningFile || isSavingTextFile) -> Unit
-
-                        editor?.state?.hasUnsavedChanges == true -> {
-                            discardPrompt = DiscardPrompt.TEXT_FILE
-                        }
-
-                        editor != null -> openedTextFile = null
-                        openedElfFile != null -> openedElfFile = null
-                        browserState.isBusy ||
-                            isImporting ||
-                            isExportingFile ||
-                            isOpeningFile ||
-                            isSavingTextFile ||
-                            isDumping -> Unit
-
-                        browserState.isSelectionMode -> {
-                            browserController.dispatch(FileBrowserAction.ClearSelection)
-                        }
-
-                        browserState.search != null -> {
-                            browserController.dispatch(FileBrowserAction.StopSearch)
-                        }
-
-                        browserState.breadcrumbs.size > 1 -> {
-                            browserController.dispatch(FileBrowserAction.NavigateUp)
-                        }
-
-                        multipleRamdisks -> {
-                            selectedFragmentIndex = null
-                        }
-
-                        else -> requestEditorExit()
+                } else if (!selectorVisible && multipleRamdisks) {
+                    {
+                        RamdiskFragmentSelector(
+                            partitionName, image.fragments, dirty, hasRebuiltImage, isDumping,
+                            snackbarHost, {}, {}, {}, {},
+                        )
                     }
-                }
+                } else null,
+            ) {
+                if (selectorVisible) {
+                    YukiFBBackHandler(
+                        state = hostBack,
+                        targetKey = listOf(image, lastRootBackAt, dirty, hasUnexportedImage, hostBusy),
+                        enabled = discardPrompt == null && (lastRootBackAt == 0L || dirty || hasUnexportedImage || hostBusy),
+                        predictiveBackEnabled = predictiveBack,
+                        previewEnabled = false,
+                        onBack = ::requestEditorExit,
+                    )
+                    RamdiskFragmentSelector(
+                        partitionName = partitionName,
+                        fragments = image.fragments,
+                        dirty = dirty,
+                        hasRebuiltImage = hasRebuiltImage,
+                        isDumping = isDumping,
+                        snackbarHost = snackbarHost,
+                        onBack = ::requestEditorExit,
+                        onSelect = { selectedFragmentIndex = it.fragment.index },
+                        onDump = ::rebuildImage,
+                        onExportImage = exportImage,
+                    )
+                } else {
+                    val backend = image.fragments.getOrElse(selectedFragmentIndex ?: 0) {
+                        image.fragments.first()
+                    }
+                    val browserSession = remember(image, backend) {
+                        browserSessions.getOrPut(backend.fragment.index) {
+                            val childScope = CoroutineScope(scope.coroutineContext + SupervisorJob(scope.coroutineContext[Job]))
+                            RamdiskBrowserSession(
+                                FileBrowserController(backend, backend.rootEntry, childScope),
+                                FileBrowserPresentationState(), childScope,
+                            )
+                        }
+                    }
+                    val browserController = browserSession.controller
+                    val browserPresentation = browserSession.presentation
+                    val browserState by browserController.state.collectAsState()
 
-                BackHandler(onBack = ::handleBrowserBack)
+                    LaunchedEffect(importGeneration, backend) {
+                        if (importGeneration > 0) {
+                            browserPresentation.invalidatePreviews()
+                            browserController.dispatch(FileBrowserAction.Refresh)
+                        }
+                    }
 
-                Box(Modifier.fillMaxSize()) {
-                    val editor = openedTextFile
-                    val elfFile = openedElfFile
-                    if (editor != null) {
-                        TextFileEditor(
-                            fileName = editor.entry.name,
-                            state = editor.state,
-                            onSave = { request ->
-                                if (!isSavingTextFile) {
-                                    launchTextOperation {
-                                        isSavingTextFile = true
-                                        val failure = try {
-                                            val encoded =
-                                                withContext(Dispatchers.Default) {
-                                                    encodeRamdiskText(
-                                                        text = request.text,
-                                                        encoding = request.encoding,
-                                                        preservedByteOrderMark =
-                                                            editor.sourceByteOrderMark.takeIf {
-                                                                editor.sourceEncoding ==
-                                                                    request.encoding
-                                                            },
-                                                    )
-                                                }
-                                            backend.replace(
-                                                editor.entry.id,
-                                                FileContentSource {
-                                                    ByteArrayInputStream(encoded.bytes)
-                                                },
-                                            )
-                                            editor.updatePersistedSource(
-                                                encoded = encoded,
-                                                encoding = request.encoding,
-                                            )
-                                            if (
-                                                editor.state.createSaveRequest() == request
-                                            ) {
-                                                editor.state.markSaved()
-                                            }
-                                            null
-                                        } catch (error: CancellationException) {
-                                            throw error
-                                        } catch (error: Throwable) {
-                                            error
-                                        } finally {
-                                            isSavingTextFile = false
-                                        }
-                                        if (failure != null) {
-                                            snackbarHost.showSnackbar(
-                                                resources.getString(
-                                                    R.string.ramdisk_editor_text_save_failed,
-                                                    failure.message
-                                                        ?: resources.getString(
-                                                            R.string.partition_unknown
-                                                        ),
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            },
-                            onReopenWithEncoding = { encoding ->
-                                if (!isOpeningFile && !isSavingTextFile) {
-                                    launchTextOperation {
-                                        isOpeningFile = true
-                                        val failure = try {
-                                            val decoded = withContext(Dispatchers.Default) {
-                                                decodeRamdiskText(
-                                                    bytes = editor.sourceBytes,
-                                                    encoding = encoding,
-                                                )
-                                            }
-                                            editor.updateDecodedSource(decoded)
-                                            null
-                                        } catch (error: CancellationException) {
-                                            throw error
-                                        } catch (error: Throwable) {
-                                            error
-                                        } finally {
-                                            isOpeningFile = false
-                                        }
-                                        if (failure != null) {
-                                            snackbarHost.showSnackbar(
-                                                resources.getString(
-                                                    R.string.ramdisk_editor_open_failed,
-                                                    failure.message
-                                                        ?: resources.getString(
-                                                            R.string.partition_unknown
-                                                        ),
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
-                            },
-                            onClose = {
-                                if (!isOpeningFile && !isSavingTextFile) {
-                                    openedTextFile = null
-                                }
-                            },
-                            modifier = Modifier.fillMaxSize(),
-                            isSaving = isSavingTextFile || isOpeningFile,
-                            availableEncodings = supportedRamdiskTextEncodings,
-                        )
-                    } else if (elfFile != null) {
-                        ElfSummaryViewer(
-                            fileName = elfFile.entry.name,
-                            header = elfFile.header,
-                            onClose = {
-                                if (!isOpeningFile) {
-                                    openedElfFile = null
-                                }
-                            },
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    } else {
-                        FileBrowser(
-                            controller = browserController,
-                            onOpenFile = { entry ->
-                                if (!isOpeningFile) {
-                                    launchTextOperation {
-                                        isOpeningFile = true
-                                        val failure = try {
-                                            require(entry.type == FileEntryType.REGULAR_FILE) {
-                                                resources.getString(
-                                                    R.string.ramdisk_editor_regular_files_only
-                                                )
-                                            }
-                                            if (entry.mimeType == ELF_MIME_TYPE) {
-                                                pendingTextFile = null
-                                                openedElfFile = OpenedElfFile(
-                                                    entry = entry,
-                                                    header = backend.readElfHeader(entry.id),
-                                                )
-                                            } else {
-                                                require(
-                                                    (entry.size ?: 0L) <=
-                                                        MAX_RAMDISK_TEXT_FILE_SIZE
-                                                ) {
-                                                    resources.getString(
-                                                        R.string.ramdisk_editor_text_too_large
-                                                    )
-                                                }
-                                                val bytes = backend.read(entry.id) { input ->
-                                                    readRamdiskTextBytes(input)
-                                                }
-                                                val decoded = try {
+                    LaunchedEffect(
+                        browserState.currentDirectory.id,
+                        browserState.selectedIds,
+                        browserState.search != null,
+                    ) {
+                        lastRootBackAt = 0L
+                    }
+
+                    fun handleBrowserBack() {
+                        val editor = openedTextFile
+                        val decision = RamdiskBackContext(
+                            busy = hostBusy || browserState.isBusy || browserState.isLoading,
+                            textOpen = editor != null,
+                            textDirty = editor?.state?.hasUnsavedChanges == true,
+                            elfOpen = openedElfFile != null,
+                            selecting = browserState.isSelectionMode,
+                            searching = browserState.search != null,
+                            hasParent = browserState.breadcrumbs.size > 1,
+                            multipleFragments = multipleRamdisks,
+                            archiveChanged = dirty || hasUnexportedImage,
+                            exitPrimed = lastRootBackAt != 0L,
+                        ).action()
+                        when (decision) {
+                            RamdiskBackAction.Blocked -> Unit
+                            RamdiskBackAction.ConfirmText -> {
+                                pendingExit = null
+                                discardPrompt = DiscardPrompt.TEXT_FILE
+                            }
+
+                            RamdiskBackAction.CloseText -> openedTextFile = null
+                            RamdiskBackAction.CloseElf -> openedElfFile = null
+                            RamdiskBackAction.ClearSelection -> {
+                                browserController.dispatch(FileBrowserAction.ClearSelection)
+                            }
+
+                            RamdiskBackAction.StopSearch -> {
+                                browserController.dispatch(FileBrowserAction.StopSearch)
+                            }
+
+                            RamdiskBackAction.ParentDirectory -> {
+                                browserController.dispatch(FileBrowserAction.NavigateUp)
+                            }
+
+                            RamdiskBackAction.FragmentSelector -> {
+                                selectedFragmentIndex = null
+                            }
+
+                            else -> requestEditorExit()
+                        }
+                    }
+
+                    val viewerVisible = openedTextFile != null || openedElfFile != null
+                    val browserOwnsBack = !viewerVisible && !hostBusy && !browserState.isBusy && !browserState.isLoading &&
+                        (browserState.isSelectionMode || browserState.search != null || browserState.breadcrumbs.size > 1)
+                    val rootCanLeave = !viewerVisible && !multipleRamdisks && !dirty && !hasUnexportedImage &&
+                        !hostBusy && !browserState.isBusy && !browserState.isLoading && lastRootBackAt != 0L
+                    YukiFBBackHandler(
+                        state = hostBack,
+                        targetKey = listOf(sceneKey, browserState.currentDirectory.id, hostBusy, browserState.isBusy,
+                            browserState.isLoading, openedTextFile?.state?.hasUnsavedChanges, dirty, hasUnexportedImage, lastRootBackAt),
+                        enabled = discardPrompt == null && pendingTextFile == null && !browserOwnsBack && !rootCanLeave,
+                        predictiveBackEnabled = predictiveBack,
+                        previewEnabled = !hostBusy && !browserState.isBusy && !browserState.isLoading &&
+                            openedTextFile?.state?.hasUnsavedChanges != true && (viewerVisible || multipleRamdisks),
+                        onBack = ::handleBrowserBack,
+                    )
+                    FileBrowserBackHandler(
+                        state = browserState, presentationState = browserPresentation,
+                        onAction = browserController::dispatch,
+                        enabled = !viewerVisible && !hostBusy && discardPrompt == null && pendingTextFile == null,
+                        predictiveBackEnabled = predictiveBack,
+                    )
+
+                    Box(Modifier.fillMaxSize()) {
+                        val editor = openedTextFile
+                        val elfFile = openedElfFile
+                        if (editor != null) {
+                            TextFileEditor(
+                                fileName = editor.entry.name,
+                                state = editor.state,
+                                onSave = { request ->
+                                    if (!isSavingTextFile) {
+                                        launchTextOperation {
+                                            isSavingTextFile = true
+                                            val failure = try {
+                                                val encoded =
                                                     withContext(Dispatchers.Default) {
-                                                        decodeInitialRamdiskText(bytes)
+                                                        encodeRamdiskText(
+                                                            text = request.text,
+                                                            encoding = request.encoding,
+                                                            preservedByteOrderMark =
+                                                                editor.sourceByteOrderMark.takeIf {
+                                                                    editor.sourceEncoding ==
+                                                                        request.encoding
+                                                                },
+                                                        )
                                                     }
-                                                } catch (error: CancellationException) {
-                                                    throw error
-                                                } catch (_: IOException) {
-                                                    null
-                                                }
+                                                backend.replace(
+                                                    editor.entry.id,
+                                                    FileContentSource {
+                                                        ByteArrayInputStream(encoded.bytes)
+                                                    },
+                                                )
+                                                editor.updatePersistedSource(
+                                                    encoded = encoded,
+                                                    encoding = request.encoding,
+                                                )
                                                 if (
-                                                    decoded == null ||
-                                                    decoded.requiresEncodingConfirmation
+                                                    editor.state.createSaveRequest() == request
                                                 ) {
-                                                    pendingTextFile = PendingTextFile(
+                                                    editor.state.markSaved()
+                                                }
+                                                browserPresentation.invalidatePreviews()
+                                                browserController.dispatch(FileBrowserAction.Refresh)
+                                                null
+                                            } catch (error: CancellationException) {
+                                                throw error
+                                            } catch (error: Throwable) {
+                                                error
+                                            } finally {
+                                                isSavingTextFile = false
+                                            }
+                                            if (failure != null) {
+                                                snackbarHost.showSnackbar(
+                                                    resources.getString(
+                                                        R.string.ramdisk_editor_text_save_failed,
+                                                        failure.message
+                                                            ?: resources.getString(
+                                                                R.string.partition_unknown
+                                                            ),
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                },
+                                onReopenWithEncoding = { encoding ->
+                                    if (!isOpeningFile && !isSavingTextFile) {
+                                        launchTextOperation {
+                                            isOpeningFile = true
+                                            val failure = try {
+                                                val decoded = withContext(Dispatchers.Default) {
+                                                    decodeRamdiskText(
+                                                        bytes = editor.sourceBytes,
+                                                        encoding = encoding,
+                                                    )
+                                                }
+                                                editor.updateDecodedSource(decoded)
+                                                null
+                                            } catch (error: CancellationException) {
+                                                throw error
+                                            } catch (error: Throwable) {
+                                                error
+                                            } finally {
+                                                isOpeningFile = false
+                                            }
+                                            if (failure != null) {
+                                                snackbarHost.showSnackbar(
+                                                    resources.getString(
+                                                        R.string.ramdisk_editor_open_failed,
+                                                        failure.message
+                                                            ?: resources.getString(
+                                                                R.string.partition_unknown
+                                                            ),
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                },
+                                onClose = ::handleBrowserBack,
+                                confirmClose = false,
+                                modifier = Modifier.fillMaxSize(),
+                                isSaving = isSavingTextFile || isOpeningFile,
+                                availableEncodings = supportedRamdiskTextEncodings,
+                            )
+                        } else if (elfFile != null) {
+                            ElfSummaryViewer(
+                                fileName = elfFile.entry.name,
+                                header = elfFile.header,
+                                onClose = ::handleBrowserBack,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        } else {
+                            FileBrowser(
+                                controller = browserController,
+                                presentationState = browserPresentation,
+                                onOpenFile = { entry ->
+                                    if (!isOpeningFile) {
+                                        launchTextOperation {
+                                            isOpeningFile = true
+                                            val failure = try {
+                                                require(entry.type == FileEntryType.REGULAR_FILE) {
+                                                    resources.getString(
+                                                        R.string.ramdisk_editor_regular_files_only
+                                                    )
+                                                }
+                                                if (entry.mimeType == ELF_MIME_TYPE) {
+                                                    pendingTextFile = null
+                                                    openedElfFile = OpenedElfFile(
                                                         entry = entry,
-                                                        sourceBytes = bytes,
+                                                        header = backend.readElfHeader(entry.id),
                                                     )
                                                 } else {
-                                                    pendingTextFile = null
-                                                    openedTextFile = OpenedTextFile(
-                                                        entry = entry,
-                                                        sourceBytes = bytes,
-                                                        decoded = decoded,
-                                                    )
+                                                    require(
+                                                        (entry.size ?: 0L) <=
+                                                            MAX_RAMDISK_TEXT_FILE_SIZE
+                                                    ) {
+                                                        resources.getString(
+                                                            R.string.ramdisk_editor_text_too_large
+                                                        )
+                                                    }
+                                                    val bytes = backend.read(entry.id) { input ->
+                                                        readRamdiskTextBytes(input)
+                                                    }
+                                                    val decoded = try {
+                                                        withContext(Dispatchers.Default) {
+                                                            decodeInitialRamdiskText(bytes)
+                                                        }
+                                                    } catch (error: CancellationException) {
+                                                        throw error
+                                                    } catch (_: IOException) {
+                                                        null
+                                                    }
+                                                    if (
+                                                        decoded == null ||
+                                                        decoded.requiresEncodingConfirmation
+                                                    ) {
+                                                        pendingTextFile = PendingTextFile(
+                                                            entry = entry,
+                                                            sourceBytes = bytes,
+                                                        )
+                                                    } else {
+                                                        pendingTextFile = null
+                                                        openedTextFile = OpenedTextFile(
+                                                            entry = entry,
+                                                            sourceBytes = bytes,
+                                                            decoded = decoded,
+                                                        )
+                                                    }
                                                 }
+                                                null
+                                            } catch (error: CancellationException) {
+                                                throw error
+                                            } catch (error: Throwable) {
+                                                error
+                                            } finally {
+                                                isOpeningFile = false
                                             }
-                                            null
-                                        } catch (error: CancellationException) {
-                                            throw error
-                                        } catch (error: Throwable) {
-                                            error
-                                        } finally {
-                                            isOpeningFile = false
-                                        }
-                                        if (failure != null) {
-                                            snackbarHost.showSnackbar(
-                                                resources.getString(
-                                                    R.string.ramdisk_editor_open_failed,
-                                                    failure.message
-                                                        ?: resources.getString(
-                                                            R.string.partition_unknown
-                                                        ),
+                                            if (failure != null) {
+                                                snackbarHost.showSnackbar(
+                                                    resources.getString(
+                                                        R.string.ramdisk_editor_open_failed,
+                                                        failure.message
+                                                            ?: resources.getString(
+                                                                R.string.partition_unknown
+                                                            ),
+                                                    )
                                                 )
-                                            )
+                                            }
                                         }
                                     }
-                                }
-                            },
-                            onImport = { directory ->
-                                if (!isImporting) {
-                                    pendingImportDirectory = directory.id
-                                    importLauncher.launch(arrayOf("*/*"))
-                                }
-                            },
-                            onExport = { entry ->
-                                if (!isExportingFile) {
-                                    pendingExportEntry = entry
-                                    fileExportLauncher.launch(entry.name)
-                                }
-                            },
-                            onClose = ::handleBrowserBack,
-                            modifier = Modifier.fillMaxSize(),
-                            topBarActions = {
-                                RamdiskImageActions(
-                                    dirty = dirty,
-                                    hasRebuiltImage = hasRebuiltImage,
-                                    isDumping = isDumping,
-                                    onDump = ::rebuildImage,
-                                    onExportImage = exportImage,
-                                )
-                            },
+                                },
+                                onImport = { directory ->
+                                    if (!isImporting) {
+                                        pendingImportDirectory = directory.id
+                                        importLauncher.launch(arrayOf("*/*"))
+                                    }
+                                },
+                                onExport = { entry ->
+                                    if (!isExportingFile) {
+                                        pendingExportEntry = entry
+                                        fileExportLauncher.launch(entry.name)
+                                    }
+                                },
+                                onClose = ::handleBrowserBack,
+                                modifier = Modifier.fillMaxSize(),
+                                topBarActions = {
+                                    RamdiskImageActions(
+                                        dirty = dirty,
+                                        hasRebuiltImage = hasRebuiltImage,
+                                        isDumping = isDumping,
+                                        onDump = ::rebuildImage,
+                                        onExportImage = exportImage,
+                                    )
+                                },
+                            )
+                        }
+
+                        SnackbarHost(
+                            hostState = snackbarHost.hostState,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp),
                         )
                     }
-
-                    if (isImporting || isExportingFile || isOpeningFile) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    }
-                    SnackbarHost(
-                        hostState = snackbarHost.hostState,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(16.dp),
-                    )
                 }
+            }
+            if (hostBusy) {
+                RamdiskOperationOverlay(
+                    label = stringResource(when {
+                        isImporting -> R.string.ramdisk_editor_importing
+                        isExportingFile -> R.string.ramdisk_editor_exporting
+                        isExportingImage -> R.string.ramdisk_editor_exporting_image
+                        isDumping -> R.string.ramdisk_editor_rebuilding
+                        isSavingTextFile -> R.string.ramdisk_editor_saving
+                        else -> R.string.ramdisk_editor_opening
+                    }),
+                )
             }
         }
     }
@@ -724,10 +915,12 @@ fun RamdiskEditorScreen(
                 message = stringResource(R.string.ramdisk_editor_discard_archive_message),
                 dismissLabel = stringResource(R.string.ramdisk_editor_cancel),
                 confirmLabel = stringResource(R.string.ramdisk_editor_confirm),
-                onDismiss = { discardPrompt = null },
+                onDismiss = { discardPrompt = null; pendingExit = null },
                 onDiscard = {
                     discardPrompt = null
-                    navigator.popBackStack()
+                    val navigate = pendingExit
+                    pendingExit = null
+                    if (navigate != null) navigate() else navigator.popBackStack()
                 },
             )
         }
@@ -738,10 +931,13 @@ fun RamdiskEditorScreen(
                 message = stringResource(R.string.ramdisk_editor_discard_text_message),
                 dismissLabel = stringResource(R.string.ramdisk_editor_continue_editing),
                 confirmLabel = stringResource(R.string.ramdisk_editor_discard),
-                onDismiss = { discardPrompt = null },
+                onDismiss = { discardPrompt = null; pendingExit = null },
                 onDiscard = {
                     discardPrompt = null
                     openedTextFile = null
+                    val navigate = pendingExit
+                    pendingExit = null
+                    navigate?.invoke()
                 },
             )
         }
@@ -872,15 +1068,18 @@ private fun RamdiskFragmentSelector(
         )
     }
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             if (isExpressiveUi) {
                 LargeFlexibleTopAppBar(
+                    colors = ramdiskTopBarColors(),
                     title = title,
                     navigationIcon = navigationIcon,
                     actions = actions,
                 )
             } else {
                 TopAppBar(
+                    colors = ramdiskTopBarColors(),
                     title = title,
                     navigationIcon = navigationIcon,
                     actions = actions,
@@ -922,9 +1121,9 @@ private fun RamdiskFragmentSelector(
                     },
                     colors = CardDefaults.cardColors(
                         containerColor = if (isExpressiveUi) {
-                            MaterialTheme.colorScheme.secondaryContainer
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = CardConfig.cardAlpha)
                         } else {
-                            MaterialTheme.colorScheme.surfaceContainer
+                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = CardConfig.cardAlpha)
                         },
                     ),
                 ) {
@@ -1013,8 +1212,10 @@ private fun RamdiskEditorStatusScreen(
     onRetry: (() -> Unit)? = null,
 ) {
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
+                colors = ramdiskTopBarColors(),
                 title = { Text(title) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -1139,10 +1340,30 @@ private fun ElfSummaryViewer(
     modifier: Modifier = Modifier,
 ) {
     val fields = header.toDisplayFields(LocalResources.current)
+    val groups = listOf(
+        R.string.ramdisk_editor_elf_identity to fields.filter { it.first in setOf(
+            R.string.ramdisk_editor_elf_field_file_size, R.string.ramdisk_editor_elf_field_magic,
+            R.string.ramdisk_editor_elf_field_class, R.string.ramdisk_editor_elf_field_data,
+            R.string.ramdisk_editor_elf_field_ident_version, R.string.ramdisk_editor_elf_field_os_abi,
+            R.string.ramdisk_editor_elf_field_abi_version, R.string.ramdisk_editor_elf_field_type,
+            R.string.ramdisk_editor_elf_field_machine, R.string.ramdisk_editor_elf_field_object_version,
+        ) },
+        R.string.ramdisk_editor_elf_entry_flags to fields.filter { it.first in setOf(
+            R.string.ramdisk_editor_elf_field_entry, R.string.ramdisk_editor_elf_field_flags,
+        ) },
+        R.string.ramdisk_editor_elf_layout to fields.filter { it.first in setOf(
+            R.string.ramdisk_editor_elf_field_header_size, R.string.ramdisk_editor_elf_field_program_offset,
+            R.string.ramdisk_editor_elf_field_program_entry_size, R.string.ramdisk_editor_elf_field_program_count,
+            R.string.ramdisk_editor_elf_field_section_offset, R.string.ramdisk_editor_elf_field_section_entry_size,
+            R.string.ramdisk_editor_elf_field_section_count, R.string.ramdisk_editor_elf_field_section_name_index,
+        ) },
+    )
     Scaffold(
+        containerColor = Color.Transparent,
         modifier = modifier,
         topBar = {
             TopAppBar(
+                colors = ramdiskTopBarColors(),
                 title = { Text(fileName) },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
@@ -1160,8 +1381,8 @@ private fun ElfSummaryViewer(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(24.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 item {
                     Column(modifier = Modifier.padding(bottom = 8.dp)) {
@@ -1179,34 +1400,44 @@ private fun ElfSummaryViewer(
                         )
                     }
                 }
-                items(
-                    items = fields,
-                    key = { it.first },
-                ) { (label, value) ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer
-                        ),
-                    ) {
-                        ListItem(
-                            content = {
-                                Text(
-                                    text = stringResource(label),
-                                    style = MaterialTheme.typography.labelLarge,
-                                )
-                            },
-                            supportingContent = {
-                                Text(
-                                    text = value,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontFamily = FontFamily.Monospace,
-                                )
-                            },
-                            colors = ListItemDefaults.colors(
-                                containerColor = androidx.compose.ui.graphics.Color.Transparent
+                groups.forEach { (groupTitle, groupFields) ->
+                    item(key = "group-$groupTitle") {
+                        Text(stringResource(groupTitle), style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 4.dp, top = 16.dp, bottom = 6.dp))
+                    }
+                    itemsIndexed(
+                        items = groupFields,
+                        key = { _, field -> field.first },
+                    ) { index, (label, value) ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = if (isExpressiveUi) ListItemDefaults.segmentedShapes(index, groupFields.size).shape
+                                else MaterialTheme.shapes.small,
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = CardConfig.cardAlpha)
                             ),
-                        )
+                        ) {
+                            ListItem(
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                content = {
+                                    Text(
+                                        text = stringResource(label),
+                                        style = MaterialTheme.typography.labelLarge,
+                                    )
+                                },
+                                supportingContent = {
+                                    Text(
+                                        text = value,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontFamily = FontFamily.Monospace,
+                                    )
+                                },
+                                colors = ListItemDefaults.colors(
+                                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                                ),
+                            )
+                        }
                     }
                 }
             }
@@ -1512,3 +1743,32 @@ private val ELF_MACHINE_NAMES = mapOf(
     252 to "csky",
     258 to "loongarch",
 )
+
+
+private class RamdiskBrowserSession(
+    val controller: FileBrowserController,
+    val presentation: FileBrowserPresentationState,
+    val scope: CoroutineScope,
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ramdiskTopBarColors() = TopAppBarDefaults.topAppBarColors(
+    containerColor = (if (CardConfig.isCustomBackgroundEnabled) MaterialTheme.colorScheme.surfaceContainerLow
+        else MaterialTheme.colorScheme.background).copy(alpha = CardConfig.cardAlpha),
+)
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun RamdiskOperationOverlay(label: String) {
+    Dialog(onDismissRequest = {}, properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)) {
+        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+            Row(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (isExpressiveUi) LoadingIndicator(Modifier.size(32.dp))
+                else CircularProgressIndicator(Modifier.size(24.dp))
+                Text(label, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
