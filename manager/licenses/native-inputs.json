@@ -70,7 +70,7 @@
     "userspace/busybox/CMakeLists.txt": "9414f7fafa2e4f495bb1b680f3a8b6aebfc05963ab07b91231890a5c6d22d9de"
   },
   "submodules": {
-    "userspace/ksud/third_party/MagiskbootAlone": "9eb0d58ba72118a3fc485ff5bce6aa3f44a1ce5a",
+    "userspace/ksud/third_party/MagiskbootAlone": "4cd9f6cab3bc0dcbad1bb4e257c00695043965bd",
     "userspace/ksud/third_party/bootctlAlone": "30becbd5ececd0ae68abd8ccae6e41466921c2f9",
     "userspace/ksud/third_party/mkbootfsAlone": "d0727db42b4394b0ec99070ec5d7e539cb86e404",
     "userspace/ksud/third_party/ndk-busybox": "df3cd7f218eb63aa4bf58aaa45d3ae770928d298",

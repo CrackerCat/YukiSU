@@ -715,11 +715,11 @@
     "id": "magiskboot",
     "name": "MagiskbootAlone / Magisk",
     "license": "GPL-3.0-or-later",
-    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/9eb0d58ba72118a3fc485ff5bce6aa3f44a1ce5a",
+    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd",
     "texts": [
       "magiskboot.txt"
     ],
-    "version": "9eb0d58ba721",
+    "version": "4cd9f6cab3bc",
     "evidence": "userspace/ksud/third_party/MagiskbootAlone/LICENSE; compiled into ksud through ksud_thirdparty_objs by userspace/ksud/CMakeLists.txt."
   },
   {
@@ -833,24 +833,24 @@
     "id": "lz4",
     "name": "LZ4",
     "license": "BSD-2-Clause",
-    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/9eb0d58ba72118a3fc485ff5bce6aa3f44a1ce5a/external/lz4",
+    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd/external/lz4",
     "texts": [
       "lz4.txt",
       "lz4-fallback.txt"
     ],
-    "version": "MagiskbootAlone 9eb0d58ba721",
+    "version": "MagiskbootAlone 4cd9f6cab3bc",
     "evidence": "userspace/ksud/third_party/MagiskbootAlone/external/lz4/lz4.c copyright/license; KSUD MAGISKBOOT_SOURCES links the vendored copy. Offline fallback: userspace/ksud/third_party/lz4 submodule @ ebb370ca83af193212df4dcbadcc5d87bc0de2f0 (v1.10.0), https://github.com/Rouyashiki/lz4/tree/ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
   },
   {
     "id": "xxhash",
     "name": "xxHash",
     "license": "BSD-2-Clause",
-    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/9eb0d58ba72118a3fc485ff5bce6aa3f44a1ce5a/external/lz4",
+    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd/external/lz4",
     "texts": [
       "xxhash.txt",
       "xxhash-fallback.txt"
     ],
-    "version": "MagiskbootAlone 9eb0d58ba721",
+    "version": "MagiskbootAlone 4cd9f6cab3bc",
     "evidence": "userspace/ksud/third_party/MagiskbootAlone/external/lz4/xxhash.c copyright/license; KSUD MAGISKBOOT_SOURCES links the vendored copy. Offline fallback: userspace/ksud/third_party/lz4 submodule @ ebb370ca83af193212df4dcbadcc5d87bc0de2f0 (v1.10.0), https://github.com/Rouyashiki/lz4/tree/ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
   },
   {
