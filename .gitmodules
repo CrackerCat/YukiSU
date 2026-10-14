@@ -1,27 +1,27 @@
 [submodule "userspace/ksud/third_party/MagiskbootAlone"]
 	path = userspace/ksud/third_party/MagiskbootAlone
-	url = https://github.com/Anatdx/MagiskbootAlone.git
+	url = https://github.com/Rouyashiki/MagiskbootAlone.git
 [submodule "userspace/ksud/third_party/bootctlAlone"]
 	path = userspace/ksud/third_party/bootctlAlone
-	url = https://github.com/Anatdx/bootctlAlone.git
+	url = https://github.com/Rouyashiki/bootctlAlone.git
 [submodule "userspace/ksud/third_party/avbctlAlone"]
 	path = userspace/ksud/third_party/avbctlAlone
 	url = https://github.com/Rouyashiki/avbctlAlone.git
 [submodule "userspace/ksud/third_party/resetpropAlone"]
 	path = userspace/ksud/third_party/resetpropAlone
-	url = https://github.com/Anatdx/resetpropAlone.git
+	url = https://github.com/Rouyashiki/resetpropAlone.git
 [submodule "userspace/ksud/third_party/ndk-busybox"]
 	path = userspace/ksud/third_party/ndk-busybox
-	url = https://github.com/Anatdx/ndk-busybox.git
+	url = https://github.com/Rouyashiki/ndk-busybox.git
 [submodule "userspace/zygisk/third_party/lsplt"]
 	path = userspace/zygisk/third_party/lsplt
-	url = https://github.com/Anatdx/LSPlt.git
+	url = https://github.com/Rouyashiki/LSPlt.git
 [submodule "userspace/ksud/third_party/mkbootfsAlone"]
 	path = userspace/ksud/third_party/mkbootfsAlone
-	url = https://github.com/Anatdx/mkbootfsAlone.git
+	url = https://github.com/Rouyashiki/mkbootfsAlone.git
 [submodule "userspace/ksud/third_party/readelf_toyboxAlone"]
 	path = userspace/ksud/third_party/readelf_toyboxAlone
-	url = https://github.com/Anatdx/readelf_toyboxAlone.git
+	url = https://github.com/Rouyashiki/readelf_toyboxAlone.git
 [submodule "userspace/ksud/third_party/libzip"]
 	path = userspace/ksud/third_party/libzip
 	url = https://github.com/Rouyashiki/libzip.git

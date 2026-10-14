@@ -728,7 +728,7 @@
     "id": "magiskboot",
     "name": "MagiskbootAlone / Magisk",
     "license": "GPL-3.0-or-later",
-    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd",
+    "source": "https://github.com/Rouyashiki/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd",
     "texts": [
       "magiskboot.txt"
     ],
@@ -739,7 +739,7 @@
     "id": "resetprop",
     "name": "resetpropAlone / Magisk",
     "license": "GPL-3.0-or-later AND Apache-2.0",
-    "source": "https://github.com/Anatdx/resetpropAlone/tree/a5989761340d1d773c166934be80187acd072e0e",
+    "source": "https://github.com/Rouyashiki/resetpropAlone/tree/a5989761340d1d773c166934be80187acd072e0e",
     "texts": [
       "resetprop.txt",
       "Apache-2.0.txt",
@@ -752,7 +752,7 @@
     "id": "bootctl",
     "name": "bootctlAlone / AOSP bootctl",
     "license": "Apache-2.0",
-    "source": "https://github.com/Anatdx/bootctlAlone/tree/30becbd5ececd0ae68abd8ccae6e41466921c2f9",
+    "source": "https://github.com/Rouyashiki/bootctlAlone/tree/30becbd5ececd0ae68abd8ccae6e41466921c2f9",
     "texts": [
       "bootctl.txt",
       "Apache-2.0.txt",
@@ -778,7 +778,7 @@
     "id": "mkbootfs",
     "name": "mkbootfsAlone / AOSP mkbootfs",
     "license": "Apache-2.0",
-    "source": "https://github.com/Anatdx/mkbootfsAlone/tree/d0727db42b4394b0ec99070ec5d7e539cb86e404",
+    "source": "https://github.com/Rouyashiki/mkbootfsAlone/tree/d0727db42b4394b0ec99070ec5d7e539cb86e404",
     "texts": [
       "mkbootfs.txt",
       "Apache-2.0.txt",
@@ -791,7 +791,7 @@
     "id": "toybox",
     "name": "Toybox readelf",
     "license": "0BSD",
-    "source": "https://github.com/Anatdx/readelf_toyboxAlone/tree/4085807f0d20aacdd9b3c323ec3be0a227ea806d",
+    "source": "https://github.com/Rouyashiki/readelf_toyboxAlone/tree/4085807f0d20aacdd9b3c323ec3be0a227ea806d",
     "texts": [
       "toybox.txt"
     ],
@@ -802,7 +802,7 @@
     "id": "busybox",
     "name": "BusyBox (ndk-busybox)",
     "license": "GPL-2.0-only",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298",
     "texts": [
       "busybox.txt",
       "BusyBox-NOTICES.txt"
@@ -814,7 +814,7 @@
     "id": "lsplt",
     "name": "LSPlt",
     "license": "LGPL-3.0",
-    "source": "https://github.com/Anatdx/LSPlt/tree/15c945ed58648afbecaa2b44cc06e15ffc6396e2",
+    "source": "https://github.com/Rouyashiki/LSPlt/tree/15c945ed58648afbecaa2b44cc06e15ffc6396e2",
     "texts": [
       "lsplt.txt",
       "GPL-3.0.txt"
@@ -859,7 +859,7 @@
     "id": "lz4",
     "name": "LZ4",
     "license": "BSD-2-Clause",
-    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd/external/lz4",
+    "source": "https://github.com/Rouyashiki/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd/external/lz4",
     "texts": [
       "lz4.txt",
       "lz4-fallback.txt"
@@ -871,7 +871,7 @@
     "id": "xxhash",
     "name": "xxHash",
     "license": "BSD-2-Clause",
-    "source": "https://github.com/Anatdx/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd/external/lz4",
+    "source": "https://github.com/Rouyashiki/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd/external/lz4",
     "texts": [
       "xxhash.txt",
       "xxhash-fallback.txt"
@@ -883,7 +883,7 @@
     "id": "bzip2",
     "name": "bzip2 (BusyBox)",
     "license": "bzip2-1.0.4",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/libarchive/bz",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/libarchive/bz",
     "texts": [
       "bzip2.txt"
     ],
@@ -894,7 +894,7 @@
     "id": "xz-embedded",
     "name": "XZ Embedded (BusyBox / YukiZygisk)",
     "license": "Public domain",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/libarchive/unxz",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/libarchive/unxz",
     "texts": [
       "xz-embedded.txt"
     ],
@@ -905,7 +905,7 @@
     "id": "selinux",
     "name": "libselinux (BusyBox)",
     "license": "Public domain",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/android/libselinux",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/android/libselinux",
     "texts": [
       "libselinux.txt"
     ],
@@ -1171,7 +1171,7 @@
     "name": "libres / dietlibc resolver (BusyBox)",
     "license": "GPL-2.0-only",
     "version": "libres-0.32-1 (BusyBox adaptation)",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libres",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libres",
     "texts": [
       "GPL-2.0.txt",
       "libres-NOTICE.txt"
@@ -1183,7 +1183,7 @@
     "name": "GNU C Library helpers (BusyBox)",
     "license": "LGPL-2.1-or-later",
     "version": "BusyBox df3cd7f218eb",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libbb/mntent_r.c",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libbb/mntent_r.c",
     "texts": [
       "LGPL-2.1.txt",
       "glibc-BusyBox-NOTICE.txt"
@@ -1195,7 +1195,7 @@
     "name": "volume_id filesystem probes (BusyBox)",
     "license": "LGPL-2.1-or-later AND GPL-2.0-or-later",
     "version": "BusyBox df3cd7f218eb",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/util-linux/volume_id",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/util-linux/volume_id",
     "texts": [
       "LGPL-2.1.txt",
       "volume-id-NOTICE.txt"
@@ -1207,7 +1207,7 @@
     "name": "MatrixSSL code (BusyBox TLS)",
     "license": "GPL-2.0-only AND GPL-2.0-or-later",
     "version": "3.7.2b-derived (BusyBox adaptation)",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/networking/tls_pstm.c",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/networking/tls_pstm.c",
     "texts": [
       "GPL-2.0.txt",
       "MatrixSSL-NOTICE.txt"
@@ -1219,7 +1219,7 @@
     "name": "wolfSSL code (BusyBox TLS)",
     "license": "GPL-2.0-only AND GPL-2.0-or-later",
     "version": "3.15.3-derived (BusyBox adaptation)",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/networking/tls_fe.c",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/networking/tls_fe.c",
     "texts": [
       "GPL-2.0.txt",
       "wolfSSL-NOTICE.txt"
@@ -1231,7 +1231,7 @@
     "name": "tiny-AES128-C code (BusyBox TLS)",
     "license": "GPL-2.0-only AND Unlicense",
     "version": "2014-12-08-derived (BusyBox adaptation)",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/networking/tls_aes.c",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/networking/tls_aes.c",
     "texts": [
       "GPL-2.0.txt",
       "tiny-AES-NOTICE.txt"
@@ -1243,7 +1243,7 @@
     "name": "LZO / lzop (BusyBox)",
     "license": "GPL-2.0-or-later",
     "version": "LZO 2.03-derived (BusyBox adaptation)",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/lzop.c",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/lzop.c",
     "texts": [
       "GPL-2.0.txt",
       "lzo-busybox-NOTICE.txt"
@@ -1255,7 +1255,7 @@
     "name": "LZMA SDK decoder (BusyBox adaptation)",
     "license": "GPL-2.0-or-later",
     "version": "LZMA SDK 4.22-derived",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/libarchive/decompress_unlzma.c",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/archival/libarchive/decompress_unlzma.c",
     "texts": [
       "GPL-2.0.txt",
       "lzma-sdk-busybox-NOTICE.txt"
@@ -1267,7 +1267,7 @@
     "name": "FreeSec DES crypt (BusyBox)",
     "license": "BSD-3-Clause",
     "version": "BusyBox df3cd7f218eb",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libbb/pw_encrypt_des.c",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libbb/pw_encrypt_des.c",
     "texts": [
       "freesec-busybox-NOTICE.txt"
     ],
@@ -1278,7 +1278,7 @@
     "name": "RSA MD5 / FreeBSD MD5 crypt (BusyBox)",
     "license": "RSA-MD AND Beerware",
     "version": "BusyBox df3cd7f218eb",
-    "source": "https://github.com/Anatdx/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libbb/pw_encrypt_md5.c",
+    "source": "https://github.com/Rouyashiki/ndk-busybox/tree/df3cd7f218eb63aa4bf58aaa45d3ae770928d298/libbb/pw_encrypt_md5.c",
     "texts": [
       "md5-crypt-busybox-NOTICE.txt"
     ],

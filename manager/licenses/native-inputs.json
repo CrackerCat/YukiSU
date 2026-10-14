@@ -1,6 +1,6 @@
 {
   "files": {
-    ".gitmodules": "9d112a25efe032892fc122bac82a502bd9896b4c2f458e1a43605a45365bef0a",
+    ".gitmodules": "6fcac5edf342ceee3d80b5f8f08c7c20c2643e8e7a09c2e4e78f01559deb6b0a",
     "manager/app/src/main/cpp/CMakeLists.txt": "c313eb7317e7598192ad303a87284652bd7ccd1c9b49ee70740cb3b732ed4fef",
     "manager/gradle/libs.versions.toml": "fc2f32704803c96cc3a1867c61358572abfc393e649a3535546dc64f0416aca9",
     "userspace/ksud/CMakeLists.txt": "d28363a6815e823c21e0d1cb95c2b57bd194b8d7cb37245d2cd9098b0a4fa55a",
