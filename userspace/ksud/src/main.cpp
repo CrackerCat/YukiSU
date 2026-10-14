@@ -1,3 +1,4 @@
+#include <avbctl/avbctl.h>
 #include <cstring>
 #include <optional>
 #include "cli.hpp"
@@ -49,6 +50,9 @@ int main(int argc, char** argv) {
     };
 
     if (const auto result = dispatch("ak3-unzip", ksud::flash::ak3_unzip_main))
+        return *result;
+
+    if (const auto result = dispatch("avbctl", avbctl_main))
         return *result;
 
 #if defined(MAGISKBOOT_ALONE_AVAILABLE) && MAGISKBOOT_ALONE_AVAILABLE

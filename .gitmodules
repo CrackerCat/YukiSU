@@ -4,6 +4,9 @@
 [submodule "userspace/ksud/third_party/bootctlAlone"]
 	path = userspace/ksud/third_party/bootctlAlone
 	url = https://github.com/Anatdx/bootctlAlone.git
+[submodule "userspace/ksud/third_party/avbctlAlone"]
+	path = userspace/ksud/third_party/avbctlAlone
+	url = https://github.com/Rouyashiki/avbctlAlone.git
 [submodule "userspace/ksud/third_party/resetpropAlone"]
 	path = userspace/ksud/third_party/resetpropAlone
 	url = https://github.com/Anatdx/resetpropAlone.git

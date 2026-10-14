@@ -326,6 +326,23 @@ else()
 endif()
 
 set(BOOTCTL_ALONE_DIR ${MAGISKTOOLS_ALONE_DIR}/bootctlAlone)
+set(AVBCTL_ALONE_DIR ${MAGISKTOOLS_ALONE_DIR}/avbctlAlone)
+set(AVBCTL_ALONE_SOURCES
+    ${AVBCTL_ALONE_DIR}/src/aosp.cpp
+    ${AVBCTL_ALONE_DIR}/src/cli.cpp
+    ${AVBCTL_ALONE_DIR}/src/io.cpp
+    ${AVBCTL_ALONE_DIR}/src/avb.cpp
+    ${AVBCTL_ALONE_DIR}/src/device.cpp
+)
+foreach(source IN LISTS AVBCTL_ALONE_SOURCES)
+    if(NOT EXISTS "${source}")
+        message(FATAL_ERROR "avbctlAlone submodule is missing; run git submodule update --init")
+    endif()
+endforeach()
+set_property(SOURCE ${AVBCTL_ALONE_SOURCES} APPEND PROPERTY
+    COMPILE_DEFINITIONS _FILE_OFFSET_BITS=64)
+set_property(SOURCE ${AVBCTL_ALONE_SOURCES} APPEND PROPERTY COMPILE_OPTIONS -fexceptions)
+message(STATUS "avbctlAlone: building avbctl into ksud (multi-call)")
 set(RESETPROP_ALONE_DIR ${MAGISKTOOLS_ALONE_DIR}/resetpropAlone)
 set(MKBOOTFS_ALONE_DIR ${MAGISKTOOLS_ALONE_DIR}/mkbootfsAlone)
 set(RESETPROP_ALONE_SOURCES)
@@ -407,7 +424,7 @@ set(KSUD_OUR_SOURCES
 )
 
 # Third-party sources (no clang-tidy)
-set(KSUD_THIRDPARTY_SOURCES)
+set(KSUD_THIRDPARTY_SOURCES ${AVBCTL_ALONE_SOURCES})
 if(MAGISKBOOT_ALONE_AVAILABLE)
     list(APPEND KSUD_THIRDPARTY_SOURCES ${MAGISKBOOT_SOURCES})
 endif()
@@ -429,6 +446,7 @@ set(KSUD_INCLUDE_DIRS
     ${LUA_BUILD_DIR}
     ${mbedtls_SOURCE_DIR}/include
     ${LZ4_LIB_DIR}
+    ${AVBCTL_ALONE_DIR}/include
     ${MKBOOTFS_ALONE_DIR}/include
     ${READELF_TOYBOX_ALONE_DIR}/include
     ${GENERATED_DIR}
@@ -504,10 +522,8 @@ add_library(ksud_thirdparty_objs OBJECT ${KSUD_THIRDPARTY_SOURCES})
 target_include_directories(ksud_thirdparty_objs PRIVATE ${KSUD_INCLUDE_DIRS})
 target_compile_definitions(ksud_thirdparty_objs PRIVATE ${KSUD_DEFINES})
 target_compile_options(ksud_thirdparty_objs PRIVATE ${KSUD_DEVIRT_FLAGS})
-# Magiskboot throws through several of its translation units and catches at its
-# command boundary; keep that submodule exception-enabled. The other welded
-# tools have no exception boundary and already terminate on allocation failure,
-# so landing pads only waste space.
+# Magiskboot and avbctl catch exceptions at their command boundaries. The tools
+# below do not use exceptions.
 set(KSUD_EXCEPTION_FREE_THIRDPARTY_SOURCES)
 if(BOOTCTL_ALONE_AVAILABLE)
     list(APPEND KSUD_EXCEPTION_FREE_THIRDPARTY_SOURCES ${BOOTCTL_ALONE_DIR}/src/main.cpp)

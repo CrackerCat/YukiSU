@@ -32,6 +32,7 @@
 #include "utils.hpp"
 #include "yzctl.hpp"
 
+#include <avbctl/avbctl.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -554,25 +555,22 @@ int cmd_flash_new(const std::vector<std::string>& args, const CliArguments& cli)
         }
 
     } else if (filtered_args[0] == "avb") {
+        const auto run_avbctl = [](std::string command) {
+            char name[] = "avbctl";
+            char* args[] = {name, command.data(), nullptr};
+            return avbctl_main(2, args);
+        };
         if (filtered_args.size() >= 2 && filtered_args[1] == "disable") {
-            terminal::message(stderr, "info", "Disabling AVB/dm-verity");
-            if (ksud::flash::patch_vbmeta_disable_verification()) {
-                terminal::message(stderr, "success", "AVB/dm-verity disabled successfully!");
-                terminal::message(stderr, "info", "Reboot required for changes to take effect.");
-                return 0;
-            } else {
-                terminal::errorf("Failed to disable AVB/dm-verity\n");
-                return 1;
-            }
-        } else {
-            const std::string status = ksud::flash::get_avb_status();
-            if (status.empty()) {
-                terminal::errorf("Failed to get AVB status\n");
-                return 1;
-            }
-            printf("AVB/dm-verity status: %s\n", status.c_str());
-            return 0;
+            const int result = run_avbctl("disable-verity");
+            if (result != 0)
+                return result;
+            return run_avbctl("disable-verification");
         }
+        if (filtered_args.size() >= 2) {
+            terminal::error("Usage: ksud flash avb [disable]");
+            return 1;
+        }
+        return run_avbctl("status");
 
     } else if (filtered_args[0] == "kernel") {
         const std::string version = ksud::flash::get_kernel_version(target_slot);

@@ -749,6 +749,19 @@
     "evidence": "userspace/ksud/third_party/bootctlAlone/LICENSE; compiled into ksud through ksud_thirdparty_objs by userspace/ksud/CMakeLists.txt."
   },
   {
+    "id": "avbctl",
+    "name": "avbctlAlone / AOSP avbctl",
+    "license": "Apache-2.0 AND MIT",
+    "source": "https://github.com/Rouyashiki/avbctlAlone/tree/68391090e9dcab995a9e009c178a93b545893ee2",
+    "texts": [
+      "avbctl.txt",
+      "avbctl-AOSP-MIT.txt",
+      "avbctl-NOTICE.txt"
+    ],
+    "version": "68391090e9dc",
+    "evidence": "userspace/ksud/third_party/avbctlAlone/LICENSE, LICENSES/AOSP-MIT.txt, NOTICE and UPSTREAM.md; five implementation sources compiled into ksud through ksud_thirdparty_objs by userspace/ksud/CMakeLists.txt. AOSP command port and AVB definitions are MIT; standalone extensions and fstab discovery are Apache-2.0."
+  },
+  {
     "id": "mkbootfs",
     "name": "mkbootfsAlone / AOSP mkbootfs",
     "license": "Apache-2.0",

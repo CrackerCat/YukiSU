@@ -1,0 +1,20 @@
+avbctlAlone
+
+Copyright 2026 Anatdx
+
+This product contains software derived from the Android Open Source Project:
+  Copyright (C) 2016, 2017 The Android Open Source Project.
+
+AOSP avbctl, libavb_user, and AVB format declarations are licensed under the
+MIT license. The complete license is in LICENSES/AOSP-MIT.txt; original notices
+are retained in src/aosp.cpp and the unmodified upstream/aosp source snapshot.
+
+Original standalone integration and extensions are licensed under Apache-2.0
+(LICENSE). Per-file SPDX identifiers identify the applicable licenses.
+
+Fstab discovery also references AOSP platform/system/core fs_mgr/libfstab:
+  Copyright (C) 2014 The Android Open Source Project.
+That source and its adapted discovery logic are licensed under Apache-2.0.
+
+See UPSTREAM.md and upstream/aosp/manifest.json for the exact upstream revision,
+source paths, checksums, and local adaptations.

@@ -31,6 +31,38 @@ object PartitionManagerHelper {
         return stdout.filter { it.isNotBlank() }.map { it.trim() }
     }
 
+    private fun avbTargetArgument(blockDevice: String): String {
+        require(blockDevice.startsWith("/dev/block/") &&
+            blockDevice.none { it == '\n' || it == '\r' || it == '\u0000' }) {
+            "Invalid partition block device"
+        }
+        return "avbctl --partition ${shellArg(blockDevice)}"
+    }
+
+    internal suspend fun getAvbStatus(blockDevice: String): PartitionAvbStatus =
+        withContext(Dispatchers.IO) {
+            parsePartitionAvbStatus(runKsudLines("${avbTargetArgument(blockDevice)} status"), blockDevice)
+        }
+
+    internal suspend fun setAvbState(
+        blockDevice: String,
+        expected: PartitionAvbStatus,
+        change: AvbChange,
+    ): PartitionAvbStatus = withContext(Dispatchers.IO) {
+        val before = getAvbStatus(blockDevice)
+        if (before != expected) throw IOException("VBMeta state changed; refresh and try again")
+        if (before.bootloader == AvbBootloaderState.Locked) {
+            throw IOException("The bootloader is locked")
+        }
+        runKsudLines("${avbTargetArgument(blockDevice)} ${change.command}")
+        val after = getAvbStatus(blockDevice)
+        val changedBit = if (change.feature == AvbFeature.Verity) 1L else 2L
+        if (!after.matches(change) || (before.flags xor after.flags) and changedBit.inv() != 0L) {
+            throw IOException("VBMeta read-back did not match the requested change")
+        }
+        after
+    }
+
     suspend fun getSlotInfo(context: Context): SlotInfo? = withContext(Dispatchers.IO) {
         val lines = runKsudLines("flash slots")
         if (lines.isEmpty()) {

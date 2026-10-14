@@ -141,6 +141,7 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
     var multiSelectMode by rememberSaveable { mutableStateOf(false) }
     var selectedPartitions by remember { mutableStateOf<Set<String>>(emptySet()) }
     var selectedPartition by remember { mutableStateOf<PartitionInfo?>(null) }
+    var avbPartition by remember { mutableStateOf<PartitionInfo?>(null) }
     var operationMessage by remember { mutableStateOf<String?>(null) }
 
     var pendingFlashPartition by remember { mutableStateOf<PartitionInfo?>(null) }
@@ -707,11 +708,22 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
                     )
                 )
             },
+            onManageAvb = { resolvedBlockDevice ->
+                selectedPartition = null
+                avbPartition = partition.copy(blockDevice = resolvedBlockDevice)
+            },
             onFlash = { resolvedBlockDevice ->
                 selectedPartition = null
                 pendingFlashPartition = partition.copy(blockDevice = resolvedBlockDevice)
                 filePickerLauncher.launch("*/*")
             },
+        )
+    }
+
+    avbPartition?.let { partition ->
+        PartitionAvbDialog(
+            partition = partition,
+            onDismiss = { avbPartition = null },
         )
     }
 
@@ -1524,6 +1536,7 @@ private fun PartitionActionDialog(
     onBackup: () -> Unit,
     onEditRamdisk: () -> Unit,
     onFlashAk3: () -> Unit,
+    onManageAvb: (resolvedBlockDevice: String) -> Unit,
     onFlash: (resolvedBlockDevice: String) -> Unit,
 ) {
     val context = LocalContext.current
@@ -1633,6 +1646,17 @@ private fun PartitionActionDialog(
                         YukiIcon(Icons.Filled.Edit, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.partition_edit_ramdisk))
+                    }
+                }
+                if (isAvbControlPartition(partition.name)) {
+                    TextButton(
+                        onClick = { onManageAvb(blockDevice) },
+                        enabled = enabled && !resolvingDevice && blockDevice.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        YukiIcon(Icons.Filled.Edit, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.partition_avb_title))
                     }
                 }
                 if (partition.name.removeSuffix("_a").removeSuffix("_b") == "boot") {

@@ -1013,4 +1013,17 @@
     <string name="ramdisk_editor_elf_entry_flags" tools:ignore="MissingTranslation">Entry and flags</string>
     <string name="ramdisk_editor_elf_layout" tools:ignore="MissingTranslation">Header layout</string>
     <string name="ramdisk_editor_exporting_image" tools:ignore="MissingTranslation">Exporting image…</string>
+    <string name="partition_avb_title" tools:ignore="MissingTranslation">AVB / dm-verity</string>
+    <string name="partition_avb_verification" tools:ignore="MissingTranslation">AVB verification</string>
+    <string name="partition_avb_verity" tools:ignore="MissingTranslation">dm-verity</string>
+    <string name="partition_avb_enabled" tools:ignore="MissingTranslation">Enabled</string>
+    <string name="partition_avb_disabled" tools:ignore="MissingTranslation">Disabled</string>
+    <string name="partition_avb_stored_state" tools:ignore="MissingTranslation">Flags stored in this vbmeta partition. They may differ from the running system; changes apply when this slot boots again.</string>
+    <string name="partition_avb_verity_note" tools:ignore="MissingTranslation">With AVB verification disabled, enabling the dm-verity flag alone does not restore verification.</string>
+    <string name="partition_avb_locked" tools:ignore="MissingTranslation">The bootloader reports that it is locked. Changes are unavailable.</string>
+    <string name="partition_avb_confirm" tools:ignore="MissingTranslation">Set %1$s to %2$s on this partition?</string>
+    <string name="partition_avb_warning" tools:ignore="MissingTranslation">Back up this partition first. Changing verification can prevent the device from booting. Re-enabling it requires valid, correctly signed partition images.</string>
+    <string name="partition_avb_apply" tools:ignore="MissingTranslation">Apply change</string>
+    <string name="partition_avb_saved" tools:ignore="MissingTranslation">Saved and read back successfully. Reboot into this slot for the change to take effect.</string>
+    <string name="partition_avb_failed" tools:ignore="MissingTranslation">Unable to confirm VBMeta state: %1$s. Refresh before making another change.</string>
 </resources>

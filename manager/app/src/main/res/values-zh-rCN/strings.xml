@@ -1007,4 +1007,17 @@
     <string name="ramdisk_editor_elf_entry_flags">入口与标志</string>
     <string name="ramdisk_editor_elf_layout">头部布局</string>
     <string name="ramdisk_editor_exporting_image">正在导出镜像…</string>
+    <string name="partition_avb_title">AVB / dm-verity</string>
+    <string name="partition_avb_verification">AVB 验证</string>
+    <string name="partition_avb_verity">dm-verity</string>
+    <string name="partition_avb_enabled">已启用</string>
+    <string name="partition_avb_disabled">已停用</string>
+    <string name="partition_avb_stored_state">这里显示此 vbmeta 分区保存的标志，可能与当前系统运行状态不同；更改将在下次启动此槽位时生效。</string>
+    <string name="partition_avb_verity_note">AVB 验证关闭时，仅启用 dm-verity 标志不会恢复验证。</string>
+    <string name="partition_avb_locked">引导加载程序报告为已锁定，无法更改。</string>
+    <string name="partition_avb_confirm">将此分区的 %1$s 设为%2$s？</string>
+    <string name="partition_avb_warning">请先备份此分区。更改验证设置可能导致设备无法启动；重新启用需要有效且签名正确的分区镜像。</string>
+    <string name="partition_avb_apply">应用更改</string>
+    <string name="partition_avb_saved">已保存并回读确认。下次启动此槽位时生效。</string>
+    <string name="partition_avb_failed">无法确认 VBMeta 状态：%1$s。请刷新后再操作。</string>
 </resources>

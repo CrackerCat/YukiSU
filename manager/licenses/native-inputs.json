@@ -1,9 +1,9 @@
 {
   "files": {
-    ".gitmodules": "8e9ed80ee7430d42d76d04992a2f0032f4c00345521634897eabcc505e4a66d4",
+    ".gitmodules": "9d112a25efe032892fc122bac82a502bd9896b4c2f458e1a43605a45365bef0a",
     "manager/app/src/main/cpp/CMakeLists.txt": "c313eb7317e7598192ad303a87284652bd7ccd1c9b49ee70740cb3b732ed4fef",
     "manager/gradle/libs.versions.toml": "1183adcc80aaaf603fd343c7efd3c1fd43128dab00ef05946c5dea7a3e34e3ec",
-    "userspace/ksud/CMakeLists.txt": "b994641f1b7fa8b25ad1f1b1442d8d921e21ab1650aabe6b8f6ffa95d8a98cf5",
+    "userspace/ksud/CMakeLists.txt": "e5144262d9a031d80daa2f1bdf0bf6d8f0c3af9fd031f20eb97febb7fad8000b",
     "userspace/ksud/kagami/CMakeLists.txt": "6665509167f33cd4e7984e292f2dddece3555a3e4ed955943e874c8e1149de6b",
     "userspace/ksud/third_party/MagiskbootAlone/CMakeLists.txt": "374cbad2969992ab4fa3c25cbf65b00edfedee0dbde42a8aa64ce6b2c0270c7c",
     "userspace/ksud/third_party/MagiskbootAlone/LICENSE": "9309f87b8961982f37747f6f5adeee1eda1d1f40d6db0dd6be6dbbd6d35d6276",
@@ -67,7 +67,16 @@
     "userspace/ksud/third_party/ndk-busybox/libbb/pw_encrypt.c": "77bdc8280de532c8d7dc3fd5e64fcfabd3d8b0fe09c68f0d3996dfd100a7289d",
     "userspace/ksud/third_party/ndk-busybox/libbb/pw_encrypt_des.c": "00470df43c2ec79b76ebbdcf1ad51d14df14db4bc59142e4c8bd10d07e7f5885",
     "userspace/ksud/third_party/ndk-busybox/libbb/pw_encrypt_md5.c": "e1c5a0d6c30648d613aa56ade3e5e67cb516568eef59e18252f13076133701e3",
-    "userspace/busybox/CMakeLists.txt": "9414f7fafa2e4f495bb1b680f3a8b6aebfc05963ab07b91231890a5c6d22d9de"
+    "userspace/busybox/CMakeLists.txt": "9414f7fafa2e4f495bb1b680f3a8b6aebfc05963ab07b91231890a5c6d22d9de",
+    "userspace/ksud/third_party/avbctlAlone/CMakeLists.txt": "9f4dd37d02c6ee861ede49daa04516160ae0b59f47756f6f6f28c3d37a9afefa",
+    "userspace/ksud/third_party/avbctlAlone/LICENSE": "c03c12ae0374ba0c9e51ce163e272e2d4e21d04d5959785bf74c868e891b4edc",
+    "userspace/ksud/third_party/avbctlAlone/LICENSES/AOSP-MIT.txt": "954cea85a81842910c16c1ab4474e098fd742785f7732eaf6a056cb9169493e4",
+    "userspace/ksud/third_party/avbctlAlone/NOTICE": "ffddeffef0f0d06c50ec58fef6428a75bcef59825d51bf7cbe2e7ca7ba32b057",
+    "userspace/ksud/third_party/avbctlAlone/UPSTREAM.md": "a9124fc8407219300bf45b150497e89b53e8d7dd50464d57b98402ef56d95179",
+    "userspace/ksud/third_party/avbctlAlone/src/aosp.cpp": "15f66a192e280b882ed6bcd74615ee3be4a45c173149866c3750ee8e17ee7b64",
+    "userspace/ksud/third_party/avbctlAlone/src/device.cpp": "593e0086a619b694b7c0efd50102fd832ac31a93605f9741d825e50943316847",
+    "userspace/ksud/third_party/avbctlAlone/upstream/aosp/manifest.json": "5c1594dd19fed42f6bf059b5f79788f4ef9d842bae6dd874155b7b011167d3fb",
+    "userspace/ksud/third_party/avbctlAlone/upstream/system-core/manifest.json": "c28b759bd8e0046adfd659aaca626400287633dbecfb2e639918495d64c69104"
   },
   "submodules": {
     "userspace/ksud/third_party/MagiskbootAlone": "4cd9f6cab3bc0dcbad1bb4e257c00695043965bd",
@@ -83,6 +92,7 @@
     "userspace/ksud/third_party/lua": "7579fc9d7ed90240487251dfb69168f8e64e9294",
     "userspace/ksud/third_party/mbedtls": "ccc12be679247960cd7147073a2e51a460c1b27e",
     "userspace/ksud/third_party/mbedtls/framework": "94599c0e3b5036e086446a51a3f79640f70f22f6",
-    "userspace/ksud/third_party/lz4": "ebb370ca83af193212df4dcbadcc5d87bc0de2f0"
+    "userspace/ksud/third_party/lz4": "ebb370ca83af193212df4dcbadcc5d87bc0de2f0",
+    "userspace/ksud/third_party/avbctlAlone": "68391090e9dcab995a9e009c178a93b545893ee2"
   }
 }

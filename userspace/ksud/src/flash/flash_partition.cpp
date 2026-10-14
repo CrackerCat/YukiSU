@@ -124,7 +124,18 @@ bool is_ab_device() {
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters) partition_name then slot_suffix
 std::string find_partition_block_device(const std::string& partition_name,
                                         const std::string& slot_suffix) {
-    // 检查分区名是否以 _a 或 _b 结尾（slotful分区）
+    const auto find_device = [](const std::string& name) -> std::string {
+        for (const char* base :
+             {"/dev/block/by-name/", "/dev/block/mapper/", "/dev/block/bootdevice/by-name/"}) {
+            const std::string path = base + name;
+            if (is_block_device_path(path)) {
+                LOGD("Found partition %s at %s", name.c_str(), path.c_str());
+                return path;
+            }
+        }
+        return "";
+    };
+
     bool is_slotful = false;
     if (partition_name.length() >= 2) {
         const std::string last_two = partition_name.substr(partition_name.length() - 2);
@@ -133,42 +144,40 @@ std::string find_partition_block_device(const std::string& partition_name,
         }
     }
 
-    // 确定要使用的槽位后缀
     std::string suffix;
     if (is_slotful) {
-        // 如果分区名本身已经带了槽位后缀，不再添加
         suffix = "";
     } else if (!slot_suffix.empty()) {
-        // 使用传入的槽位后缀
         suffix = slot_suffix;
     } else {
-        // 使用当前槽位
         suffix = get_current_slot_suffix();
     }
 
-    // Build candidate names
+    if (partition_name == "vbmeta" && !suffix.empty()) {
+        if (suffix != "_a" && suffix != "_b") {
+            LOGE("Invalid vbmeta slot suffix: %s", suffix.c_str());
+            return "";
+        }
+        if (const auto device = find_device(partition_name + suffix); !device.empty()) {
+            return device;
+        }
+        // An unsuffixed alias must not hide a missing slot on a slotted layout.
+        const std::string other_suffix = suffix == "_a" ? "_b" : "_a";
+        if (!find_device(partition_name + other_suffix).empty()) {
+            LOGE("Partition %s%s not found", partition_name.c_str(), suffix.c_str());
+            return "";
+        }
+    }
+
     std::vector<std::string> names_to_try;
-    // 总是先尝试不带后缀的名字（slotless分区、或者已经带后缀的分区名）
     names_to_try.push_back(partition_name);
-    // 如果分区名本身不带_a/_b后缀，且在AB设备上，再尝试带槽位后缀的版本
     if (!suffix.empty() && !is_slotful) {
         names_to_try.push_back(partition_name + suffix);
     }
 
-    // Try multiple common locations
-    const std::vector<std::string> base_paths = {
-        "/dev/block/by-name/",
-        "/dev/block/mapper/",
-        "/dev/block/bootdevice/by-name/",
-    };
-
     for (const auto& name : names_to_try) {
-        for (const auto& base : base_paths) {
-            const std::string path = base + name;
-            if (is_block_device_path(path)) {
-                LOGD("Found partition %s at %s", partition_name.c_str(), path.c_str());
-                return path;
-            }
+        if (const auto device = find_device(name); !device.empty()) {
+            return device;
         }
     }
 
@@ -626,7 +635,8 @@ bool flash_partition(const std::string& image_path, const std::string& partition
 
     std::string hash;
     if (info.is_logical) {
-        hash = flash_logical_partition(image_path, partition_name, suffix, verify_hash);
+        const std::string resolved_name = fs::path(info.block_device).filename().string();
+        hash = flash_logical_partition(image_path, resolved_name, "", verify_hash);
     } else {
         hash = flash_physical_partition(image_path, info.block_device, verify_hash);
     }
@@ -764,69 +774,6 @@ bool map_logical_partitions(const std::string& slot_suffix) {
     LOGI("Mapped %d/%d logical partitions for slot %s", success_count, total_count,
          slot_suffix.c_str());
     return success_count > 0;
-}
-
-std::string get_avb_status() {
-    // Check AVB flags in vbmeta
-    const std::string vbmeta_device = find_partition_block_device("vbmeta", "");
-    if (vbmeta_device.empty()) {
-        LOGW("vbmeta partition not found");
-        return "";
-    }
-
-    // Read vbmeta header flags (offset 123-126)
-    const int fd = open(vbmeta_device.c_str(), O_RDONLY);
-    if (fd < 0) {
-        LOGE("Failed to open vbmeta: %s", strerror(errno));
-        return "";
-    }
-
-    std::array<unsigned char, 4> flags{};
-    if (lseek(fd, 123, SEEK_SET) != 123 || read(fd, flags.data(), flags.size()) != 4) {
-        LOGE("Failed to read vbmeta flags");
-        close(fd);
-        return "";
-    }
-    close(fd);
-
-    // Check if verification is disabled (flags = 2 or 3)
-    if (flags[0] == 0 && flags[1] == 0 && flags[2] == 0 && (flags[3] == 2 || flags[3] == 3)) {
-        return "disabled";
-    }
-
-    return "enabled";
-}
-
-bool patch_vbmeta_disable_verification() {
-    const std::string vbmeta_device = find_partition_block_device("vbmeta", "");
-    if (vbmeta_device.empty()) {
-        LOGE("vbmeta partition not found");
-        return false;
-    }
-
-    LOGI("Patching vbmeta to disable verification: %s", vbmeta_device.c_str());
-
-    const int fd = open(vbmeta_device.c_str(), O_RDWR);
-    if (fd < 0) {
-        LOGE("Failed to open vbmeta: %s", strerror(errno));
-        return false;
-    }
-
-    // Set flags at offset 123 to disable verification (value = 3)
-    std::array<unsigned char, 4> flags = {0, 0, 0, 3};
-
-    if (lseek(fd, 123, SEEK_SET) != 123 || write(fd, flags.data(), flags.size()) != 4) {
-        LOGE("Failed to write vbmeta flags");
-        close(fd);
-        return false;
-    }
-
-    fsync(fd);
-    close(fd);
-    sync();
-
-    LOGI("vbmeta patched successfully");
-    return true;
 }
 
 std::string get_kernel_version(const std::string& slot_suffix) {

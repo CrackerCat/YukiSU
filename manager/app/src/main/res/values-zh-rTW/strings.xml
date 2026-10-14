@@ -920,4 +920,17 @@
     <string name="install_block_modules">阻止核心模組載入</string>
     <string name="install_block_modules_summary">名稱以逗號分隔；留空則不阻止任何模組</string>
     <string name="install_block_modules_invalid">僅限字母、數字和底線；每項最多 64 個字元，總計最多 255 個</string>
+    <string name="partition_avb_title">AVB / dm-verity</string>
+    <string name="partition_avb_verification">AVB 驗證</string>
+    <string name="partition_avb_verity">dm-verity</string>
+    <string name="partition_avb_enabled">已啟用</string>
+    <string name="partition_avb_disabled">已停用</string>
+    <string name="partition_avb_stored_state">這裡顯示此 vbmeta 分割區儲存的旗標，可能與目前系統執行狀態不同；變更將在下次啟動此槽位時生效。</string>
+    <string name="partition_avb_verity_note">AVB 驗證關閉時，僅啟用 dm-verity 旗標不會恢復驗證。</string>
+    <string name="partition_avb_locked">開機載入程式回報為已鎖定，無法變更。</string>
+    <string name="partition_avb_confirm">將此分割區的 %1$s 設為%2$s？</string>
+    <string name="partition_avb_warning">請先備份此分割區。變更驗證設定可能導致裝置無法啟動；重新啟用需要有效且簽章正確的分割區映像。</string>
+    <string name="partition_avb_apply">套用變更</string>
+    <string name="partition_avb_saved">已儲存並回讀確認。下次啟動此槽位時生效。</string>
+    <string name="partition_avb_failed">無法確認 VBMeta 狀態：%1$s。請重新整理後再操作。</string>
 </resources>
