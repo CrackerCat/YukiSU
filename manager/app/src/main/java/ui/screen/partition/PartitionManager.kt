@@ -670,7 +670,7 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
             enabled = !isBusy,
             showRamdiskEditor = when (partitionName) {
                 "boot" -> !hasInitBoot
-                "init_boot", "vendor_boot" -> true
+                "init_boot", "vendor_boot", "recovery" -> true
                 else -> false
             },
             onDismiss = { selectedPartition = null },
