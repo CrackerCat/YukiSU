@@ -129,6 +129,8 @@ data class RepositoryModule(
     val dependencies: List<String> = emptyList(),
     @field:SerializedName(value = "compatibility")
     val compatibility: ModuleCompatibility = ModuleCompatibility(),
+    @field:SerializedName(value = "kind")
+    val kind: String = "module",
     @field:SerializedName(value = "metamodule")
     val metamodule: Boolean = false,
     @field:SerializedName(value = "stars")
@@ -138,6 +140,8 @@ data class RepositoryModule(
     @field:SerializedName(value = "updatedAt")
     val updatedAt: Long? = null,
 ) {
+    val isScript: Boolean get() = kind == "script"
+
     /**
      * The module declaration is authoritative. MMRL history is not guaranteed to be ordered or
      * internally consistent, so choosing max(versionCode) here would silently select another

@@ -63,7 +63,7 @@ class ModuleRepositoryViewModel : ViewModel() {
                     it.description.contains(query, ignoreCase = true)
             }
             .sortedWith(
-                compareByDescending<RepositoryModule> { installedModules.containsKey(it.moduleId) }
+                compareByDescending<RepositoryModule> { !it.isScript && installedModules.containsKey(it.moduleId) }
                     .thenByDescending { it.updatedAt ?: it.declaredArtifact()?.timestamp ?: 0L }
                     .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }
                     .thenBy { it.sourceId }

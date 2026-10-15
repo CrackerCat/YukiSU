@@ -46,16 +46,7 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
     var text by rememberSaveable { mutableStateOf("") }
     var tempText : String
     val logContent = remember { StringBuilder() }
-    val snackBarHost = LocalSnackbarHost.current
     val activity = LocalActivity.current
-    val scope = rememberCoroutineScope()
-    val scrollState = rememberScrollState()
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
     var isActionRunning by rememberSaveable { mutableStateOf(true) }
 
     val fromShortcut = remember(activity) {
@@ -101,11 +92,42 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
         }
     }
 
+    ActionOutputScreen(
+        text = text,
+        isActionRunning = isActionRunning,
+        logContent = logContent,
+        onClose = {
+            if (fromShortcut && activity != null) activity.finish() else navigator.popBackStack()
+        },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ActionOutputScreen(
+    text: String,
+    isActionRunning: Boolean,
+    logContent: StringBuilder,
+    onClose: () -> Unit,
+    title: String = stringResource(R.string.action),
+    resultNotice: String? = null,
+    logPrefix: String = "KernelSU_module_action_log",
+) {
+    val snackBarHost = LocalSnackbarHost.current
+    val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+    val topAppBarState = rememberTopAppBarState()
+    val scrollBehavior = if (isExpressiveUi) {
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
+    } else {
+        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
+    }
     Scaffold(
         topBar = {
             TopBar(
                 isActionRunning = isActionRunning,
                 scrollBehavior = scrollBehavior,
+                titleText = title,
                 onSave = {
                     if (!isActionRunning) {
                         scope.launch {
@@ -113,7 +135,7 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
                             val date = format.format(Date())
                             val file = File(
                                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                                "KernelSU_module_action_log_${date}.log"
+                                "${logPrefix}_${date}.log"
                             )
                             file.writeText(logContent.toString())
                             snackBarHost.showSnackbar("Log saved to ${file.absolutePath}")
@@ -130,11 +152,7 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
                         YukiIcon(Icons.Filled.Close, contentDescription = null)
                     },
                     onClick = {
-                        if (fromShortcut && activity != null) {
-                            activity.finish()
-                        } else {
-                            navigator.popBackStack()
-                        }
+                        onClose()
                     }
                 )
             }
@@ -154,6 +172,9 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
             LaunchedEffect(text) {
                 scrollState.animateScrollTo(scrollState.maxValue)
             }
+            resultNotice?.let {
+                Text(it, modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.primary)
+            }
             Text(
                 modifier = Modifier.padding(if (isExpressiveUi) 16.dp else 8.dp),
                 text = text,
@@ -169,12 +190,13 @@ fun ExecuteModuleActionScreen(navigator: DestinationsNavigator, moduleId: String
 @Composable
 private fun TopBar(
     isActionRunning: Boolean,
+    titleText: String,
     onSave: () -> Unit = {},
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     val title: @Composable () -> Unit = {
         Text(
-            text = stringResource(R.string.action),
+            text = titleText,
             fontWeight = if (isExpressiveUi) FontWeight.Normal else null,
         )
     }

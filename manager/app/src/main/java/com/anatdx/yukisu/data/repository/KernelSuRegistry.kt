@@ -50,7 +50,7 @@ internal fun RegistryCatalog.toRepositorySnapshot(
         registryBuildId = buildId,
         modules = modules.map { summary ->
             val loaded = detail?.takeIf { it.id == summary.id && it.buildId == buildId }
-            if (loaded == null) previousModules[summary.id]?.let { return@map it }
+            if (loaded == null) previousModules[summary.id]?.takeIf { it.kind == summary.kind }?.let { return@map it }
             RepositoryModule(
                 sourceId = sourceId,
                 moduleId = summary.id,
@@ -82,6 +82,7 @@ internal fun RegistryCatalog.toRepositorySnapshot(
                     maxApi = loaded?.compatibility?.androidMaxApi,
                     architectures = loaded?.compatibility?.architectures.orEmpty(),
                 ),
+                kind = summary.kind,
                 metamodule = summary.metamodule,
                 stars = summary.stars,
                 detailsLoaded = loaded != null,

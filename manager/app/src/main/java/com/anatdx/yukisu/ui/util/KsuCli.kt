@@ -1363,6 +1363,36 @@ fun runModuleAction(
     return result.isSuccess
 }
 
+fun runOneshotScript(
+    command: String, onStdout: (String) -> Unit, onStderr: (String) -> Unit
+): Int {
+    val stdoutCallback: CallbackList<String?> = object : CallbackList<String?>() {
+        override fun onAddElement(s: String?) {
+            onStdout(s ?: "")
+        }
+    }
+
+    val stderrCallback: CallbackList<String?> = object : CallbackList<String?>() {
+        override fun onAddElement(s: String?) {
+            onStderr(s ?: "")
+        }
+    }
+
+    check(ensureBundledBusybox()) { "Standalone BusyBox is unavailable" }
+    val result = withNewRootShell(true) {
+        check(isRoot) { "Root shell is unavailable" }
+        newJob().add(command).to(stdoutCallback, stderrCallback).exec()
+    }
+    Log.i(TAG, "one-shot script exit code: ${result.code}")
+    return result.code
+}
+
+/** Removes a script's extraction directory, including files the script created as root. */
+fun removeAsRoot(path: String): Boolean {
+    val escaped = "'" + path.replace("'", "'\\''") + "'"
+    return ShellUtils.fastCmdResult(getRootShell(), "rm -rf $escaped")
+}
+
 fun restoreBoot(
     onFinish: (Boolean, Int) -> Unit, onStdout: (String) -> Unit, onStderr: (String) -> Unit
 ): Boolean {

@@ -1,5 +1,7 @@
 package com.anatdx.yukisu.ui
 
+import com.anatdx.yukisu.ui.screen.scriptrun.ScriptRunArg
+import com.anatdx.yukisu.data.script.ScriptRepository
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -33,6 +35,7 @@ import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.destinations.ExecuteModuleActionScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.HomeScreenDestination
+import com.ramcosta.composedestinations.generated.destinations.ScriptRunScreenDestination
 import com.ramcosta.composedestinations.spec.NavHostGraphSpec
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import com.anatdx.yukisu.Natives
@@ -178,6 +181,19 @@ class MainActivity : ComponentActivity() {
                             pendingZipFiles.value = emptyList()
                             showConfirmationDialog.value = false
                             lifecycleScope.launch {
+                                val singleUri = zipUri.singleOrNull()
+                                val script = singleUri?.let { ScriptRepository.peekOneshot(it) }
+                                if (intentState.value != intentStateValue) return@launch
+                                if (script != null) {
+                                    navigator.navigate(
+                                        ScriptRunScreenDestination(
+                                            ScriptRunArg(
+                                                checkNotNull(singleUri), offerInstall = true, displayName = script.name,
+                                            )
+                                        )
+                                    )
+                                    return@launch
+                                }
                                 UltraActivityUtils.detectZipTypeAndShowConfirmation(this@MainActivity, zipUri) { infos ->
                                     if (intentState.value != intentStateValue) {
                                         ZipFileDetector.cleanupStagedFiles(infos)

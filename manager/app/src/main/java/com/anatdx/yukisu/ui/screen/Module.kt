@@ -1,5 +1,8 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.ramcosta.composedestinations.generated.destinations.ScriptRunScreenDestination
+import com.anatdx.yukisu.ui.screen.scriptrun.ScriptRunArg
+import com.anatdx.yukisu.data.script.ScriptRepository
 import android.annotation.SuppressLint
 import android.app.Activity.*
 import android.content.ClipData
@@ -209,6 +212,16 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
             confirmButton = { TextButton(onClick = { mountConflicts = null }) { Text(stringResource(android.R.string.ok)) } },
         )
     }
+    suspend fun openScript(uri: Uri): Boolean {
+        val manifest = ScriptRepository.peekOneshot(uri) ?: return false
+        navigator.navigate(
+            ScriptRunScreenDestination(
+                ScriptRunArg(uri, offerInstall = true, displayName = manifest.name)
+            )
+        )
+        return true
+    }
+
     val selectZipLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) {
@@ -247,6 +260,8 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                     return@launch
                 }
 
+                if (selectedModules.size == 1 && openScript(selectedModules.single())) return@launch
+
                 val modulesList = selectedModuleNames.values.joinToString("\n• ", "• ")
                 val confirmResult = confirmDialog.awaitConfirm(
                     title = resources.getString(R.string.module_install),
@@ -276,6 +291,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
 
                     ModuleUtils.takePersistableUriPermission(context, uri)
 
+                    if (openScript(uri)) return@launch
                     val moduleName = ModuleUtils.extractModuleName(context, uri)
 
                     val confirmResult = confirmDialog.awaitConfirm(

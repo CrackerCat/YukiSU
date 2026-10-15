@@ -1,5 +1,7 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.ramcosta.composedestinations.generated.destinations.ScriptRunScreenDestination
+import com.anatdx.yukisu.ui.screen.scriptrun.ScriptRunArg
 import android.text.format.Formatter
 import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
@@ -414,8 +416,8 @@ fun ModuleRepositoryScreen(navigator: DestinationsNavigator) {
                             module = module,
                             source = sources.firstOrNull { it.id == module.sourceId },
                             duplicateCount = viewModel.duplicateCount(module.moduleId, catalog),
-                            installed = viewModel.installedModules[module.moduleId],
-                            binding = bindings[module.moduleId],
+                            installed = viewModel.installedModules[module.moduleId].takeUnless { module.isScript },
+                            binding = bindings[module.moduleId].takeUnless { module.isScript },
                             compatibilityStatus = viewModel.compatibility(module).status,
                             onClick = {
                                 navigator.navigate(
@@ -494,6 +496,7 @@ private fun RepositoryModuleCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                if (module.isScript) RepositoryTag(stringResource(R.string.module_repo_script_badge))
                 if (installed != null) {
                     RepositoryTag(stringResource(R.string.repository_installed_version, installed.version))
                 }
@@ -1142,8 +1145,8 @@ fun ModuleRepositoryDetailScreen(
     val module = catalog.firstOrNull { it.sourceId == sourceId && it.moduleId == moduleId }
         ?: viewModel.module(sourceId, moduleId)
     val source = sources.firstOrNull { it.id == sourceId }
-    val installed = viewModel.installedModules[moduleId]
-    val binding = bindings[moduleId]
+    val installed = viewModel.installedModules[moduleId].takeUnless { module?.isScript == true }
+    val binding = bindings[moduleId].takeUnless { module?.isScript == true }
     val compatibility = module?.let(viewModel::compatibility)
     val missingDependencies = module?.dependencies?.filterNot {
         viewModel.installedModules.containsKey(it)
@@ -1397,6 +1400,7 @@ fun ModuleRepositoryDetailScreen(
                     isDeclared = version.versionCode == module.declaredVersionCode &&
                         version.version == module.declaredVersion,
                     isInstalled = installed?.versionCode == version.versionCode,
+                    isScript = module.isScript,
                     onInstall = { selectedVersion = version },
                 )
             }
@@ -1407,11 +1411,11 @@ fun ModuleRepositoryDetailScreen(
         val switchingSource = binding != null && binding.sourceId != sourceId
         YukiAlertDialog(
             onDismissRequest = { selectedVersion = null },
-            title = { Text(stringResource(R.string.module_install)) },
+            title = { Text(stringResource(if (module?.isScript == true) R.string.script_run_title else R.string.module_install)) },
             icon = { Icon(Icons.Outlined.Warning, null) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.repository_install_version_confirm, version.version, version.versionCode))
+                    Text(if (module?.isScript == true) "${module.name} · ${version.version}" else stringResource(R.string.repository_install_version_confirm, version.version, version.versionCode))
                     if (source?.builtIn != true) {
                         Text(
                             stringResource(R.string.repository_unverified_warning),
@@ -1451,7 +1455,15 @@ fun ModuleRepositoryDetailScreen(
                         onDownloaded = { uri ->
                             downloadingVersion = null
                             downloadHandle = null
-                            navigator.navigate(
+                            if (module?.isScript == true) {
+                                navigator.navigate(
+                                    ScriptRunScreenDestination(
+                                        ScriptRunArg(
+                                            uri, registryId = moduleId, displayName = module.name,
+                                        )
+                                    )
+                                )
+                            } else navigator.navigate(
                                 FlashScreenDestination(
                                     FlashIt.FlashModule(
                                         uri = uri,
@@ -1474,7 +1486,7 @@ fun ModuleRepositoryDetailScreen(
                             ).show()
                         },
                     )
-                }) { Text(stringResource(R.string.install)) }
+                }) { Text(stringResource(if (module?.isScript == true) R.string.script_run else R.string.install)) }
             },
             dismissButton = {
                 RepositoryTextButton(onClick = { selectedVersion = null }) {
@@ -1539,6 +1551,7 @@ private fun VersionCard(
     version: RepositoryModuleVersion,
     isDeclared: Boolean,
     isInstalled: Boolean,
+    isScript: Boolean,
     onInstall: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -1578,7 +1591,8 @@ private fun VersionCard(
             }
             RepositoryButton(onClick = onInstall) {
                 Text(
-                    if (isInstalled) stringResource(R.string.repository_reinstall)
+                    if (isScript) stringResource(R.string.script_run)
+                    else if (isInstalled) stringResource(R.string.repository_reinstall)
                     else stringResource(R.string.install)
                 )
             }

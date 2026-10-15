@@ -1028,4 +1028,41 @@
     <string name="partition_avb_failed" tools:ignore="MissingTranslation">Unable to confirm VBMeta state: %1$s. Refresh before making another change.</string>
 
     <string name="ramdisk_editor_open_text" tools:ignore="MissingTranslation">Text editor</string>
+    <string name="module_repo_script_badge" tools:ignore="MissingTranslation">Script</string>
+    <string name="script_run" tools:ignore="MissingTranslation">Run</string>
+    <string name="script_run_title" tools:ignore="MissingTranslation">Run script</string>
+    <string name="script_preparing" tools:ignore="MissingTranslation">Verifying and extracting…</string>
+    <string name="script_error_title" tools:ignore="MissingTranslation">Cannot run this script</string>
+    <string name="script_error_unverified" tools:ignore="MissingTranslation">This download could not be verified. Please download it again.</string>
+    <string name="script_error_verify_failed" tools:ignore="MissingTranslation">Size or SHA-256 mismatch. The file was deleted, please download it again.</string>
+    <string name="script_error_not_oneshot" tools:ignore="MissingTranslation">This ZIP is not a one-shot script (module.prop does not declare oneshot=true).</string>
+    <string name="script_error_id_mismatch" tools:ignore="MissingTranslation">The id in module.prop does not match this registry entry.</string>
+    <string name="script_error_invalid_id" tools:ignore="MissingTranslation">module.prop has a missing or invalid id.</string>
+    <string name="script_error_missing_prop" tools:ignore="MissingTranslation">module.prop is missing.</string>
+    <string name="script_error_missing_action" tools:ignore="MissingTranslation">action.sh is missing.</string>
+    <string name="script_error_unsafe" tools:ignore="MissingTranslation">The ZIP contains unsafe entries (absolute paths, \"..\", symlinks or special files).</string>
+    <string name="script_error_too_large" tools:ignore="MissingTranslation">The ZIP is too large to extract (limit: 64 MiB).</string>
+    <string name="script_error_corrupt" tools:ignore="MissingTranslation">The ZIP is damaged or uses an unsupported format.</string>
+    <string name="script_error_params" tools:ignore="MissingTranslation">params.json is invalid: %s</string>
+    <string name="script_error_generic" tools:ignore="MissingTranslation">Failed to prepare the script: %s</string>
+    <string name="script_notice" tools:ignore="MissingTranslation">This script runs once with root privileges; nothing is installed. Review the source before running it.</string>
+    <string name="script_local_notice" tools:ignore="MissingTranslation">This ZIP is a one-shot script. You can run it once without installing it, or install it as a module anyway.</string>
+    <string name="script_install_anyway" tools:ignore="MissingTranslation">Install as module anyway</string>
+    <string name="script_params" tools:ignore="MissingTranslation">Parameters</string>
+    <string name="script_source" tools:ignore="MissingTranslation">action.sh source</string>
+    <string name="script_source_truncated" tools:ignore="MissingTranslation">(truncated)</string>
+    <string name="script_last_run" tools:ignore="MissingTranslation">Last run: %1$s, exit code %2$d</string>
+    <string name="script_last_run_version" tools:ignore="MissingTranslation">Last run: %1$s (versionCode %2$d), exit code %3$d</string>
+    <string name="script_never_run" tools:ignore="MissingTranslation">Not run on this device yet</string>
+    <string name="script_run_confirm" tools:ignore="MissingTranslation">Run \"%s\" with root privileges now?</string>
+    <string name="script_result_success" tools:ignore="MissingTranslation">The script finished successfully.</string>
+    <string name="script_result_not_applicable" tools:ignore="MissingTranslation">This script is not applicable to this device (exit code 2).</string>
+    <string name="script_result_failed" tools:ignore="MissingTranslation">The script failed with exit code %d.</string>
+    <string name="script_param_required" tools:ignore="MissingTranslation">This field is required</string>
+    <string name="script_param_too_long" tools:ignore="MissingTranslation">Character limit: %d</string>
+    <string name="script_param_invalid_characters" tools:ignore="MissingTranslation">Line breaks are not allowed</string>
+    <string name="script_param_not_integer" tools:ignore="MissingTranslation">Enter an integer</string>
+    <string name="script_param_below_min" tools:ignore="MissingTranslation">Must be at least %d</string>
+    <string name="script_param_above_max" tools:ignore="MissingTranslation">Must be at most %d</string>
+    <string name="script_param_invalid" tools:ignore="MissingTranslation">Invalid value</string>
 </resources>
