@@ -42,6 +42,8 @@ See [`guide/installation.md`](guide/installation.md)
 
 [One-shot scripts](guide/module-script.md)
 
+Module hot installation: [guide](guide/module-hot-install.md)
+
 ## Integration
 
 See [`guide/how-to-integrate.md`](guide/how-to-integrate.md)

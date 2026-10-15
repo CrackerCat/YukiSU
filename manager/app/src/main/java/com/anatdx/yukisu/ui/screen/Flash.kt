@@ -425,7 +425,8 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
 
                 if (flashIt is FlashIt.FlashModules && flashIt.currentIndex < flashIt.uris.size - 1) {
                     val nextFlashIt = flashIt.copy(
-                        currentIndex = flashIt.currentIndex + 1
+                        currentIndex = flashIt.currentIndex + 1,
+                        needsReboot = showReboot,
                     )
                     scope.launch {
                         kotlinx.coroutines.delay(500)
@@ -935,7 +936,11 @@ sealed class FlashIt : Parcelable {
         val repositoryVersionCode: Long? = null,
         val repositoryVersionName: String? = null,
     ) : FlashIt()
-    data class FlashModules(val uris: List<Uri>, val currentIndex: Int = 0) : FlashIt()
+    data class FlashModules(
+        val uris: List<Uri>,
+        val currentIndex: Int = 0,
+        val needsReboot: Boolean = false,
+    ) : FlashIt()
     data class FlashModuleUpdate(val uri: Uri) : FlashIt() // ????
     data class FlashAk3(
         val zipPath: String,
@@ -1005,7 +1010,9 @@ fun flashIt(
             val currentUri = flashIt.uris[flashIt.currentIndex]
             onStdout("\n")
 
-            flashModule(currentUri, onFinish, onStdout, onStderr)
+            flashModule(currentUri, { showReboot, code ->
+                onFinish(flashIt.needsReboot || showReboot, code)
+            }, onStdout, onStderr)
         }
         is FlashIt.FlashModuleUpdate -> {
             onFinish(false, 0)

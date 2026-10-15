@@ -51,7 +51,8 @@ struct ScriptWait {
 };
 
 int run_script(const std::string& script, ScriptWait wait, const std::string& module_id = "",
-               const char* extra_env_name = nullptr, const char* extra_env_value = nullptr);
+               const char* extra_env_name = nullptr, const char* extra_env_value = nullptr,
+               bool hot_install = false);
 int exec_stage_script(const std::string& stage, ScriptWait wait);
 int exec_common_scripts(const std::string& stage_dir, ScriptWait wait);
 int load_sepolicy_rule();

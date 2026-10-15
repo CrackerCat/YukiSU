@@ -1327,7 +1327,7 @@ fun flashModule(
         val result = flashWithIO(ksudCmd(cmd), onStdout, onStderr)
         Log.i("KernelSU", "install module $uri result: $result")
 
-        onFinish(result.isSuccess, result.code)
+        onFinish(result.isSuccess && moduleNeedsReboot(file), result.code)
         return result.isSuccess
     } catch (error: java.io.IOException) {
         if (expected != null) RegistryDownloadStore.delete(store, storedFile)
@@ -1337,6 +1337,23 @@ fun flashModule(
     } finally {
         file.delete()
     }
+}
+
+private val MODULE_ID_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9._-]+$")
+
+private fun moduleNeedsReboot(zip: File): Boolean {
+    val id = runCatching {
+        ZipFile(zip).use { archive ->
+            val entry = archive.getEntry("module.prop") ?: return@use null
+            archive.getInputStream(entry).bufferedReader().useLines { lines ->
+                lines.map { it.trim() }.firstOrNull { it.startsWith("id=") }
+                    ?.substringAfter('=')?.trim()
+            }
+        }
+    }.getOrNull()
+    if (id == null || !MODULE_ID_REGEX.matches(id)) return true
+    val dir = shellArg("/data/adb/modules/$id")
+    return !ShellUtils.fastCmdResult(getRootShell(), "[ -d $dir ] && [ ! -e $dir/update ]")
 }
 
 fun runModuleAction(

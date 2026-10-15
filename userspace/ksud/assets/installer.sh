@@ -7,6 +7,8 @@
 
 umask 022
 
+export KSU_HAS_HOT_INSTALL=true
+
 ui_print() {
   if $BOOTMODE; then
     echo "$1"
@@ -398,7 +400,7 @@ install_module() {
 
     if ! grep -q '^SKIPUNZIP=1$' $MODPATH/customize.sh 2>/dev/null; then
       ui_print "- Extracting module files"
-      unzip -o "$ZIPFILE" -x 'META-INF/*' -d $MODPATH >&2
+      unzip -o "$ZIPFILE" -x 'META-INF/*' '.ksu_hot_install' -d $MODPATH >&2
 
       # Default permissions
       set_perm_recursive $MODPATH 0 0 0755 0644
@@ -434,6 +436,12 @@ install_module() {
     rm -rf $NVBASE/modules/$MODID/remove 2>/dev/null
     rm -rf $NVBASE/modules/$MODID/disable 2>/dev/null
     cp -af $MODPATH/module.prop $NVBASE/modules/$MODID/module.prop
+
+    # Only the completed installer may request activation without a reboot.
+    rm -f "$MODPATH/.ksu_hot_install"
+    if [ "$MODULE_HOT_INSTALL_REQUEST" = "true" ]; then
+      printf '%s\n' "$MODULE_HOT_RUN_SCRIPT" > "$MODPATH/.ksu_hot_install"
+    fi
   fi
 
   # Remove stuff that doesn't belong to modules and clean up any empty directories

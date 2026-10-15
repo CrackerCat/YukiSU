@@ -8,6 +8,7 @@
 #include "../utils.hpp"
 #include "../yukizygisk_snapshot.hpp"
 #include "../yzctl.hpp"
+#include "hot_install.hpp"
 #include "metamodule.hpp"
 
 #include <dirent.h>
@@ -779,7 +780,17 @@ int module_install(const std::string& zip_path) {
         return 1;
     }
 
+    const auto request =
+        take_hot_install_request(std::filesystem::path(MODULE_UPDATE_DIR) / mod_id);
+    if (request && apply_hot_install(mod_id, installing_metamodule, *request)) {
+        printf("- Module installed successfully, no reboot required!\n");
+        warn_regenerate_preinit_rc_failed(regenerate_preinit_rc());
+        warn_refresh_yukizygisk_early_snapshot_failed();
+        return 0;
+    }
+
     const std::string final_module = std::string(MODULE_DIR) + mod_id;
+    (void)unlink((final_module + "/" + HOT_INSTALL_MARKER).c_str());
     if (!ensure_dir_exists(std::string(MODULE_DIR)) || !ensure_dir_exists(final_module)) {
         printf("! Failed to create module directory\n");
         return 1;
@@ -1346,7 +1357,7 @@ private:
 }  // namespace
 
 int run_script(const std::string& script, ScriptWait wait, const std::string& module_id,
-               const char* extra_env_name, const char* extra_env_value) {
+               const char* extra_env_name, const char* extra_env_value, bool hot_install) {
     if (!file_exists(script))
         return 0;
 
@@ -1403,6 +1414,34 @@ int run_script(const std::string& script, ScriptWait wait, const std::string& mo
                 ignored = write(exec_status_pipe[1], &child_errno, sizeof(child_errno));
             } while (ignored < 0 && errno == EINTR);
             _exit(127);
+        }
+
+        if (hot_install) {
+            const int null_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+            int setup_error = null_fd < 0 ? errno : 0;
+            if (null_fd >= 0) {
+                if (dup2(null_fd, STDIN_FILENO) < 0)
+                    setup_error = errno;
+                if (null_fd != STDIN_FILENO)
+                    close(null_fd);
+                else if (fcntl(STDIN_FILENO, F_SETFD, 0) < 0)
+                    setup_error = errno;
+            }
+            struct sigaction action{};
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-union-access)
+            action.sa_handler = SIG_IGN;
+            sigemptyset(&action.sa_mask);
+            if (setup_error == 0 && sigaction(SIGPIPE, &action, nullptr) != 0)
+                setup_error = errno;
+            if (setup_error == 0 && !switch_mnt_ns(1))
+                setup_error = errno != 0 ? errno : EIO;
+            if (setup_error != 0) {
+                ssize_t ignored;
+                do {
+                    ignored = write(exec_status_pipe[1], &setup_error, sizeof(setup_error));
+                } while (ignored < 0 && errno == EINTR);
+                _exit(127);
+            }
         }
 
         // Match upstream's Command::pre_exec setup.
@@ -1474,7 +1513,7 @@ int run_script(const std::string& script, ScriptWait wait, const std::string& mo
         }
         if (result == 0) {
             LOGW("Timed out waiting for script: %s", script.c_str());
-            return 0;
+            return hot_install ? ETIMEDOUT : 0;
         }
         return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
     }

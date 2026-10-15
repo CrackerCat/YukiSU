@@ -14,6 +14,7 @@ extern "C" {
 namespace ksud {
 
 constexpr auto BOOT_STAGE_TIMEOUT = std::chrono::seconds(35);
+constexpr auto HOT_INSTALL_SCRIPT_TIMEOUT = std::chrono::seconds(30);
 constexpr auto EMULATED_SOFT_REBOOT_TIMEOUT = std::chrono::seconds(5);
 
 // Version info
@@ -89,6 +90,8 @@ constexpr const char* SULOGD_LOCK_PATH = "/data/adb/ksu/sulogd.lock";
 constexpr const char* MODULE_DIR = "/data/adb/modules/";
 constexpr const char* MODULE_UPDATE_DIR = "/data/adb/modules_update/";
 constexpr const char* METAMODULE_DIR = "/data/adb/metamodule/";
+constexpr const char* HOT_INSTALL_TRASH_DIR = "/data/adb/ksu/hot_install_trash/";
+constexpr const char* HOT_INSTALL_MARKER = ".ksu_hot_install";
 constexpr const char* PREINIT_DIR_WATCHDOG = "/metadata/watchdog/ksu/";
 constexpr const char* PREINIT_DIR_DEFAULT = "/metadata/ksu/";
 constexpr const char* MODULES_RC_FILE = "modules.rc";

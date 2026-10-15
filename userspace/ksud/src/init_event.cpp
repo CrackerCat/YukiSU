@@ -12,6 +12,7 @@
 #include "integrity_monitor.hpp"
 #include "log.hpp"
 #include "magisk_compat/msud.hpp"
+#include "module/hot_install.hpp"
 #include "module/metamodule.hpp"
 #include "module/module.hpp"
 #include "module/module_config.hpp"
@@ -302,6 +303,8 @@ int on_post_data_fs() {
     if (ensure_binaries(true) != 0) {
         LOGW("Failed to ensure binaries");
     }
+
+    clean_hot_install_trash();
 
     if (safe_mode) {
         LOGW("safe mode, skip common post-fs-data.d scripts");

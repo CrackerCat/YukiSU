@@ -383,6 +383,7 @@ set(KSUD_OUR_SOURCES
     src/core/restorecon.cpp
     src/core/assets.cpp
     src/module/module.cpp
+    src/module/hot_install.cpp
     src/module/module_compat.cpp
     src/module/module_config.cpp
     src/module/metamodule.cpp

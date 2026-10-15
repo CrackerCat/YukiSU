@@ -42,6 +42,8 @@
 
 [一次性脚本](guide/module-script.md)
 
+模块热安装：[使用指南](guide/module-hot-install.md)
+
 ## 集成
 
 参见 [`guide/how-to-integrate.md`](guide/how-to-integrate.md)

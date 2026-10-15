@@ -11,6 +11,7 @@
 #include "kernelsu_loader.hpp"
 #include "log.hpp"
 #include "magica/magica.hpp"
+#include "module/hot_install.hpp"
 #include "module/metamodule.hpp"
 #include "module/module.hpp"
 #include "module/module_config.hpp"
@@ -192,6 +193,8 @@ int run(bool post_magica, bool allow_shell) {
             LOGE("late-load: install() failed");
             return 1;
         }
+
+        clean_hot_install_trash();
 
         if (handle_updated_modules() != 0) {
             LOGW("late-load: handle_updated_modules failed");
