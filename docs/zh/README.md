@@ -40,6 +40,8 @@
 
 参见 [`guide/installation.md`](guide/installation.md)
 
+[一次性脚本](guide/module-script.md)
+
 ## 集成
 
 参见 [`guide/how-to-integrate.md`](guide/how-to-integrate.md)

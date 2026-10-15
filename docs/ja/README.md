@@ -40,6 +40,8 @@
 
 [`guide/installation.md`](guide/installation.md) を参照してください。
 
+[ワンショットスクリプト](guide/module-script.md)
+
 ## 統合
 
 [`guide/how-to-integrate.md`](guide/how-to-integrate.md) を参照してください。

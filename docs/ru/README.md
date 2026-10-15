@@ -40,6 +40,8 @@
 
 См. [`guide/installation.md`](guide/installation.md)
 
+[Одноразовые скрипты](guide/module-script.md)
+
 ## Интеграция
 
 См. [`guide/how-to-integrate.md`](guide/how-to-integrate.md)
