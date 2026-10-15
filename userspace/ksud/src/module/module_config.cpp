@@ -87,15 +87,16 @@ std::optional<Config> decode(std::string_view input) {
     if (read_u32(rest, magic) && magic == MAGIC) {
         uint32_t version = 0;
         uint32_t count = 0;
-        if (!read_u32(rest, version) || version != VERSION || !read_u32(rest, count))
+        if (!read_u32(rest, version) || version != VERSION || !read_u32(rest, count) ||
+            count > MAX_COUNT)
             return std::nullopt;
         for (uint32_t i = 0; i < count; ++i) {
             uint32_t length = 0;
-            if (!read_u32(rest, length) || length > rest.size())
+            if (!read_u32(rest, length) || length > MAX_KEY_LEN || length > rest.size())
                 return std::nullopt;
             std::string key(rest.substr(0, length));
             rest.remove_prefix(length);
-            if (!read_u32(rest, length) || length > rest.size())
+            if (!read_u32(rest, length) || length > MAX_VALUE_LEN || length > rest.size())
                 return std::nullopt;
             std::string value(rest.substr(0, length));
             rest.remove_prefix(length);
