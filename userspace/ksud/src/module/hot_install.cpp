@@ -9,12 +9,37 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <string_view>
 #include <system_error>
+#include <vector>
 
 namespace ksud {
 namespace {
 
 namespace fs = std::filesystem;
+
+bool is_boot_id(std::string_view value) {
+    if (value.size() != 36)
+        return false;
+    for (size_t index = 0; index < value.size(); ++index) {
+        const char ch = value[index];
+        if (index == 8 || index == 13 || index == 18 || index == 23) {
+            if (ch != '-')
+                return false;
+        } else if (std::string_view("0123456789abcdef").find(ch) == std::string_view::npos) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::optional<std::string> current_boot_id() {
+    const auto content = read_file("/proc/sys/kernel/random/boot_id");
+    if (!content)
+        return std::nullopt;
+    const std::string boot_id = trim(*content);
+    return is_boot_id(boot_id) ? std::make_optional(boot_id) : std::nullopt;
+}
 
 bool check_run_script(const fs::path& staged_dir, const std::string& script,
                       std::optional<fs::path>& result, std::string& reason) {
@@ -63,14 +88,20 @@ bool swap_module(const fs::path& staged_dir, const fs::path& live_dir, const fs:
         return false;
     }
     if (has_live) {
-        fs::create_directories(trash, error);
+        const auto boot_id = current_boot_id();
+        if (!boot_id) {
+            reason = "Cannot determine the current boot for hot install trash";
+            return false;
+        }
+        const fs::path generation = trash / *boot_id;
+        fs::create_directories(generation, error);
         if (error) {
             reason = "Cannot create hot install trash: " + error.message();
             return false;
         }
         const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
-        stashed = trash / (live_dir.filename().string() + "." + std::to_string(getpid()) + "." +
-                           std::to_string(stamp));
+        stashed = generation / (live_dir.filename().string() + "." + std::to_string(getpid()) +
+                                "." + std::to_string(stamp));
         if (fs::exists(stashed, error) || error) {
             reason = "hot install trash destination is unavailable";
             return false;
@@ -92,6 +123,37 @@ bool swap_module(const fs::path& staged_dir, const fs::path& live_dir, const fs:
     }
     reason = "Cannot activate staged module: " + error.message();
     return false;
+}
+
+void preserve_legacy_trash(const fs::path& path, const fs::path& generation) {
+    std::error_code error;
+    const auto status = fs::symlink_status(path, error);
+    if (error == std::errc::no_such_file_or_directory || status.type() == fs::file_type::not_found)
+        return;
+    if (!error)
+        fs::create_directories(generation, error);
+    if (!error) {
+        const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
+        const fs::path target =
+            generation / ("legacy." + std::to_string(getpid()) + "." + std::to_string(stamp));
+        fs::rename(path, target, error);
+    }
+    if (error)
+        LOGW("Failed to preserve legacy hot install trash %s: %s", path.c_str(),
+             error.message().c_str());
+}
+
+bool remove_trash_generations(const std::vector<fs::path>& generations) {
+    bool success = true;
+    for (const auto& generation : generations) {
+        std::error_code error;
+        fs::remove_all(generation, error);
+        if (error) {
+            LOGW("Failed to clean %s: %s", generation.c_str(), error.message().c_str());
+            success = false;
+        }
+    }
+    return success;
 }
 
 }  // namespace
@@ -164,35 +226,52 @@ bool apply_hot_install(const std::string& module_id, bool is_metamodule,
 }
 
 void clean_hot_install_trash() {
+    const auto boot_id = current_boot_id();
+    if (!boot_id) {
+        LOGW("Cannot determine the current boot, keeping hot install trash");
+        return;
+    }
     const fs::path trash(HOT_INSTALL_TRASH_DIR);
-    const fs::path old = fs::path(WORKING_DIR) / "hot_install_trash.old";
+    const fs::path current = trash / *boot_id;
+    std::vector<fs::path> stale;
     std::error_code error;
-    fs::remove_all(old, error);
+    fs::directory_iterator entry(trash, error);
+    if (error == std::errc::no_such_file_or_directory)
+        error.clear();
     if (error) {
-        LOGW("Failed to clean %s: %s", old.c_str(), error.message().c_str());
+        LOGW("Failed to inspect %s: %s", trash.c_str(), error.message().c_str());
         return;
     }
-    if (!fs::exists(trash, error))
-        return;
-    fs::rename(trash, old, error);
+    const fs::directory_iterator end;
+    for (; !error && entry != end; entry.increment(error)) {
+        const auto& path = entry->path();
+        const std::string name = path.filename().string();
+        if (name == *boot_id)
+            continue;
+        if (is_boot_id(name)) {
+            stale.push_back(path);
+        } else {
+            // Legacy entries may still be in use; retain them until the next boot.
+            preserve_legacy_trash(path, current);
+        }
+    }
     if (error) {
-        LOGW("Failed to move %s: %s", trash.c_str(), error.message().c_str());
+        LOGW("Failed to scan %s: %s", trash.c_str(), error.message().c_str());
         return;
     }
+    preserve_legacy_trash(fs::path(WORKING_DIR) / "hot_install_trash.old", current);
+    if (stale.empty())
+        return;
 
     const pid_t pid = fork();
     if (pid == 0) {
         detach_process_group(true);
         switch_cgroups();
         (void)reset_stdio_to_devnull();
-        fs::remove_all(old, error);
-        _exit(error ? 1 : 0);
+        _exit(remove_trash_generations(stale) ? 0 : 1);
     }
-    if (pid < 0) {
-        fs::remove_all(old, error);
-        if (error)
-            LOGW("Failed to clean %s: %s", old.c_str(), error.message().c_str());
-    }
+    if (pid < 0)
+        (void)remove_trash_generations(stale);
 }
 
 }  // namespace ksud
