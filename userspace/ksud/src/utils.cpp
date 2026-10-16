@@ -1159,8 +1159,8 @@ int uninstall(const std::optional<std::string>& magiskboot_path) {
         return result;
 
     printf("- Removing directories..\n");
-    for (const char* path :
-         {MODULE_DIR, PREINIT_DIR_WATCHDOG, PREINIT_DIR_DEFAULT, WORKING_DIR, DAEMON_PATH}) {
+    for (const char* path : {MODULE_DIR, PREINIT_DIR_VOLD, PREINIT_DIR_WATCHDOG,
+                             PREINIT_DIR_DEFAULT, WORKING_DIR, DAEMON_PATH}) {
         std::error_code error;
         std::filesystem::remove_all(path, error);
         if (error) {
