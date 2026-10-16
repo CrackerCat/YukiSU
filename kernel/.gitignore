@@ -21,3 +21,5 @@ CLAUDE.md
 .ddk-version
 .vscode/settings.json
 check_symbol
+preinit/runner.elf
+preinit/.runner.elf.cmd

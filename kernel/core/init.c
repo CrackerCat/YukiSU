@@ -9,6 +9,7 @@
 #include <linux/kobject.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
+#include "preinit/preinit.h"
 #include <linux/rcupdate.h>
 #include <linux/sched.h>
 #include <linux/version.h>
@@ -264,6 +265,7 @@ int __init kernelsu_init(void)
 	} else {
 		ksu_throne_tracker_init();
 		ksu_ksud_init();
+		ksu_preinit_init();
 		ksu_file_wrapper_init();
 	}
 
@@ -282,8 +284,10 @@ static void kernelsu_exit(void)
 	ksu_kasumi_exit();
 	ksu_supercalls_exit();
 
-	if (!ksu_late_loaded)
+	if (!ksu_late_loaded) {
 		ksu_ksud_exit();
+		ksu_preinit_exit();
+	}
 
 	// Wait for any in-flight RCU readers (e.g. handlers traversing
 	// allow_list) before releasing the data structures they access.

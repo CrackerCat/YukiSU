@@ -26,7 +26,7 @@ Like any install, this enables the module even if the previous version was disab
 
 Effective immediately: the module files themselves, WebUI, `action.sh` and the information in `module.prop`.
 
-Only applied on the next boot: files under `system` and the other partition directories (mounted by the metamodule), `system.prop`, `initrc`, and the `post-fs-data.sh`, `post-mount.sh`, `service.sh` and `boot-completed.sh` stages. They are **not** run during a hot install, but keep running on every boot as usual. If you need their effect now, do it in `MODULE_HOT_RUN_SCRIPT`, e.g. by starting your service or calling `resetprop`.
+Only applied on the next boot: files under `system` and the other partition directories (mounted by the metamodule), `system.prop`, `initrc`, `preinit`, and the `post-fs-data.sh`, `post-mount.sh`, `service.sh` and `boot-completed.sh` stages. They are **not** run during a hot install, but keep running on every boot as usual. If you need their effect now, do it in `MODULE_HOT_RUN_SCRIPT`, e.g. by starting your service or calling `resetprop`.
 
 The old version is not stopped for you, and `uninstall.sh` is not run on updates. If your module runs a daemon, `MODULE_HOT_RUN_SCRIPT` should stop the old instance before starting the new one.
 

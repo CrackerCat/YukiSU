@@ -95,6 +95,8 @@ BootPatchV2Args parse_args(const std::vector<std::string>& args) {
             result.config.allow_shell = true;
         } else if (argument == "--no-custom-rc") {
             result.config.no_custom_rc = true;
+        } else if (argument == "--no-preinit") {
+            result.config.no_preinit = true;
         } else if (argument == "--enable-adbd") {
             result.enable_adbd = true;
         } else if (argument == "--no-reuse") {

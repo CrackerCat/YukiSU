@@ -11,6 +11,9 @@
 #include <linux/file.h>
 #include <linux/fs.h>
 #include <linux/kprobes.h>
+#include <linux/kallsyms.h>
+#include "infra/symbol_resolver.h"
+#include "preinit/preinit.h"
 #include <linux/pid.h>
 #include <linux/mm.h>
 #include <linux/magic.h>
@@ -114,6 +117,8 @@ static struct ksu_get_info_cmd get_current_info(void)
 	if (ksu_late_loaded) {
 		cmd.flags |= KSU_GET_INFO_FLAG_LATE_LOAD;
 	}
+	if (ksu_preinit_enabled_param() && !ksu_late_loaded)
+		cmd.flags |= KSU_GET_INFO_FLAG_PREINIT;
 	cmd.features = KSU_FEATURE_MAX;
 	return cmd;
 }
@@ -1614,7 +1619,93 @@ static int do_yz_patch_text_v2(void __user *arg)
 #endif // #ifdef CONFIG_KSU_YUKIZYGISK
 
 // IOCTL handlers mapping table
+/*
+ * Resolve symbols of the running kernel image, exported or not, matching
+ * them like ksuinit's /proc/kallsyms walk. Userspace uses this to bind a
+ * module's undefined symbols before init_module, so the kernel never parses
+ * the module ELF itself.
+ */
+static int do_lookup_symbols(void __user *arg)
+{
+	struct ksu_lookup_symbols_cmd cmd;
+	const u64 __user *unames;
+	u64 __user *uaddrs;
+	char **names;
+	unsigned long *addrs;
+	int ret = 0;
+	u32 i;
+
+	if (copy_from_user(&cmd, arg, sizeof(cmd)))
+		return -EFAULT;
+
+	if (cmd.flags) {
+		pr_err("lookup_symbols: unsupported flags 0x%x\n", cmd.flags);
+		return -EINVAL;
+	}
+	if (!cmd.count || cmd.count > KSU_LOOKUP_SYMBOLS_MAX)
+		return -EINVAL;
+
+	names = kvcalloc(cmd.count, sizeof(*names), GFP_KERNEL);
+	addrs = kvcalloc(cmd.count, sizeof(*addrs), GFP_KERNEL);
+	if (!names || !addrs) {
+		ret = -ENOMEM;
+		goto out;
+	}
+
+	unames = (const u64 __user *)(uintptr_t)cmd.names;
+	uaddrs = (u64 __user *)(uintptr_t)cmd.addrs;
+	for (i = 0; i < cmd.count; i++) {
+		u64 uname;
+		char *name;
+
+		if (get_user(uname, unames + i)) {
+			ret = -EFAULT;
+			goto out;
+		}
+		name = strndup_user((const char __user *)(uintptr_t)uname,
+				    KSYM_NAME_LEN);
+		if (IS_ERR(name)) {
+			// An overlong name cannot be a kernel symbol: report it
+			// missing.
+			if (PTR_ERR(name) == -EINVAL)
+				continue;
+			ret = PTR_ERR(name);
+			goto out;
+		}
+		if (!*name) {
+			kfree(name);
+			continue;
+		}
+		names[i] = name;
+	}
+
+	ret = ksu_lookup_kernel_symbols((const char *const *)names, addrs,
+					cmd.count);
+	if (ret < 0)
+		goto out;
+
+	for (i = 0; i < cmd.count; i++) {
+		if (put_user((u64)addrs[i], uaddrs + i)) {
+			ret = -EFAULT;
+			goto out;
+		}
+	}
+
+out:
+	if (names) {
+		for (i = 0; i < cmd.count; i++)
+			kfree(names[i]);
+	}
+	kvfree(names);
+	kvfree(addrs);
+	return ret;
+}
+
 static const struct ksu_ioctl_cmd_map ksu_ioctl_handlers[] = {
+    {.cmd = KSU_IOCTL_LOOKUP_SYMBOLS,
+     .name = "LOOKUP_SYMBOLS",
+     .handler = do_lookup_symbols,
+     .perm_check = only_root},
     {.cmd = KSU_IOCTL_GRANT_ROOT,
      .name = "GRANT_ROOT",
      .handler = do_grant_root,

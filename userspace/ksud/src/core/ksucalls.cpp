@@ -9,6 +9,7 @@
 #include <sys/syscall.h>
 #include <sys/ucontext.h>
 #include <unistd.h>
+#include <algorithm>
 #include <array>
 #include <cerrno>
 #include <csignal>
@@ -292,6 +293,28 @@ uint32_t get_flags() {
 
 uint32_t get_uapi_version() {
     return query_info().uapi_version;
+}
+
+bool lookup_symbols(const std::vector<std::string>& names, std::vector<uint64_t>& addresses) {
+    addresses.assign(names.size(), 0);
+    for (size_t offset = 0; offset < names.size();) {
+        const size_t count =
+            std::min(names.size() - offset, static_cast<size_t>(KSU_LOOKUP_SYMBOLS_MAX));
+        std::vector<uint64_t> pointers(count);
+        for (size_t i = 0; i < count; ++i) {
+            if (names[offset + i].find('\0') != std::string::npos)
+                return false;
+            pointers[i] = reinterpret_cast<uintptr_t>(names[offset + i].c_str());
+        }
+        ksu_lookup_symbols_cmd command{};
+        command.names = reinterpret_cast<uintptr_t>(pointers.data());
+        command.addrs = reinterpret_cast<uintptr_t>(addresses.data() + offset);
+        command.count = static_cast<uint32_t>(count);
+        if (ksuctl(KSU_IOCTL_LOOKUP_SYMBOLS, &command) < 0)
+            return false;
+        offset += count;
+    }
+    return true;
 }
 
 bool is_lkm() {

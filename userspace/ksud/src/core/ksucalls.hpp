@@ -69,6 +69,7 @@ uint32_t get_uapi_version();
 constexpr uint32_t uapi_version() {
     return KERNEL_SU_UAPI_VERSION;
 }
+bool lookup_symbols(const std::vector<std::string>& names, std::vector<uint64_t>& addresses);
 bool is_lkm();
 bool is_lkm_bundled();
 bool is_late_load();

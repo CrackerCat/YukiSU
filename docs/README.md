@@ -44,6 +44,8 @@ See [`guide/installation.md`](guide/installation.md)
 
 Module hot installation: [guide](guide/module-hot-install.md)
 
+[Module preinit](guide/module-preinit.md)
+
 ## Integration
 
 See [`guide/how-to-integrate.md`](guide/how-to-integrate.md)

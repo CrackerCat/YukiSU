@@ -1414,6 +1414,22 @@ fun ModuleItem(
                 )
             }
 
+            val preinitWarning = when (module.preinit) {
+                "no_space" -> R.string.module_preinit_no_space
+                "error" -> R.string.module_preinit_error
+                "bootloop" -> R.string.module_preinit_bootloop
+                "unsupported" -> R.string.module_preinit_unsupported
+                else -> null
+            }
+            preinitWarning?.let { message ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(message),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
             if (!isHideTagRow) {
                 val isLoadedRuntimeModule = module.runtimeLoaded
                 val runtimeKind = module.runtimeKind

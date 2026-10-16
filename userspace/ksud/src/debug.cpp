@@ -101,7 +101,7 @@ int debug_insmod(const std::string& module, const std::vector<std::string>& para
         param_values += params[i];
     }
 
-    if (!kernelsu_loader::load_module(resolved_path.c_str(), param_values)) {
+    if (!kernelsu_loader::load_module(resolved_path.c_str(), param_values, true)) {
         terminal::errorf("Failed to load kernel module: %s\n", resolved_path.c_str());
         return 1;
     }

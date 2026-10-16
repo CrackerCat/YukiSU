@@ -1,5 +1,6 @@
 #include "kernelsu_loader.hpp"
 
+#include "core/ksucalls.hpp"
 #include "log.hpp"
 #include "utils.hpp"
 
@@ -96,7 +97,7 @@ int init_module_syscall(void* module_image, unsigned long len, const char* param
 }
 
 template <typename Ehdr, typename Shdr, typename Sym>
-bool patch_undefined_symbols(std::vector<uint8_t>* buffer) {
+bool patch_undefined_symbols(std::vector<uint8_t>* buffer, bool kernel_lookup) {
     if (buffer->size() < sizeof(Ehdr)) {
         LOGE("loader: file too small to be an ELF");
         return false;
@@ -146,6 +147,28 @@ bool patch_undefined_symbols(std::vector<uint8_t>* buffer) {
 
     if (unresolved_symbols.empty()) {
         return true;
+    }
+
+    if (kernel_lookup && get_uapi_version() >= 6) {
+        std::vector<std::string> names;
+        names.reserve(unresolved_symbols.size());
+        for (const auto& entry : unresolved_symbols)
+            names.push_back(entry.first);
+        std::vector<uint64_t> addresses;
+        if (lookup_symbols(names, addresses)) {
+            for (size_t i = 0; i < names.size(); ++i) {
+                if (!addresses[i]) {
+                    LOGW("loader: cannot find symbol: %s", names[i].c_str());
+                    continue;
+                }
+                for (auto* symbol : unresolved_symbols.at(names[i])) {
+                    symbol->st_shndx = SHN_ABS;
+                    symbol->st_value = static_cast<decltype(symbol->st_value)>(addresses[i]);
+                }
+            }
+            return true;
+        }
+        LOGW("loader: kernel symbol lookup failed, using /proc/kallsyms");
     }
 
     KptrGuard const guard;
@@ -214,7 +237,7 @@ bool patch_undefined_symbols(std::vector<uint8_t>* buffer) {
 
 }  // namespace
 
-bool load_module(const char* path, const std::string& param_values) {
+bool load_module(const char* path, const std::string& param_values, bool kernel_lookup) {
     std::vector<uint8_t> buffer;
     if (!read_file_bytes(path, &buffer)) {
         return false;
@@ -228,9 +251,11 @@ bool load_module(const char* path, const std::string& param_values) {
     const unsigned char elf_class = buffer[EI_CLASS];
     bool patched = false;
     if (elf_class == ELFCLASS64) {
-        patched = patch_undefined_symbols<Elf64_Ehdr, Elf64_Shdr, Elf64_Sym>(&buffer);
+        patched =
+            patch_undefined_symbols<Elf64_Ehdr, Elf64_Shdr, Elf64_Sym>(&buffer, kernel_lookup);
     } else if (elf_class == ELFCLASS32) {
-        patched = patch_undefined_symbols<Elf32_Ehdr, Elf32_Shdr, Elf32_Sym>(&buffer);
+        patched =
+            patch_undefined_symbols<Elf32_Ehdr, Elf32_Shdr, Elf32_Sym>(&buffer, kernel_lookup);
     } else {
         LOGE("loader: unsupported ELF class %u", elf_class);
         return false;

@@ -1,3 +1,4 @@
+#include "util.h"
 #include <asm/current.h>
 #include <asm/unistd.h>
 #include <linux/compiler_types.h>
@@ -233,15 +234,6 @@ static const struct ksu_feature_handler kasumi_sucompat_handler = {
 bool ksu_sucompat_exec_enabled(void)
 {
 	return READ_ONCE(ksu_su_compat_enabled) && !ksu_sucompat_vfs_active();
-}
-
-static void __user *userspace_stack_buffer(const void *d, size_t len)
-{
-	// To avoid having to mmap a page in userspace, just write below the
-	// stack pointer.
-	char __user *p = (void __user *)current_user_stack_pointer() - len;
-
-	return copy_to_user(p, d, len) ? NULL : p;
 }
 
 static char __user *ksud_user_path(void)

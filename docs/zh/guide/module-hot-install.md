@@ -26,7 +26,7 @@ export MODULE_HOT_RUN_SCRIPT=hotinstall.sh
 
 立即生效：模块文件本身、WebUI、`action.sh` 以及 `module.prop` 中的信息。
 
-下次开机才生效：`system` 及其他分区目录下的文件（由元模块挂载）、`system.prop`、`initrc`，以及 `post-fs-data.sh`、`post-mount.sh`、`service.sh`、`boot-completed.sh` 这几个阶段。热安装时**不会**执行它们，但之后每次开机仍会照常执行。如果需要它们立即生效，请在 `MODULE_HOT_RUN_SCRIPT` 中处理，例如启动你的服务或调用 `resetprop`。
+下次开机才生效：`system` 及其他分区目录下的文件（由元模块挂载）、`system.prop`、`initrc`、`preinit`，以及 `post-fs-data.sh`、`post-mount.sh`、`service.sh`、`boot-completed.sh` 这几个阶段。热安装时**不会**执行它们，但之后每次开机仍会照常执行。如果需要它们立即生效，请在 `MODULE_HOT_RUN_SCRIPT` 中处理，例如启动你的服务或调用 `resetprop`。
 
 YukiSU 不会替你停止旧版本，更新时也不会执行 `uninstall.sh`。如果你的模块运行了守护进程，`MODULE_HOT_RUN_SCRIPT` 应先停止旧实例再启动新实例。
 

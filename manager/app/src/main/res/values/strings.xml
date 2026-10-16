@@ -1065,4 +1065,8 @@
     <string name="script_param_below_min" tools:ignore="MissingTranslation">Must be at least %d</string>
     <string name="script_param_above_max" tools:ignore="MissingTranslation">Must be at most %d</string>
     <string name="script_param_invalid" tools:ignore="MissingTranslation">Invalid value</string>
+    <string tools:ignore="MissingTranslation" name="module_preinit_no_space">preinit skipped: not enough space on /metadata</string>
+    <string tools:ignore="MissingTranslation" name="module_preinit_error">preinit skipped: invalid preinit directory</string>
+    <string tools:ignore="MissingTranslation" name="module_preinit_bootloop">preinit disabled after repeated boot failures</string>
+    <string tools:ignore="MissingTranslation" name="module_preinit_unsupported">preinit skipped: not supported by the current kernel</string>
 </resources>

@@ -1283,5 +1283,16 @@
       "md5-crypt-busybox-NOTICE.txt"
     ],
     "evidence": "BusyBox libbb/pw_encrypt.c directly includes pw_encrypt_md5.c. This is derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm and FreeBSD md5_crypt; the original RSA attribution requirement and Poul-Henning Kamp's Beerware notice are reproduced in full."
+  },
+  {
+    "id": "linux-nolibc",
+    "name": "Linux nolibc",
+    "version": "6.18",
+    "license": "MIT",
+    "source": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/tools/include/nolibc?h=v6.18",
+    "texts": [
+      "nolibc-NOTICE.txt"
+    ],
+    "evidence": "Vendored unmodified in kernel/preinit/runner/nolibc and linked into the embedded preinit runner. Original per-file notices are retained."
   }
 ]

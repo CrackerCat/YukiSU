@@ -92,6 +92,7 @@ constexpr const char* MODULE_UPDATE_DIR = "/data/adb/modules_update/";
 constexpr const char* METAMODULE_DIR = "/data/adb/metamodule/";
 constexpr const char* HOT_INSTALL_TRASH_DIR = "/data/adb/ksu/hot_install_trash/";
 constexpr const char* HOT_INSTALL_MARKER = ".ksu_hot_install";
+constexpr const char* PREINIT_DIR_VOLD = "/metadata/vold/ksu/";
 constexpr const char* PREINIT_DIR_WATCHDOG = "/metadata/watchdog/ksu/";
 constexpr const char* PREINIT_DIR_DEFAULT = "/metadata/ksu/";
 constexpr const char* MODULES_RC_FILE = "modules.rc";

@@ -16,6 +16,7 @@
 #include "module/metamodule.hpp"
 #include "module/module.hpp"
 #include "module/module_config.hpp"
+#include "module/preinit.hpp"
 #include "plugin/lua_engine.hpp"
 #include "profile/profile.hpp"
 #include "soft_reboot_waiter.hpp"
@@ -429,6 +430,7 @@ void on_boot_completed() {
 
     // Report to kernel
     report_boot_complete();
+    preinit::on_boot_completed();
     kagami::embedded_boot_completed();
 
     ensure_msud_running_if_enabled();

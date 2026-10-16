@@ -102,6 +102,7 @@ class ModuleViewModel : ViewModel() {
         val runtimeLoaded: Boolean = false,
         val zygiskConflict: Boolean = false,
         var config: ModuleConfig? = null,
+        val preinit: String = "",
 
     )
 
@@ -186,7 +187,8 @@ class ModuleViewModel : ViewModel() {
                             obj.optString("webuiIcon").takeIf { it.isNotBlank() },
                             parseRuntimeKind(obj.optString("runtime")),
                             obj.getBooleanCompat("runtimeLoaded"),
-                            obj.getBooleanCompat("yzConflict")
+                            obj.getBooleanCompat("yzConflict"),
+                            preinit = obj.optString("preinit")
                         )
                     }.toList()
 
@@ -332,11 +334,12 @@ fun ModuleViewModel.ModuleInfo.copy(
     runtimeLoaded: Boolean = this.runtimeLoaded,
     zygiskConflict: Boolean = this.zygiskConflict,
     config: ModuleConfig? = this.config,
+    preinit: String = this.preinit,
 ): ModuleViewModel.ModuleInfo {
     return ModuleViewModel.ModuleInfo(
         id, name, author, version, versionCode, description,
         enabled, update, remove, updateJson, hasWebUi, hasActionScript, metamodule,
-        dirId, actionIconPath, webUiIconPath, runtimeKind, runtimeLoaded, zygiskConflict, config
+        dirId, actionIconPath, webUiIconPath, runtimeKind, runtimeLoaded, zygiskConflict, config, preinit
     )
 }
 

@@ -22,6 +22,7 @@
 #include "magisk_compat/msud.hpp"
 #include "module/module.hpp"
 #include "module/module_config.hpp"
+#include "module/preinit.hpp"
 #include "plugin/plugin.hpp"
 #include "profile/profile.hpp"
 #include "sepolicy/sepolicy.hpp"
@@ -137,6 +138,12 @@ int cmd_module(const std::vector<std::string>& args) {
         return module_run_action(args[1]);
     } else if (subcmd == "list") {
         return module_list();
+    } else if (subcmd == "preinit" && args.size() == 2) {
+        if (args[1] == "status")
+            return preinit::print_status();
+        if (args[1] == "reset")
+            return preinit::reset_bootcount();
+        return 1;
     } else if (subcmd == "config") {
         // Handle module config subcommands
         if (args.size() < 2) {

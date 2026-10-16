@@ -10,6 +10,7 @@
 #include "../yzctl.hpp"
 #include "hot_install.hpp"
 #include "metamodule.hpp"
+#include "preinit.hpp"
 
 #include <dirent.h>
 #include <fcntl.h>
@@ -113,14 +114,6 @@ std::string escape_json(const std::string& s) {
 bool file_exists(const std::string& path) {
     struct stat st{};
     return stat(path.c_str(), &st) == 0;
-}
-
-std::filesystem::path preinit_ksu_dir() {
-    std::error_code error;
-    if (std::filesystem::is_directory("/metadata/watchdog", error) && !error) {
-        return PREINIT_DIR_WATCHDOG;
-    }
-    return PREINIT_DIR_DEFAULT;
 }
 
 bool has_rc_extension(const std::filesystem::path& path) {
@@ -597,8 +590,9 @@ std::string get_metamodule_id() {
     return get_metamodule_id_impl();
 }
 
-int regenerate_preinit_rc() {
-    const std::filesystem::path preinit_dir = preinit_ksu_dir();
+namespace {
+int regenerate_preinit_rc(const std::filesystem::path& preinit_dir,
+                          const std::map<std::string, std::filesystem::path>& modules) {
     std::error_code ec;
     std::filesystem::create_directories(preinit_dir, ec);
     if (ec) {
@@ -616,6 +610,39 @@ int regenerate_preinit_rc() {
     }
 
     bool write_ok = collect_rc_files(std::filesystem::path(ADB_DIR) / "initrc.d", nullptr, out_fd);
+    for (const auto& [id, path] : modules) {
+        if (!collect_rc_files(path / MODULE_INIT_RC_DIR, &id, out_fd)) {
+            write_ok = false;
+            break;
+        }
+    }
+
+    if (fsync(out_fd) != 0)
+        write_ok = false;
+    if (close(out_fd) != 0)
+        write_ok = false;
+    if (!write_ok) {
+        LOGW("Failed to write %s", tmp_path.c_str());
+        unlink(tmp_path.c_str());
+        return 1;
+    }
+
+    std::filesystem::rename(tmp_path, out_path, ec);
+    if (ec) {
+        LOGW("Failed to rename %s -> %s: %s", tmp_path.c_str(), out_path.c_str(),
+             ec.message().c_str());
+        std::filesystem::remove(tmp_path, ec);
+        return 1;
+    }
+
+    (void)lsetfilecon(out_path, preinit::file_context(preinit_dir));
+    return 0;
+}
+
+}  // namespace
+
+int regenerate_preinit_rc() {
+    std::error_code ec;
     std::map<std::string, std::filesystem::path> modules;
     std::map<std::string, bool> skipped_modules;
 
@@ -641,36 +668,18 @@ int regenerate_preinit_rc() {
         }
     }
 
-    for (const auto& [id, path] : modules) {
-        if (!collect_rc_files(path / MODULE_INIT_RC_DIR, &id, out_fd)) {
-            write_ok = false;
-            break;
-        }
+    const auto dir = preinit::storage_dir();
+    std::vector<std::filesystem::path> stale;
+    for (const char* candidate : {PREINIT_DIR_VOLD, PREINIT_DIR_WATCHDOG, PREINIT_DIR_DEFAULT}) {
+        if (dir != candidate)
+            stale.emplace_back(candidate);
     }
-
-    if (close(out_fd) != 0)
-        write_ok = false;
-    if (!write_ok) {
-        LOGW("Failed to write %s", tmp_path.c_str());
-        unlink(tmp_path.c_str());
-        return 1;
-    }
-
-    std::filesystem::rename(tmp_path, out_path, ec);
-    if (ec) {
-        LOGW("Failed to rename %s -> %s: %s", tmp_path.c_str(), out_path.c_str(),
-             ec.message().c_str());
-        std::filesystem::remove(tmp_path, ec);
-        return 1;
-    }
-
-    (void)lsetfilecon(out_path, METADATA_FILE_CON);
-
-    const std::filesystem::path stale_dir =
-        (preinit_dir == PREINIT_DIR_WATCHDOG) ? PREINIT_DIR_DEFAULT : PREINIT_DIR_WATCHDOG;
-    std::filesystem::remove(stale_dir / MODULES_RC_FILE, ec);
-
-    return 0;
+    const int rc_result = regenerate_preinit_rc(dir, modules);
+    for (const auto& path : stale)
+        std::filesystem::remove(path / MODULES_RC_FILE, ec);
+    const int sync_result =
+        preinit::sync(dir, stale, modules, (get_flags() & KSU_GET_INFO_FLAG_PREINIT) != 0);
+    return rc_result != 0 ? rc_result : sync_result;
 }
 
 int module_install(const std::string& zip_path) {
@@ -785,6 +794,7 @@ int module_install(const std::string& zip_path) {
     if (request && apply_hot_install(mod_id, installing_metamodule, *request)) {
         printf("- Module installed successfully, no reboot required!\n");
         warn_regenerate_preinit_rc_failed(regenerate_preinit_rc());
+        preinit::warn_status(mod_id);
         warn_refresh_yukizygisk_early_snapshot_failed();
         return 0;
     }
@@ -812,6 +822,7 @@ int module_install(const std::string& zip_path) {
 
     LOGI("Module installed successfully");
     warn_regenerate_preinit_rc_failed(regenerate_preinit_rc());
+    preinit::warn_status(mod_id);
     warn_refresh_yukizygisk_early_snapshot_failed();
     return 0;
 }
@@ -946,11 +957,11 @@ int module_run_action(const std::string& id) {
 namespace {
 
 bool is_dedicated_prop_key(const std::string& key) {
-    static constexpr std::array<std::string_view, 19> kDedicatedKeys = {
+    static constexpr std::array<std::string_view, 20> kDedicatedKeys = {
         "id",        "dir_id",      "name",          "version",    "versionCode",
         "author",    "description", "enabled",       "update",     "remove",
         "web",       "action",      "mount",         "metamodule", "actionIcon",
-        "webuiIcon", "runtime",     "runtimeLoaded", "yzConflict"};
+        "webuiIcon", "runtime",     "runtimeLoaded", "yzConflict", "preinit"};
     return std::find(kDedicatedKeys.begin(), kDedicatedKeys.end(), key) != kDedicatedKeys.end();
 }
 
@@ -1107,6 +1118,8 @@ int module_list() {
         }
     }
 
+    const auto preinit_states = preinit::module_states();
+
     // Output JSON array
     printf("[\n");
     for (size_t i = 0; i < modules.size(); i++) {
@@ -1126,6 +1139,9 @@ int module_list() {
         printf("    \"action\": \"%s\",\n", m.action ? "true" : "false");
         printf("    \"mount\": \"%s\",\n", m.mount ? "true" : "false");
         printf("    \"metamodule\": \"%s\"", m.metamodule ? "true" : "false");
+        const auto preinit_state = preinit_states.find(m.dir_id);
+        if (preinit_state != preinit_states.end())
+            printf(",\n    \"preinit\": \"%s\"", escape_json(preinit_state->second).c_str());
         if (!m.runtime.empty()) {
             printf(",\n    \"runtime\": \"%s\"", m.runtime.c_str());
         }

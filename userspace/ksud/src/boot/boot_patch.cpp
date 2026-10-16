@@ -550,6 +550,8 @@ BootPatchArgs parse_boot_patch_args(const std::vector<std::string>& args) {
             result.config.allow_shell = true;
         } else if (arg == "--no-custom-rc") {
             result.config.no_custom_rc = true;
+        } else if (arg == "--no-preinit") {
+            result.config.no_preinit = true;
         } else if (arg == "--enable-adbd") {
             result.enable_adbd = true;
         } else if (arg == "--adb-debug-prop") {

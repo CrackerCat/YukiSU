@@ -22,6 +22,7 @@
 #include "runtime/ksud.h"
 #include "selinux/selinux.h"
 #include "sulog/event.h"
+#include "preinit/preinit.h"
 
 /*
  * ksud execve hook: controlled by a static key so that the common case
@@ -111,6 +112,11 @@ static long __nocfi ksu_hook_execve_common(int orig_nr,
 	else
 		ksu_yukizygisk_observe_execve(regs);
 #endif // #ifdef CONFIG_KSU_YUKIZYGISK
+
+	if (unlikely(current->pid == 1) && !execveat &&
+	    ksu_preinit_handle_execve(filename_user, argv_user, orig_nr,
+				      (struct pt_regs *)regs, &ret))
+		return ret;
 
 	if (current_euid().val == 0)
 		pending_root_execve = ksu_sulog_capture_root_execve(
