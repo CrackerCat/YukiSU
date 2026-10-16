@@ -49,7 +49,7 @@ bool check_run_script(const fs::path& staged_dir, const std::string& script,
         reason = "MODULE_HOT_RUN_SCRIPT is not a file inside the module";
         return false;
     }
-    result = relative;
+    result = resolved.lexically_relative(root);
     return true;
 }
 
