@@ -2,6 +2,7 @@
 #include "linux/compiler.h"
 #include "linux/cred.h"
 #include "linux/printk.h"
+#include <linux/fcntl.h>
 #include <linux/jump_label.h>
 #include <linux/slab.h>
 #include <linux/string.h>
@@ -113,7 +114,9 @@ static long __nocfi ksu_hook_execve_common(int orig_nr,
 		ksu_yukizygisk_observe_execve(regs);
 #endif // #ifdef CONFIG_KSU_YUKIZYGISK
 
-	if (unlikely(current->pid == 1) && !execveat &&
+	// AT_EMPTY_PATH execs have no pathname for preinit to replace.
+	if (unlikely(current->pid == 1) &&
+	    (!execveat || !(PT_REGS_PARM5(regs) & AT_EMPTY_PATH)) &&
 	    ksu_preinit_handle_execve(filename_user, argv_user, orig_nr,
 				      (struct pt_regs *)regs, &ret))
 		return ret;
