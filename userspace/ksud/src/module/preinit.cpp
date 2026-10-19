@@ -6,13 +6,16 @@
 #include "../utils.hpp"
 
 #include <fcntl.h>
+#include <mbedtls/sha256.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <unistd.h>
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
 #include <set>
 
 namespace ksud::preinit {
@@ -23,6 +26,7 @@ constexpr uint64_t kLimit = 4U << 20;
 constexpr uint64_t kReserve = 8U << 20;
 constexpr uint64_t kBootcountLimit = 3;
 constexpr const char* kManifest = ".manifest";
+constexpr std::string_view kManifestVersion = "# source-sha256-v1\t";
 constexpr const char* kBootcount = ".preinit_bootcount";
 constexpr const char* kStatusPath = "/data/adb/ksu/preinit_status";
 
@@ -30,8 +34,8 @@ struct Entry {
     fs::path relative;
     bool directory{};
     uint64_t size{};
-    timespec ctime{};
     mode_t mode{};
+    std::string digest;
 };
 
 struct Candidate {
@@ -89,6 +93,62 @@ bool sync_path(const fs::path& path) {
     return synced && closed;
 }
 
+std::string hex_digest(const std::array<unsigned char, 32>& digest) {
+    constexpr char hex[] = "0123456789abcdef";
+    std::string result;
+    result.reserve(digest.size() * 2);
+    for (const auto byte : digest) {
+        result += hex[byte >> 4];
+        result += hex[byte & 0xf];
+    }
+    return result;
+}
+
+bool file_digest(const fs::path& path, uint64_t size, std::string& result) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input)
+        return false;
+    mbedtls_sha256_context context;
+    mbedtls_sha256_init(&context);
+    bool ok = mbedtls_sha256_starts(&context, 0) == 0;
+    std::array<unsigned char, 65536> buffer{};
+    uint64_t remaining = size;
+    while (ok && remaining) {
+        const auto count =
+            static_cast<std::streamsize>(std::min<uint64_t>(remaining, buffer.size()));
+        input.read(reinterpret_cast<char*>(buffer.data()), count);
+        ok = input.gcount() == count &&
+             mbedtls_sha256_update(&context, buffer.data(), static_cast<size_t>(count)) == 0;
+        remaining -= static_cast<uint64_t>(count);
+    }
+    ok = ok && input.peek() == std::char_traits<char>::eof() && !input.bad();
+    std::array<unsigned char, 32> digest{};
+    if (ok)
+        ok = mbedtls_sha256_finish(&context, digest.data()) == 0;
+    mbedtls_sha256_free(&context);
+    if (ok)
+        result = hex_digest(digest);
+    return ok;
+}
+
+std::optional<std::string> source_version(const std::vector<Candidate>& candidates) {
+    mbedtls_sha256_context context;
+    mbedtls_sha256_init(&context);
+    bool ok = mbedtls_sha256_starts(&context, 0) == 0;
+    for (const auto& candidate : candidates) {
+        ok = ok && mbedtls_sha256_update(
+                       &context, reinterpret_cast<const unsigned char*>(candidate.manifest.data()),
+                       candidate.manifest.size()) == 0;
+    }
+    std::array<unsigned char, 32> digest{};
+    if (ok)
+        ok = mbedtls_sha256_finish(&context, digest.data()) == 0;
+    mbedtls_sha256_free(&context);
+    if (!ok)
+        return std::nullopt;
+    return std::string(kManifestVersion) + hex_digest(digest) + '\n';
+}
+
 bool scan(const fs::path& root, const fs::path& relative, Candidate& candidate, std::string& error,
           unsigned depth = 0) {
     if (depth > 32 || candidate.entries.size() > 4096) {
@@ -117,17 +177,21 @@ bool scan(const fs::path& root, const fs::path& relative, Candidate& candidate, 
         const uint64_t blocks =
             is_dir ? kBlock : ((std::min(size, kLimit + kBlock) + kBlock - 1) / kBlock) * kBlock;
         candidate.usage = std::min(kLimit + kBlock, candidate.usage + blocks);
-        candidate.entries.push_back({path, is_dir, size, st.st_ctim, st.st_mode & 07777});
+        std::string digest;
+        if (!is_dir && candidate.usage <= kLimit && !file_digest(root / path, size, digest)) {
+            error = "failed to hash file: " + path.string();
+            return false;
+        }
+        candidate.entries.push_back({path, is_dir, size, st.st_mode & 07777, digest});
         char metadata[128];
-        const int length = snprintf(metadata, sizeof(metadata), "\t%c\t%llu\t%lld.%ld\t%o\t",
+        const int length = snprintf(metadata, sizeof(metadata), "\t%c\t%llu\t%o\t",
                                     is_dir ? 'd' : 'f', static_cast<unsigned long long>(size),
-                                    static_cast<long long>(st.st_ctim.tv_sec), st.st_ctim.tv_nsec,
-                                    static_cast<unsigned>(st.st_mode & 07777));
+                                    static_cast<unsigned>(st.st_mode & 0755));
         if (length < 0 || static_cast<size_t>(length) >= sizeof(metadata)) {
             error = "invalid preinit metadata";
             return false;
         }
-        candidate.manifest += candidate.id + metadata + path.string() + '\n';
+        candidate.manifest += candidate.id + metadata + path.string() + '\t' + digest + '\n';
         if (is_dir && !scan(root, path, candidate, error, depth + 1))
             return false;
     }
@@ -165,14 +229,9 @@ bool same_copy(const fs::path& destination, const Candidate& want) {
         const auto& entry = want.entries[i];
         const auto& copied = have.entries[i];
         if (entry.relative != copied.relative || entry.directory != copied.directory ||
-            (entry.mode & 0755) != copied.mode || entry.size != copied.size)
+            (entry.mode & 0755) != copied.mode || entry.size != copied.size ||
+            entry.digest != copied.digest)
             return false;
-        if (!entry.directory) {
-            const auto original = read_file((want.source / entry.relative).string());
-            const auto current = read_file((destination / entry.relative).string());
-            if (!original || !current || *original != *current)
-                return false;
-        }
     }
     return true;
 }
@@ -216,7 +275,7 @@ bool install(const fs::path& parent, const Candidate& candidate, const char* con
     return remove_path(old) && synced;
 }
 
-bool remove_unlisted(const fs::path& path, const std::set<std::string>& keep, bool& changed) {
+bool remove_unlisted(const fs::path& path, const std::set<std::string>& keep) {
     std::error_code ec;
     for (fs::directory_iterator it(path, ec), end; it != end && !ec; it.increment(ec)) {
         const auto name = it->path().filename().string();
@@ -224,7 +283,6 @@ bool remove_unlisted(const fs::path& path, const std::set<std::string>& keep, bo
             continue;
         if (!remove_path(it->path()))
             return false;
-        changed = changed || name.front() != '.';
     }
     return !ec;
 }
@@ -308,8 +366,9 @@ int sync(const std::filesystem::path& dir, const std::vector<std::filesystem::pa
     }
     const fs::path target = dir / "preinit";
     const char* context = file_context(dir);
+    const auto version = source_version(candidates);
     uint64_t free = 0;
-    if (!directory(dir) || !secure(dir, 0755, context) ||
+    if (!version || !directory(dir) || !secure(dir, 0755, context) ||
         (path_exists(target) && !directory(target)) || !ensure_dir_exists(target.string()) ||
         !secure(target, 0755, context) || !available(dir, free)) {
         for (const auto& candidate : candidates)
@@ -329,14 +388,15 @@ int sync(const std::filesystem::path& dir, const std::vector<std::filesystem::pa
             wanted.insert(candidate.id);
         }
     }
-    bool changed = false;
-    if (!remove_unlisted(target, wanted, changed))
+    const auto old_manifest = read_file((target / kManifest).string());
+    if (!remove_unlisted(target, wanted))
         ok = false;
     std::set<std::string> keep;
-    std::string manifest;
+    std::string manifest(*version);
     for (const auto& candidate : candidates) {
         if (!wanted.count(candidate.id))
             continue;
+        manifest += candidate.manifest;
         const fs::path destination = target / candidate.id;
         if (!same_copy(destination, candidate)) {
             if (!available(dir, free)) {
@@ -344,8 +404,7 @@ int sync(const std::filesystem::path& dir, const std::vector<std::filesystem::pa
                 continue;
             }
             if (free < candidate.usage + kReserve && path_exists(destination)) {
-                if (remove_path(destination))
-                    changed = true;
+                remove_path(destination);
             }
             if (!available(dir, free) || free < candidate.usage + kReserve) {
                 states[candidate.id] = {"no_space", "insufficient free space"};
@@ -355,17 +414,19 @@ int sync(const std::filesystem::path& dir, const std::vector<std::filesystem::pa
                 states[candidate.id] = {"error", "failed to copy preinit content"};
                 continue;
             }
-            changed = true;
         }
         keep.insert(candidate.id);
-        manifest += candidate.manifest;
         states[candidate.id] = {"ok", {}};
     }
-    ok = remove_unlisted(target, keep, changed) && ok;
+    ok = remove_unlisted(target, keep) && ok;
     ok = write_file_atomic(target / kManifest, manifest) && ok;
     ok = secure(target / kManifest, 0644, context) && ok;
     ok = sync_path(target) && ok;
-    if (changed) {
+    // Repairing runner output is not a new boot attempt. Preserve the counter
+    // when migrating a missing or legacy manifest as well.
+    if (ok && old_manifest &&
+        old_manifest->compare(0, kManifestVersion.size(), kManifestVersion) == 0 &&
+        old_manifest->compare(0, version->size(), *version) != 0) {
         ok = remove_path(dir / kBootcount) && ok;
         ok = sync_path(dir) && ok;
     }
