@@ -957,4 +957,7 @@
     <string name="module_preinit_reset">重設啟動失敗計數</string>
     <string name="module_preinit_reset_confirm">核心允許時，preinit 將在下次啟動時重試。請先修復或停用導致啟動失敗的模組，再重設計數。</string>
     <string name="module_preinit_reset_done">計數已重設，不會立即執行 preinit。</string>
+    <string name="module_preinit_command_failed">模組 preinit 指令執行失敗（結束代碼 %1$d）。</string>
+    <string name="module_preinit_status_empty">ksud 未傳回 preinit 狀態。</string>
+    <string name="module_preinit_status_invalid">ksud 傳回的 preinit 狀態無效：%1$s</string>
 </resources>

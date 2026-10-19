@@ -1,7 +1,9 @@
 package com.anatdx.yukisu.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -10,54 +12,31 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
-import com.anatdx.yukisu.ui.util.getRootShell
-import com.anatdx.yukisu.ui.util.ksudCmd
+import com.anatdx.yukisu.ui.util.ModulePreinitStatus
+import com.anatdx.yukisu.ui.util.readModulePreinitStatus
+import com.anatdx.yukisu.ui.util.resetModulePreinitBootCount
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
-
-private data class PreinitStatus(
-    val supported: Boolean,
-    val bootCount: Long,
-    val bootloop: Boolean,
-    val modules: List<Pair<String, String>>,
-)
-
-private suspend fun readPreinitStatus(): PreinitStatus = withContext(Dispatchers.IO) {
-    val result = getRootShell().newJob().add(ksudCmd("module preinit status --json")).exec()
-    check(result.isSuccess)
-    val json = JSONObject(result.out.joinToString("\n"))
-    val modules = json.getJSONArray("modules")
-    PreinitStatus(
-        json.getBoolean("supported"),
-        json.getLong("boot_count"),
-        json.getBoolean("bootloop"),
-        List(modules.length()) { index ->
-            val entry = modules.getJSONObject(index)
-            entry.getString("id") to entry.getString("state")
-        },
-    )
-}
 
 @Composable
 internal fun ModulePreinitDialog(onDismiss: () -> Unit, onReset: () -> Unit) {
     val scope = rememberCoroutineScope()
-    var status by remember { mutableStateOf<PreinitStatus?>(null) }
+    val operationFailed = stringResource(R.string.operation_failed)
+    var status by remember { mutableStateOf<ModulePreinitStatus?>(null) }
     var busy by remember { mutableStateOf(true) }
-    var failed by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     var resetDone by remember { mutableStateOf(false) }
     var confirmReset by remember { mutableStateOf(false) }
     suspend fun refresh() {
         busy = true
-        failed = false
+        errorMessage = null
         try {
-            status = readPreinitStatus()
+            status = readModulePreinitStatus()
         } catch (error: Exception) {
             if (error is CancellationException) throw error
+            Log.e("ModulePreinit", "Failed to read preinit status", error)
             status = null
-            failed = true
+            errorMessage = error.message?.takeIf { it.isNotBlank() } ?: operationFailed
         } finally {
             busy = false
         }
@@ -72,7 +51,11 @@ internal fun ModulePreinitDialog(onDismiss: () -> Unit, onReset: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                if (failed) Text(stringResource(R.string.operation_failed))
+                errorMessage?.let { message ->
+                    SelectionContainer {
+                        Text(message, color = MaterialTheme.colorScheme.error)
+                    }
+                }
                 if (resetDone) Text(stringResource(R.string.module_preinit_reset_done))
                 status?.let { current ->
                     Text(stringResource(
@@ -122,23 +105,18 @@ internal fun ModulePreinitDialog(onDismiss: () -> Unit, onReset: () -> Unit) {
                 TextButton(onClick = {
                     confirmReset = false
                     busy = true
-                    failed = false
+                    errorMessage = null
                     resetDone = false
                     scope.launch {
                         try {
-                            val success = withContext(Dispatchers.IO) {
-                                getRootShell().newJob().add(ksudCmd("module preinit reset")).exec().isSuccess
-                            }
-                            if (success) {
-                                resetDone = true
-                                onReset()
-                                refresh()
-                            } else {
-                                failed = true
-                            }
+                            resetModulePreinitBootCount()
+                            resetDone = true
+                            onReset()
+                            refresh()
                         } catch (error: Exception) {
                             if (error is CancellationException) throw error
-                            failed = true
+                            Log.e("ModulePreinit", "Failed to reset preinit boot counter", error)
+                            errorMessage = error.message?.takeIf { it.isNotBlank() } ?: operationFailed
                         } finally {
                             busy = false
                         }

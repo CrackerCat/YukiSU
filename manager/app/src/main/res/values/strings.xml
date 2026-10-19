@@ -1093,4 +1093,7 @@
     <string name="module_preinit_reset" tools:ignore="MissingTranslation">Reset boot failure counter</string>
     <string name="module_preinit_reset_confirm" tools:ignore="MissingTranslation">Preinit actions will be retried on the next boot if the kernel allows them. Fix or disable the module that caused the boot failure before resetting.</string>
     <string name="module_preinit_reset_done" tools:ignore="MissingTranslation">Counter reset. No actions were run immediately.</string>
+    <string name="module_preinit_command_failed" tools:ignore="MissingTranslation">Module preinit command failed (exit code %1$d).</string>
+    <string name="module_preinit_status_empty" tools:ignore="MissingTranslation">ksud returned no preinit status.</string>
+    <string name="module_preinit_status_invalid" tools:ignore="MissingTranslation">ksud returned an invalid preinit status: %1$s</string>
 </resources>
