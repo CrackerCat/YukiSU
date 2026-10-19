@@ -80,6 +80,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.anatdx.yukisu.ui.activity.util.WindowNavigationEventBridge
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.AnimatedFab
 import com.anatdx.yukisu.ui.component.ConfirmResult
@@ -482,6 +483,7 @@ fun PluginScreen(navigator: DestinationsNavigator) {
 
     if (showSortSheet) {
         ModalBottomSheet(onDismissRequest = { showSortSheet = false }) {
+            WindowNavigationEventBridge()
             Column(Modifier.padding(horizontal = 24.dp, vertical = 8.dp)) {
                 Text(
                     text = stringResource(R.string.plugin_sort_options),

@@ -1,6 +1,7 @@
 package com.anatdx.yukisu.ui.screen
 
 import com.ramcosta.composedestinations.generated.destinations.ScriptRunScreenDestination
+import com.anatdx.yukisu.ui.activity.util.WindowNavigationEventBridge
 import com.anatdx.yukisu.ui.screen.scriptrun.ScriptRunArg
 import com.anatdx.yukisu.data.script.ScriptRepository
 import android.annotation.SuppressLint
@@ -611,6 +612,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                     }
                 }
             ) {
+                WindowNavigationEventBridge()
                 ModuleBottomSheetContent(
                     viewModel = viewModel,
                     prefs = prefs,

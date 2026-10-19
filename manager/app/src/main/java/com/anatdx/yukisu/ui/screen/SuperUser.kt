@@ -68,6 +68,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.AppProfileScreenDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.anatdx.yukisu.ui.activity.util.WindowNavigationEventBridge
 import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.FabMenuPresets
@@ -503,6 +504,7 @@ private fun SuperUserBottomSheet(
             }
         }
     ) {
+        WindowNavigationEventBridge()
         BottomSheetContent(
             menuItems = bottomSheetMenuItems,
             currentSortType = viewModel.currentSortType,

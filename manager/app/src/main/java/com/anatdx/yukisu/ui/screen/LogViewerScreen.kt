@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import com.anatdx.yukisu.ui.activity.util.WindowNavigationEventBridge
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.*
 import com.anatdx.yukisu.ui.theme.CardConfig
@@ -652,6 +653,7 @@ private fun LogFilterBottomSheet(
         modifier = Modifier.clickHapticFeedback(),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
+        WindowNavigationEventBridge()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
