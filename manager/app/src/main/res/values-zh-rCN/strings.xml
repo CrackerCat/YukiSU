@@ -1063,4 +1063,19 @@
     <string name="module_preinit_error">preinit 未生效：preinit 目录无效</string>
     <string name="module_preinit_bootloop">多次启动失败，preinit 已停用</string>
     <string name="module_preinit_unsupported">preinit 未生效：当前内核不支持</string>
+
+    <string name="install_boot_config_invalid">启动配置选项无效</string>
+    <string name="install_config_only">仅更新 ramdisk 配置</string>
+    <string name="install_config_only_summary">保留镜像原有的 init、内核模块和 SuperKey。以下选项会替换已有启动设置，不用于修改 ImgPatch 配置。</string>
+    <string name="install_disable_preinit">禁用模块 preinit</string>
+    <string name="install_disable_preinit_summary">刷入此镜像并重启后，跳过模块在 SELinux 加载前执行的操作。</string>
+    <string name="install_disable_custom_rc">禁用模块 init.rc</string>
+    <string name="install_disable_custom_rc_summary">刷入此镜像并重启后，不加载模块提供的自定义 init.rc。</string>
+    <string name="install_force_features">强制功能（%1$d 项）</string>
+    <string name="install_force_features_summary">刷入并重启后锁定功能值，功能设置页将无法更改。选择“不锁定”并重新修补可解除锁定。</string>
+    <string name="install_feature_unlocked">不锁定</string>
+    <string name="install_feature_force_on">强制开启</string>
+    <string name="install_feature_force_off">强制关闭</string>
+    <string name="install_feature_kernel_umount">为未授权应用卸载模块挂载</string>
+    <string name="install_feature_sulog">Root 授权日志</string>
 </resources>

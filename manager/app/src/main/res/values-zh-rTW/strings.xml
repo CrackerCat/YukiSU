@@ -933,4 +933,19 @@
     <string name="partition_avb_apply">套用變更</string>
     <string name="partition_avb_saved">已儲存並回讀確認。下次啟動此槽位時生效。</string>
     <string name="partition_avb_failed">無法確認 VBMeta 狀態：%1$s。請重新整理後再操作。</string>
+
+    <string name="install_boot_config_invalid">啟動設定選項無效</string>
+    <string name="install_config_only">僅更新 ramdisk 設定</string>
+    <string name="install_config_only_summary">保留映像原有的 init、核心模組和 SuperKey。以下選項會取代已有啟動設定，不用於修改 ImgPatch 設定。</string>
+    <string name="install_disable_preinit">停用模組 preinit</string>
+    <string name="install_disable_preinit_summary">刷入此映像並重新啟動後，略過模組在 SELinux 載入前執行的操作。</string>
+    <string name="install_disable_custom_rc">停用模組 init.rc</string>
+    <string name="install_disable_custom_rc_summary">刷入此映像並重新啟動後，不載入模組提供的自訂 init.rc。</string>
+    <string name="install_force_features">強制功能（%1$d 項）</string>
+    <string name="install_force_features_summary">刷入並重新啟動後鎖定功能值，功能設定頁將無法變更。選擇「不鎖定」並重新修補可解除鎖定。</string>
+    <string name="install_feature_unlocked">不鎖定</string>
+    <string name="install_feature_force_on">強制開啟</string>
+    <string name="install_feature_force_off">強制關閉</string>
+    <string name="install_feature_kernel_umount">為未授權應用程式卸載模組掛載</string>
+    <string name="install_feature_sulog">Root 授權記錄</string>
 </resources>

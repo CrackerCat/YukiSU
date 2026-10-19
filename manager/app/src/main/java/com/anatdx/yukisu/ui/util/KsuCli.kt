@@ -1463,6 +1463,7 @@ private fun patchBootImage(
     onStdout: (String) -> Unit,
     onStderr: (String) -> Unit,
     blockModules: String = "",
+    bootConfig: BootConfigOptions = BootConfigOptions(),
 ): Boolean {
     val normalizedModules = normalizeBlockModules(blockModules)
     if (normalizedModules == null) {
@@ -1471,7 +1472,13 @@ private fun patchBootImage(
         return false
     }
 
-    if (!targetKmi.matches(kmiPattern)) {
+    val configOptions = bootConfig.commandOptions()
+    if (configOptions == null || (bootConfig.noInstall && bootFile == null)) {
+        onStderr(ksuApp.getString(R.string.install_boot_config_invalid))
+        onFinish(false, 1)
+        return false
+    }
+    if (!bootConfig.noInstall && !targetKmi.matches(kmiPattern)) {
         onStderr("Invalid target KMI: $targetKmi")
         onFinish(false, 1)
         return false
@@ -1494,7 +1501,7 @@ private fun patchBootImage(
         template = patchedUtsBootDraft,
     )
 
-    var cmd = "boot-patch"
+    var cmd = "boot-patch" + configOptions
     if (normalizedModules.isNotEmpty())
         cmd += " --block-module ${shellArg(normalizedModules)}"
 
@@ -1509,12 +1516,12 @@ private fun patchBootImage(
         cmd += " -u"
     }
 
-    if (forceBackup) {
+    if (forceBackup && !bootConfig.noInstall) {
         cmd += " --backup"
     }
 
     // Add superkey if specified
-    if (!superKey.isNullOrBlank()) {
+    if (!bootConfig.noInstall && !superKey.isNullOrBlank()) {
         cmd += " --superkey=${shellArg(superKey)}"
         // Add signature bypass flag if enabled
         if (signatureBypass) {
@@ -1523,9 +1530,9 @@ private fun patchBootImage(
     }
 
     var lkmFile: File? = null
-    when (lkm) {
+    when (val selectedLkm = if (bootConfig.noInstall) LkmSelection.KmiNone else lkm) {
         is LkmSelection.LkmUri -> {
-            lkmFile = with(ksuApp.contentResolver.openInputStream(lkm.uri)) {
+            lkmFile = with(ksuApp.contentResolver.openInputStream(selectedLkm.uri)) {
                 val file = File(ksuApp.cacheDir, "kernelsu-tmp-lkm.ko")
                 file.outputStream().use { output ->
                     this?.copyTo(output)
@@ -1540,7 +1547,7 @@ private fun patchBootImage(
             // do nothing
         }
     }
-    cmd += " --kmi ${shellArg(targetKmi)}"
+    if (!bootConfig.noInstall) cmd += " --kmi ${shellArg(targetKmi)}"
 
     // output dir
     val downloadsDir =
@@ -1567,7 +1574,7 @@ private fun patchBootImage(
     val result = flashWithIO(ksudCmd(cmd), onStdout, onStderr)
     Log.i("KernelSU", "install boot result: ${result.isSuccess}")
     if (
-        result.isSuccess &&
+        result.isSuccess && (!bootConfig.noInstall || pendingUtsBoot != null) &&
         !recordPatchedUtsBootConfigurationToken(patchedUtsBootToken)
     ) {
         Log.e("KernelSU", "Failed to persist patched UTS boot configuration token")
@@ -1615,6 +1622,7 @@ fun patchBootImageV2(
     onStdout: (String) -> Unit,
     onStderr: (String) -> Unit,
     blockModules: String = "",
+    bootConfig: BootConfigOptions = BootConfigOptions(),
 ): Boolean {
     val normalizedModules = normalizeBlockModules(blockModules)
     if (normalizedModules == null) {
@@ -1623,6 +1631,12 @@ fun patchBootImageV2(
         return false
     }
 
+    val configOptions = bootConfig.commandOptions(directLkm = true)
+    if (configOptions == null) {
+        onStderr(ksuApp.getString(R.string.install_boot_config_invalid))
+        onFinish(false, 1)
+        return false
+    }
     val pendingUtsBoot = getPendingUtsBootTemplate()
     val pendingUtsBootExists = hasPendingUtsBootConfigFile()
     if (pendingUtsBootExists && pendingUtsBoot == null) {
@@ -1661,6 +1675,7 @@ fun patchBootImageV2(
         }
         val command = buildString {
             append("boot-patch-v2")
+            append(configOptions)
             if (normalizedModules.isNotEmpty()) {
                 append(" --block-module ")
                 append(shellArg(normalizedModules))
@@ -1742,6 +1757,7 @@ fun installBoot(
     onStdout: (String) -> Unit,
     onStderr: (String) -> Unit,
     blockModules: String = "",
+    bootConfig: BootConfigOptions = BootConfigOptions(),
 ): Boolean {
     if (embedLkmInBoot) {
         return patchBootImageV2(
@@ -1756,6 +1772,7 @@ fun installBoot(
             onStdout = onStdout,
             onStderr = onStderr,
             blockModules = blockModules,
+            bootConfig = bootConfig,
         )
     }
     val bootFile = bootUri?.let { uri ->
@@ -1781,6 +1798,7 @@ fun installBoot(
         onStdout = onStdout,
         onStderr = onStderr,
         blockModules = blockModules,
+        bootConfig = bootConfig,
     )
 }
 
@@ -1830,6 +1848,7 @@ fun downloadBoot(
     onStdout: (String) -> Unit,
     onStderr: (String) -> Unit,
     blockModules: String = "",
+    bootConfig: BootConfigOptions = BootConfigOptions(),
 ): Boolean {
     val bootFile = File(ksuApp.cacheDir, "download-boot.img")
     try {
@@ -1864,6 +1883,7 @@ fun downloadBoot(
         onStdout = onStdout,
         onStderr = onStderr,
         blockModules = blockModules,
+        bootConfig = bootConfig,
     )
 }
 

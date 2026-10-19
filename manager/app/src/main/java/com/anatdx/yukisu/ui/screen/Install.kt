@@ -185,6 +185,10 @@ fun InstallScreen(
     // Signature bypass - when enabled, only SuperKey authentication works
     var signatureBypass by remember { mutableStateOf(false) }
     var allowShell by remember { mutableStateOf(false) }
+    var noInstall by rememberSaveable { mutableStateOf(false) }
+    var noPreinit by rememberSaveable { mutableStateOf(false) }
+    var noCustomRc by rememberSaveable { mutableStateOf(false) }
+    var forcedFeatures by rememberSaveable { mutableStateOf(emptyList<String>()) }
     var blockModulesEnabled by rememberSaveable { mutableStateOf(false) }
     var blockModules by rememberSaveable { mutableStateOf("") }
     var blockModulesInitialized by rememberSaveable { mutableStateOf(false) }
@@ -208,6 +212,8 @@ fun InstallScreen(
         mutableStateOf(embedLkmInBootByDefault)
     }
 
+    val configOnly = noInstall && installMethod is InstallMethod.SelectFile && !embedLkmInBoot
+    val bootConfig = BootConfigOptions(configOnly, noPreinit, noCustomRc, forcedFeatures)
     val directKernelMethod = installMethod is InstallMethod.SelectFile ||
         installMethod is InstallMethod.DirectInstall ||
         installMethod is InstallMethod.DirectInstallToInactiveSlot
@@ -231,6 +237,7 @@ fun InstallScreen(
     }
 
     LaunchedEffect(installMethod) {
+        noInstall = false
         embedLkmInBoot = directKernelMethod && embedLkmInBootByDefault
     }
 
@@ -264,6 +271,7 @@ fun InstallScreen(
                             partition = "boot",
                             allowShell = allowShell,
                             blockModules = modules,
+                            bootConfig = bootConfig,
                             enableAdb = enableAdb,
                             backup = false,
                             superKey = effectiveSuperKey.ifBlank { null },
@@ -295,6 +303,7 @@ fun InstallScreen(
                     lkm = selectedLkm,
                     allowShell = allowShell,
                     blockModules = modules,
+                    bootConfig = bootConfig,
                     enableAdb = enableAdb,
                     backup = forceBackup,
                     superKey = effectiveSuperKey.ifBlank { null },
@@ -316,6 +325,7 @@ fun InstallScreen(
                 partition = partitionSelection,
                 allowShell = allowShell,
                 blockModules = modules,
+                bootConfig = bootConfig,
                 enableAdb = enableAdb,
                 backup = !utsBootRepatch &&
                     method is InstallMethod.SelectFile &&
@@ -336,7 +346,7 @@ fun InstallScreen(
     val onClickNext = onClickNext@{
         val method = installMethod
         if (method != null && !isResolvingKmi) {
-            if (embedLkmInBoot && directKernelMethod) {
+            if (configOnly || (embedLkmInBoot && directKernelMethod)) {
                 onInstall(method, lkmSelection, "")
                 return@onClickNext
             }
@@ -521,7 +531,7 @@ fun InstallScreen(
 
             // Select the target partition for direct LKM installation.
             AnimatedVisibility(
-                visible = !embedLkmInBoot &&
+                visible = !configOnly && !embedLkmInBoot &&
                     (installMethod is InstallMethod.DirectInstall ||
                         installMethod is InstallMethod.DirectInstallToInactiveSlot),
                 enter = fadeIn() + expandVertically(),
@@ -640,7 +650,7 @@ fun InstallScreen(
                     .padding(16.dp)
             ) {
                 // Select a local LKM file.
-                if (!utsBootRepatch) {
+                if (!utsBootRepatch && !configOnly) {
                     InstallSurface(
                         colors = getCardColors(MaterialTheme.colorScheme.surfaceVariant),
                         elevation = getCardElevation(),
@@ -677,10 +687,10 @@ fun InstallScreen(
 
                 // SuperKey input is shared by ramdisk and ImgPatch flows.
                 AnimatedVisibility(
-                    visible = installMethod is InstallMethod.DirectInstall || 
+                    visible = !configOnly && (installMethod is InstallMethod.DirectInstall ||
                               installMethod is InstallMethod.DirectInstallToInactiveSlot ||
                               installMethod is InstallMethod.SelectFile ||
-                              installMethod is InstallMethod.DownloadFile,
+                              installMethod is InstallMethod.DownloadFile),
                     enter = fadeIn() + expandVertically(),
                     exit = shrinkVertically() + fadeOut()
                 ) {
@@ -886,6 +896,20 @@ fun InstallScreen(
                             }
                             Spacer(modifier = Modifier.height(12.dp))
 
+                            BootConfigControls(
+                                allowConfigOnly = installMethod is InstallMethod.SelectFile,
+                                configOnly = configOnly,
+                                onConfigOnlyChange = {
+                                    noInstall = it
+                                    if (it) embedLkmInBoot = false
+                                },
+                                noPreinit = noPreinit,
+                                onNoPreinitChange = { noPreinit = it },
+                                noCustomRc = noCustomRc,
+                                onNoCustomRcChange = { noCustomRc = it },
+                                forcedFeatures = forcedFeatures,
+                                onForcedFeaturesChange = { forcedFeatures = it },
+                            )
                             if (directKernelMethod) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
@@ -906,13 +930,16 @@ fun InstallScreen(
                                     }
                                     YukiSwitch(
                                         checked = embedLkmInBoot,
-                                        onCheckedChange = { embedLkmInBoot = it },
+                                        onCheckedChange = {
+                                            embedLkmInBoot = it
+                                            if (it) noInstall = false
+                                        },
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
 
-                            if (installMethod is InstallMethod.SelectFile && !embedLkmInBoot) {
+                            if (installMethod is InstallMethod.SelectFile && !embedLkmInBoot && !configOnly) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
