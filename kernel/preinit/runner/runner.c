@@ -7,13 +7,15 @@
  * mounts (/metadata, /system, /vendor, /proc, /sys, /dev) are ready, but no
  * SELinux policy is loaded and init.rc has not been parsed.
  *
- * PID 1 only forks a worker, waits for it with a deadline, kills whatever is
- * left and then execs the real init with the original argv/envp. Everything
- * that can fail runs in the worker, so a crash there only costs the preinit
+ * PID 1 forks a subreaper that supervises a worker and cleans up its
+ * descendants, even after setsid(), without touching init's other children.
+ * PID 1 then execs the real init with the original argv/envp. Everything
+ * that can fail runs in the children, so a crash there only costs the preinit
  * actions, never the boot.
  */
 #include "nolibc.h"
 #include <linux/elf.h>
+#include <sys/prctl.h>
 
 #include "uapi/supercall.h"
 
@@ -45,6 +47,7 @@
 
 #define TOTAL_TIMEOUT_MS 30000
 #define EXEC_TIMEOUT_MS 5000
+#define CLEANUP_TIMEOUT_MS 1000
 #define BOOTCOUNT_LIMIT 3
 
 #define CONF_MAX (64 * 1024)
@@ -981,9 +984,9 @@ static int worker_main(void)
 
 /* ----------------------------------------------------------------- PID 1 */
 
-static void supervise(pid_t worker)
+static void supervise(pid_t worker, long timeout_ms)
 {
-	long deadline = now_ms() + TOTAL_TIMEOUT_MS;
+	long deadline = now_ms() + timeout_ms;
 	pid_t r;
 	int i;
 
@@ -992,8 +995,8 @@ static void supervise(pid_t worker)
 		if (r == worker || (r < 0 && errno != EINTR))
 			break;
 		if (now_ms() >= deadline) {
-			klog("timed out after %d ms, killing worker",
-			     TOTAL_TIMEOUT_MS);
+			klog("timed out after %ld ms, killing worker",
+			     timeout_ms);
 			kill(-worker, SIGKILL);
 			kill(worker, SIGKILL);
 			/*
@@ -1009,17 +1012,94 @@ static void supervise(pid_t worker)
 		}
 		sleep_ms(10);
 	}
+}
 
-	/*
-	 * Nothing may outlive preinit: once policy loads, leftovers would keep
-	 * running in the kernel domain. Orphans are reparented to us, reap what
-	 * has already exited. Do not wait for the rest: first stage init may
-	 * have left children of its own (e.g. snapuserd) that stay alive.
-	 */
-	kill(-worker, SIGKILL);
-	while ((r = waitpid(-1, NULL, WNOHANG)) > 0 ||
-	       (r < 0 && errno == EINTR))
-		;
+static void kill_children(int proc_fd)
+{
+	char entries[4096], path[64], stat[512], *tail, *end;
+	struct linux_dirent64 *d;
+	pid_t self = getpid();
+	long pid;
+	int n, off;
+
+	if (lseek(proc_fd, 0, SEEK_SET) < 0)
+		return;
+	while ((n = getdents64(proc_fd, (void *)entries, sizeof(entries))) >
+	       0) {
+		for (off = 0; off < n; off += d->d_reclen) {
+			d = (struct linux_dirent64 *)(entries + off);
+			pid = strtol(d->d_name, &end, 10);
+			if (pid <= 0 || *end)
+				continue;
+			snprintf(path, sizeof(path), "/proc/%ld/stat", pid);
+			if (read_file(path, stat, sizeof(stat)) <= 0)
+				continue;
+			tail = strrchr(stat, ')');
+			if (!tail || strlen(tail) < 4 ||
+			    strtol(tail + 4, NULL, 10) != self)
+				continue;
+			/* Child PIDs cannot be reused until we reap them. */
+			kill((pid_t)pid, SIGKILL);
+		}
+	}
+}
+
+static void reap_descendants(int proc_fd)
+{
+	long deadline = now_ms() + CLEANUP_TIMEOUT_MS;
+	pid_t r;
+
+	for (;;) {
+		do {
+			r = waitpid(-1, NULL, WNOHANG);
+		} while (r > 0 || (r < 0 && errno == EINTR));
+		if (r < 0 && errno == ECHILD)
+			return;
+		/* Killing direct children reparents their descendants to us. */
+		kill_children(proc_fd);
+		if (now_ms() >= deadline) {
+			klog("descendant cleanup timed out");
+			return;
+		}
+		sleep_ms(10);
+	}
+}
+
+static int reaper_main(void)
+{
+	struct sigaction action = {.sa_handler = SIG_DFL};
+	int proc_fd;
+	pid_t worker;
+
+	if (syscall(__NR_rt_sigaction, SIGCHLD, &action, NULL,
+		    sizeof(action.sa_mask))) {
+		klog("cannot reset SIGCHLD: %d, skipping preinit", errno);
+		return 1;
+	}
+	if (prctl(PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0)) {
+		klog("cannot become subreaper: %d, skipping preinit", errno);
+		return 1;
+	}
+	proc_fd = open("/proc", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+	if (proc_fd < 0) {
+		klog("cannot open procfs: %d, skipping preinit", errno);
+		return 1;
+	}
+	worker = fork();
+	if (!worker) {
+		close(proc_fd);
+		setpgid(0, 0);
+		_exit(worker_main());
+	}
+	if (worker > 0) {
+		setpgid(worker, worker);
+		supervise(worker, TOTAL_TIMEOUT_MS);
+		reap_descendants(proc_fd);
+	} else {
+		klog("worker fork failed: %d", errno);
+	}
+	close(proc_fd);
+	return worker < 0;
 }
 
 int main(int argc, char **argv, char **envp)
@@ -1030,11 +1110,11 @@ int main(int argc, char **argv, char **envp)
 	pid = fork();
 	if (pid == 0) {
 		setpgid(0, 0);
-		_exit(worker_main());
+		_exit(reaper_main());
 	}
 	if (pid > 0) {
 		setpgid(pid, pid);
-		supervise(pid);
+		supervise(pid, TOTAL_TIMEOUT_MS + 3 * CLEANUP_TIMEOUT_MS);
 	} else {
 		klog("fork failed: %d", errno);
 	}

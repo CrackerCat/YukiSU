@@ -41,7 +41,7 @@ write    /proc/sys/kernel/printk_devkmsg on
 - 固件加载没有用户态回退，固件只能由内核直接从 `/vendor/firmware` 等路径加载。
 - 不能读写属性。
 - 只有 first stage 的 vendor 模块已经加载，依赖 vendor_dlkm（second stage 才加载）中符号的 `.ko` 会加载失败。
-- 不允许常驻：preinit 结束时残留的进程都会被杀掉。整个 preinit 阶段最多 30 秒。
+- 不允许常驻：preinit 结束时所有后代进程都会被杀掉，包括自行创建会话的程序。整个 preinit 阶段最多 30 秒。
 - 改动在**下次开机**生效，热安装不会执行 preinit。
 - 目录和 `preinit.conf`（以及用到的 `.ko`、程序文件）的属主必须是 root，且 group/other 不可写。ksud 复制时会自动处理。
 - ksud 复制时保留文件原有的权限位（去掉 group/other 写权限）。安装器会把模块文件设为 `0644`，所以 `exec` 要运行的程序需要在 `customize.sh` 里 `set_perm $MODPATH/preinit/bin/xxx 0 0 0755`。

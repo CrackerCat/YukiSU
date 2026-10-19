@@ -41,7 +41,7 @@ Programs started by `exec` run as root with full capabilities and no SELinux res
 - The firmware loader has no userspace fallback, firmware must be loadable directly from `/vendor/firmware` and similar paths.
 - Properties can neither be read nor set.
 - Only the vendor modules of first stage are loaded. A `.ko` that depends on symbols from vendor_dlkm (loaded in second stage) fails to load.
-- Nothing may keep running: all processes left over when preinit ends are killed. The whole preinit stage is limited to 30 seconds.
+- Nothing may keep running: all descendant processes are killed when preinit ends, including programs that create their own session. The whole preinit stage is limited to 30 seconds.
 - Changes take effect on the **next boot**; a hot install does not run preinit.
 - The directory and `preinit.conf` (and the `.ko` / program files used) must be owned by root and not writable by group or others. ksud takes care of this when copying.
 - ksud keeps the permission bits of each file (minus group/other write). The installer sets module files to `0644`, so programs run by `exec` need `set_perm $MODPATH/preinit/bin/xxx 0 0 0755` in `customize.sh`.
