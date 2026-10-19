@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeveloperMode
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.outlined.Warning
@@ -185,6 +187,7 @@ fun InstallScreen(
     // Signature bypass - when enabled, only SuperKey authentication works
     var signatureBypass by remember { mutableStateOf(false) }
     var allowShell by remember { mutableStateOf(false) }
+    var advancedOptionsExpanded by rememberSaveable { mutableStateOf(false) }
     var noInstall by rememberSaveable { mutableStateOf(false) }
     var noPreinit by rememberSaveable { mutableStateOf(false) }
     var noCustomRc by rememberSaveable { mutableStateOf(false) }
@@ -835,7 +838,16 @@ fun InstallScreen(
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
+                                    .clickable(
+                                        role = Role.Button,
+                                        onClickLabel = stringResource(
+                                            if (advancedOptionsExpanded) R.string.collapse_menu else R.string.expand_menu
+                                        ),
+                                    ) { advancedOptionsExpanded = !advancedOptionsExpanded },
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 YukiIcon(
                                     Icons.Default.DeveloperMode,
@@ -846,201 +858,214 @@ fun InstallScreen(
                                 Text(
                                     text = stringResource(id = R.string.advanced_options),
                                     style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.secondary
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                YukiIcon(
+                                    if (advancedOptionsExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.secondary,
                                 )
                             }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
+                            AnimatedVisibility(
+                                visible = advancedOptionsExpanded,
+                                enter = fadeIn() + expandVertically(),
+                                exit = shrinkVertically() + fadeOut(),
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(R.string.install_block_modules),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.install_block_modules_warning),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f),
-                                    )
-                                }
-                                YukiSwitch(
-                                    checked = blockModulesEnabled,
-                                    onCheckedChange = { blockModulesEnabled = it },
-                                )
-                            }
-                            if (blockModulesEnabled) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                OutlinedTextField(
-                                    value = blockModules,
-                                    onValueChange = {
-                                        blockModules = it
-                                        blockModulesInitialized = true
-                                    },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    label = { Text(stringResource(R.string.install_block_modules_list)) },
-                                    supportingText = {
-                                        Text(stringResource(
-                                            if (normalizedBlockModules == null) R.string.install_block_modules_invalid
-                                            else R.string.install_block_modules_summary
-                                        ))
-                                    },
-                                    isError = normalizedBlockModules == null,
-                                    singleLine = true,
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
+                                Column {
+                                    Spacer(modifier = Modifier.height(12.dp))
 
-                            BootConfigControls(
-                                allowConfigOnly = installMethod is InstallMethod.SelectFile,
-                                configOnly = configOnly,
-                                onConfigOnlyChange = {
-                                    noInstall = it
-                                    if (it) embedLkmInBoot = false
-                                },
-                                noPreinit = noPreinit,
-                                onNoPreinitChange = { noPreinit = it },
-                                noCustomRc = noCustomRc,
-                                onNoCustomRcChange = { noCustomRc = it },
-                                forcedFeatures = forcedFeatures,
-                                onForcedFeaturesChange = { forcedFeatures = it },
-                            )
-                            if (directKernelMethod) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = stringResource(R.string.install_direct_lkm_title),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        )
-                                        Text(
-                                            text = stringResource(R.string.install_direct_lkm_summary),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f),
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = stringResource(R.string.install_block_modules),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.install_block_modules_warning),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f),
+                                            )
+                                        }
+                                        YukiSwitch(
+                                            checked = blockModulesEnabled,
+                                            onCheckedChange = { blockModulesEnabled = it },
                                         )
                                     }
-                                    YukiSwitch(
-                                        checked = embedLkmInBoot,
-                                        onCheckedChange = {
-                                            embedLkmInBoot = it
-                                            if (it) noInstall = false
+                                    if (blockModulesEnabled) {
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        OutlinedTextField(
+                                            value = blockModules,
+                                            onValueChange = {
+                                                blockModules = it
+                                                blockModulesInitialized = true
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            label = { Text(stringResource(R.string.install_block_modules_list)) },
+                                            supportingText = {
+                                                Text(stringResource(
+                                                    if (normalizedBlockModules == null) R.string.install_block_modules_invalid
+                                                    else R.string.install_block_modules_summary
+                                                ))
+                                            },
+                                            isError = normalizedBlockModules == null,
+                                            singleLine = true,
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    BootConfigControls(
+                                        allowConfigOnly = installMethod is InstallMethod.SelectFile,
+                                        configOnly = configOnly,
+                                        onConfigOnlyChange = {
+                                            noInstall = it
+                                            if (it) embedLkmInBoot = false
                                         },
+                                        noPreinit = noPreinit,
+                                        onNoPreinitChange = { noPreinit = it },
+                                        noCustomRc = noCustomRc,
+                                        onNoCustomRcChange = { noCustomRc = it },
+                                        forcedFeatures = forcedFeatures,
+                                        onForcedFeaturesChange = { forcedFeatures = it },
                                     )
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                            }
+                                    if (directKernelMethod) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = stringResource(R.string.install_direct_lkm_title),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                )
+                                                Text(
+                                                    text = stringResource(R.string.install_direct_lkm_summary),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f),
+                                                )
+                                            }
+                                            YukiSwitch(
+                                                checked = embedLkmInBoot,
+                                                onCheckedChange = {
+                                                    embedLkmInBoot = it
+                                                    if (it) noInstall = false
+                                                },
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
 
-                            if (installMethod is InstallMethod.SelectFile && !embedLkmInBoot && !configOnly) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = stringResource(id = R.string.install_force_backup),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                                        )
-                                        Text(
-                                            text = stringResource(id = R.string.install_force_backup_summary),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                                    if (installMethod is InstallMethod.SelectFile && !embedLkmInBoot && !configOnly) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = stringResource(id = R.string.install_force_backup),
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                )
+                                                Text(
+                                                    text = stringResource(id = R.string.install_force_backup_summary),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                                                )
+                                            }
+                                            YukiSwitch(
+                                                checked = forceBackup,
+                                                onCheckedChange = { forceBackup = it }
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = stringResource(id = R.string.allow_shell),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                                            )
+                                            Text(
+                                                text = stringResource(id = R.string.allow_shell_summary),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                                            )
+                                        }
+                                        YukiSwitch(
+                                            checked = allowShell,
+                                            onCheckedChange = { allowShell = it }
                                         )
                                     }
-                                    YukiSwitch(
-                                        checked = forceBackup,
-                                        onCheckedChange = { forceBackup = it }
-                                    )
-                                }
 
-                                Spacer(modifier = Modifier.height(12.dp))
-                            }
+                                    Spacer(modifier = Modifier.height(12.dp))
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(id = R.string.allow_shell),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                    Text(
-                                        text = stringResource(id = R.string.allow_shell_summary),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
-                                    )
-                                }
-                                YukiSwitch(
-                                    checked = allowShell,
-                                    onCheckedChange = { allowShell = it }
-                                )
-                            }
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = stringResource(id = R.string.enable_adb),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                                            )
+                                            Text(
+                                                text = stringResource(id = R.string.enable_adb_summary),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                                            )
+                                        }
+                                        YukiSwitch(
+                                            checked = enableAdb,
+                                            onCheckedChange = { enableAdb = it }
+                                        )
+                                    }
 
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(id = R.string.enable_adb),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                    Text(
-                                        text = stringResource(id = R.string.enable_adb_summary),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
-                                    )
-                                }
-                                YukiSwitch(
-                                    checked = enableAdb,
-                                    onCheckedChange = { enableAdb = it }
-                                )
-                            }
-
-                            if (utsBootRepatch) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                        .copy(alpha = 0.12f)
-                                )
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text(
-                                        text = stringResource(
-                                            R.string.uts_boot_repatch_option
-                                        ),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Text(
-                                        text = stringResource(
-                                            R.string.uts_boot_repatch_changed
-                                        ),
-                                        style = MaterialTheme.typography.labelLarge,
-                                        color = MaterialTheme.colorScheme.secondary
-                                    )
+                                    if (utsBootRepatch) {
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        HorizontalDivider(
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                .copy(alpha = 0.12f)
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = stringResource(
+                                                    R.string.uts_boot_repatch_option
+                                                ),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Text(
+                                                text = stringResource(
+                                                    R.string.uts_boot_repatch_changed
+                                                ),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                color = MaterialTheme.colorScheme.secondary
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
