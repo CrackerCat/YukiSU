@@ -18,6 +18,7 @@
 #include "klog.h" // IWYU pragma: keep
 #include "ksu.h"
 #include "selinux/selinux.h"
+#include "util.h"
 
 static_assert(sizeof(struct ksu_uts_template) == 400,
 	      "ksu_uts_template ABI drift");
@@ -732,7 +733,7 @@ void ksu_uts_view_on_setresuid(uid_t old_uid, uid_t new_uid)
 	mutex_unlock(&uts_view_lock);
 
 	old_cred = override_creds(ksu_cred);
-	ret = ksys_unshare(CLONE_NEWUTS);
+	ret = ksyscall(unshare, CLONE_NEWUTS);
 	revert_creds(old_cred);
 	if (ret) {
 		pr_warn("uts_view: CLONE_NEWUTS failed for pid %d: %ld\n",

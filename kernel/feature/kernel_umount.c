@@ -32,6 +32,7 @@
 #include "runtime/ksud_boot.h"
 #include "runtime/ksud.h"
 #include "selinux/selinux.h"
+#include "util.h"
 
 static bool ksu_kernel_umount_enabled = true;
 static bool ksu_webview_zygote_umount_enabled;
@@ -429,10 +430,10 @@ static void umount_tw_func(struct callback_head *cb)
 	if (READ_ONCE(ksu_unshare_mnt_enabled) &&
 	    !(current->flags & PF_EXITING) && current->fs && current->nsproxy) {
 		/* Clone the remaining mounts only after all detach attempts. */
-		int ret = ksys_unshare(CLONE_NEWNS);
+		long ret = ksyscall(unshare, CLONE_NEWNS);
 
 		if (ret)
-			pr_warn_ratelimited("unshare_mnt: pid %d failed: %d\n",
+			pr_warn_ratelimited("unshare_mnt: pid %d failed: %ld\n",
 					    current->pid, ret);
 	}
 
