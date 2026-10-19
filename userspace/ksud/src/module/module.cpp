@@ -636,6 +636,17 @@ int regenerate_preinit_rc(const std::filesystem::path& preinit_dir,
     }
 
     (void)lsetfilecon(out_path, preinit::file_context(preinit_dir));
+    const int dir_fd = open(preinit_dir.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+    if (dir_fd < 0) {
+        LOGW("Failed to open %s for sync: %s", preinit_dir.c_str(), strerror(errno));
+        return 1;
+    }
+    const bool synced = fsync(dir_fd) == 0;
+    const bool closed = close(dir_fd) == 0;
+    if (!synced || !closed) {
+        LOGW("Failed to sync %s", preinit_dir.c_str());
+        return 1;
+    }
     return 0;
 }
 
@@ -675,8 +686,10 @@ int regenerate_preinit_rc() {
             stale.emplace_back(candidate);
     }
     const int rc_result = regenerate_preinit_rc(dir, modules);
-    for (const auto& path : stale)
-        std::filesystem::remove(path / MODULES_RC_FILE, ec);
+    if (rc_result == 0) {
+        for (const auto& path : stale)
+            std::filesystem::remove(path / MODULES_RC_FILE, ec);
+    }
     const int sync_result =
         preinit::sync(dir, stale, modules, (get_flags() & KSU_GET_INFO_FLAG_PREINIT) != 0);
     return rc_result != 0 ? rc_result : sync_result;
