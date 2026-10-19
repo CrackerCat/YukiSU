@@ -15,6 +15,6 @@ std::map<std::string, std::string> module_states();
 void warn_status(const std::string& id);
 void on_boot_completed();
 int reset_bootcount();
-int print_status();
+int print_status(bool json = false);
 
 }  // namespace ksud::preinit

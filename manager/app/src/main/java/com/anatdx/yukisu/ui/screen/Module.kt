@@ -147,6 +147,17 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
     )
     var showBottomSheet by remember { mutableStateOf(false) }
     var showModuleCompat by rememberSaveable { mutableStateOf(false) }
+    var showPreinit by rememberSaveable { mutableStateOf(false) }
+
+    if (showPreinit) {
+        ModulePreinitDialog(
+            onDismiss = { showPreinit = false },
+            onReset = {
+                viewModel.markNeedRefresh()
+                scope.launch { viewModel.fetchModuleList() }
+            },
+        )
+    }
 
     if (showModuleCompat) {
         ModuleCompatDialog(onDismiss = { showModuleCompat = false })
@@ -616,6 +627,13 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                             showModuleCompat = true
                         }
                     },
+                    onPreinit = {
+                        scope.launch {
+                            bottomSheetState.hide()
+                            showBottomSheet = false
+                            showPreinit = true
+                        }
+                    },
                     onCheckConflicts = {
                         if (!checkingConflicts) {
                             checkingConflicts = true
@@ -832,6 +850,7 @@ private fun ModuleBottomSheetContent(
     onMountFilter: (String) -> Unit,
     checkingConflicts: Boolean,
     onModuleCompat: () -> Unit,
+    onPreinit: () -> Unit,
     onCheckConflicts: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -908,6 +927,9 @@ private fun ModuleBottomSheetContent(
                 shapes = if (isExpressiveUi) ButtonDefaults.shapes() else
                     ButtonDefaults.shapes(shape = ButtonDefaults.shape, pressedShape = ButtonDefaults.shape),
             ) { Text(stringResource(R.string.module_compat_title)) }
+            OutlinedButton(onClick = onPreinit, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.module_preinit_title))
+            }
             ConfigChoice(stringResource(R.string.kasumi_mount_filter), mountFilter,
                 listOf("all", "auto", "kasumi", "overlay", "magic", "none", "kasumi-active"),
                 mountState != null) { value ->

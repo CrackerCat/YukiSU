@@ -138,10 +138,10 @@ int cmd_module(const std::vector<std::string>& args) {
         return module_run_action(args[1]);
     } else if (subcmd == "list") {
         return module_list();
-    } else if (subcmd == "preinit" && args.size() == 2) {
-        if (args[1] == "status")
-            return preinit::print_status();
-        if (args[1] == "reset")
+    } else if (subcmd == "preinit" && args.size() >= 2) {
+        if (args[1] == "status" && (args.size() == 2 || (args.size() == 3 && args[2] == "--json")))
+            return preinit::print_status(args.size() == 3);
+        if (args[1] == "reset" && args.size() == 2)
             return preinit::reset_bootcount();
         return 1;
     } else if (subcmd == "config") {

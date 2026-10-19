@@ -1,4 +1,5 @@
 #include "preinit.hpp"
+#include "../../../common/json.hpp"
 #include "../core/ksucalls.hpp"
 #include "../core/restorecon.hpp"
 #include "../defs.hpp"
@@ -481,8 +482,20 @@ int reset_bootcount() {
     return remove_path(dir / kBootcount) && sync_path(dir) ? 0 : 1;
 }
 
-int print_status() {
+int print_status(bool json) {
     const auto count = read_bootcount();
+    if (json) {
+        printf("{\"supported\":%s,\"boot_count\":%llu,\"bootloop\":%s,\"modules\":[",
+               (get_flags() & KSU_GET_INFO_FLAG_PREINIT) != 0 ? "true" : "false",
+               static_cast<unsigned long long>(count), count > kBootcountLimit ? "true" : "false");
+        bool first = true;
+        for (const auto& [id, state] : module_states()) {
+            printf("%s{\"id\":%s,\"state\":%s}", first ? "" : ",", json::escape_string(id).c_str(),
+                   json::escape_string(state).c_str());
+            first = false;
+        }
+        return puts("]}") == EOF ? 1 : 0;
+    }
     if (count > kBootcountLimit)
         printf("preinit: disabled after 3 failed boots (reset with `ksud module preinit reset`)\n");
     else

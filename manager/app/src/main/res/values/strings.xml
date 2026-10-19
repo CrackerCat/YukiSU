@@ -1084,4 +1084,13 @@
     <string name="install_feature_force_off" tools:ignore="MissingTranslation">Force off</string>
     <string name="install_feature_kernel_umount" tools:ignore="MissingTranslation">Unmount modules for unprivileged apps</string>
     <string name="install_feature_sulog" tools:ignore="MissingTranslation">Root access logging</string>
+    <string name="module_preinit_title" tools:ignore="MissingTranslation">Module preinit</string>
+    <string name="module_preinit_ready" tools:ignore="MissingTranslation">The current kernel can run module preinit.</string>
+    <string name="module_preinit_boot_count" tools:ignore="MissingTranslation">Incomplete boot attempts: %1$d / 3</string>
+    <string name="module_preinit_empty" tools:ignore="MissingTranslation">No modules have staged preinit actions.</string>
+    <string name="module_preinit_staged" tools:ignore="MissingTranslation">Prepared for the next boot</string>
+    <string name="module_preinit_manage_hint" tools:ignore="MissingTranslation">To disable all preinit actions, enable Disable module preinit on the installation page, then flash the patched image and reboot.</string>
+    <string name="module_preinit_reset" tools:ignore="MissingTranslation">Reset boot failure counter</string>
+    <string name="module_preinit_reset_confirm" tools:ignore="MissingTranslation">Preinit actions will be retried on the next boot if the kernel allows them. Fix or disable the module that caused the boot failure before resetting.</string>
+    <string name="module_preinit_reset_done" tools:ignore="MissingTranslation">Counter reset. No actions were run immediately.</string>
 </resources>

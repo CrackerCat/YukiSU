@@ -948,4 +948,13 @@
     <string name="install_feature_force_off">強制關閉</string>
     <string name="install_feature_kernel_umount">為未授權應用程式卸載模組掛載</string>
     <string name="install_feature_sulog">Root 授權記錄</string>
+    <string name="module_preinit_title">模組 preinit</string>
+    <string name="module_preinit_ready">目前核心可以執行模組 preinit。</string>
+    <string name="module_preinit_boot_count">未完成啟動次數：%1$d / 3</string>
+    <string name="module_preinit_empty">沒有模組準備了 preinit 操作。</string>
+    <string name="module_preinit_staged">已準備，下次啟動時執行</string>
+    <string name="module_preinit_manage_hint">若要完全關閉 preinit，請在安裝頁啟用「停用模組 preinit」，重新修補、刷入映像並重新啟動。</string>
+    <string name="module_preinit_reset">重設啟動失敗計數</string>
+    <string name="module_preinit_reset_confirm">核心允許時，preinit 將在下次啟動時重試。請先修復或停用導致啟動失敗的模組，再重設計數。</string>
+    <string name="module_preinit_reset_done">計數已重設，不會立即執行 preinit。</string>
 </resources>

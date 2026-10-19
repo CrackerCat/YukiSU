@@ -71,7 +71,7 @@ const std::vector<Command>& commands() {
         {"module action", "Run a module action", "<ID>", 1, 1},
         {"module list", "List modules as JSON", ""},
         {"module preinit", "Manage actions before SELinux policy loads", "<COMMAND>"},
-        {"module preinit status", "Show preinit status", ""},
+        {"module preinit status", "Show preinit status", "", 0, 0, {kJson}, true},
         {"module preinit reset", "Retry preinit after failed boots", ""},
         {"module compat", "Configure global module version compatibility", "<COMMAND>"},
         {"module compat get", "Read compatibility settings and actual versions", ""},

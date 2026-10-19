@@ -1078,4 +1078,13 @@
     <string name="install_feature_force_off">强制关闭</string>
     <string name="install_feature_kernel_umount">为未授权应用卸载模块挂载</string>
     <string name="install_feature_sulog">Root 授权日志</string>
+    <string name="module_preinit_title">模块 preinit</string>
+    <string name="module_preinit_ready">当前内核可以执行模块 preinit。</string>
+    <string name="module_preinit_boot_count">未完成启动次数：%1$d / 3</string>
+    <string name="module_preinit_empty">没有模块准备了 preinit 操作。</string>
+    <string name="module_preinit_staged">已准备，下次启动时执行</string>
+    <string name="module_preinit_manage_hint">要彻底关闭 preinit，请在安装页启用“禁用模块 preinit”，重新修补、刷入镜像并重启。</string>
+    <string name="module_preinit_reset">重置启动失败计数</string>
+    <string name="module_preinit_reset_confirm">内核允许时，preinit 将在下次启动时重试。请先修复或禁用导致启动失败的模块，再重置计数。</string>
+    <string name="module_preinit_reset_done">计数已重置，不会立即执行 preinit。</string>
 </resources>

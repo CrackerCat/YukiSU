@@ -55,6 +55,8 @@ write    /proc/sys/kernel/printk_devkmsg on
 ksud module preinit status
 ```
 
+管理器模块页的菜单中也可以打开“模块 preinit”，查看当前内核是否允许执行、启动失败计数和各模块的准备状态。自动化工具可使用 `ksud module preinit status --json` 获取结构化结果。
+
 ## 防砖
 
 runner 执行任何动作前会把启动计数加 1，开机完成后由 ksud 清零。连续 3 次开机没有完成时，preinit 会被跳过，并保持禁用，直到某个模块的 preinit 内容发生变化，或者手动执行：
@@ -62,6 +64,8 @@ runner 执行任何动作前会把启动计数加 1，开机完成后由 ksud �
 ```sh
 ksud module preinit reset
 ```
+
+也可以在管理器的“模块 preinit”对话框中重置计数。重置前请先修复或禁用导致启动失败的模块；重置不会立即运行 preinit，内核允许时会在下次启动重试。
 
 关机充电模式下不会执行 preinit；安全模式会禁用所有模块，下次开机时它们的 preinit 内容也会被移除。如果需要手动救砖，可以在 recovery 里删除 `/metadata/vold/ksu/preinit`（或 `/metadata/watchdog/ksu/preinit`、`/metadata/ksu/preinit`，以实际存在的为准），或者 `fastboot boot` 原厂镜像后删除。
 
