@@ -1,0 +1,179 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+import java.security.MessageDigest
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+
+// Exercise the production task with local archives and native inputs.
+gradle.projectsEvaluated {
+    def app = gradle.rootProject.project(':app')
+    def generatorType = app.tasks.named('generateReleaseOpenSourceLicenses').get().class.superclass
+    def root = app.layout.buildDirectory.dir('licenseGenerationTests').get().asFile
+    def inputs = new File(root, 'inputs')
+    def texts = new File(inputs, 'texts')
+    texts.mkdirs()
+    def writeJson = { File file, value -> file.setText(JsonOutput.toJson(value), 'UTF-8') }
+    def readJson = { File file -> new JsonSlurper().parse(file) }
+    def digest = { byte[] bytes -> MessageDigest.getInstance('SHA-256').digest(bytes).encodeHex().toString() }
+    def archive = { Map<String, byte[]> entries ->
+        def bytes = new ByteArrayOutputStream()
+        new ZipOutputStream(bytes).withCloseable { zip ->
+            entries.each { name, content ->
+                def entry = new ZipEntry(name)
+                entry.time = 0
+                zip.putNextEntry(entry)
+                zip.write(content)
+                zip.closeEntry()
+            }
+        }
+        bytes.toByteArray()
+    }
+    def retained = new File(texts, 'retained.txt')
+    retained.setText('Retained attribution\n', 'UTF-8')
+    def nativeFile = new File(inputs, 'CMakeLists.txt')
+    nativeFile.setText('changed build input\r\n', 'UTF-8')
+    def nativeLicense = new File(inputs, 'LICENSE')
+    nativeLicense.setText('Current native notice\n', 'UTF-8')
+    def luaNotice = '''Copyright (C) Current Lua Owner.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+'''
+    def luaSource = { String notice ->
+        '/* See Copyright Notice at the end of this file. */\r\n' +
+        '#define LUA_COPYRIGHT "Unrelated macro"\r\n' +
+        '/******************************************************************************\r\n' +
+        notice.readLines().collect { '* ' + it }.join('\r\n') +
+        '\r\n******************************************************************************/\r\n'
+    }
+    def luaHeader = new File(inputs, 'lua.h')
+    luaHeader.setText(luaSource(luaNotice), 'UTF-8')
+    def artifact = new File(inputs, 'fixture-2.0.aar')
+    artifact.bytes = archive([
+        'META-INF/LICENSE': 'Current Maven notice\n'.bytes,
+        'classes.jar': archive(['META-INF/NOTICE': 'Nested JAR notice\n'.bytes]),
+    ])
+    def extraArtifact = new File(inputs, 'fixture-2.0-extra.jar')
+    extraArtifact.bytes = archive(['META-INF/NOTICE': 'Classifier notice\n'.bytes])
+    def catalog = new File(inputs, 'components.json')
+    def entries = [
+        [id: 'fixture', name: 'Fixture', license: 'MIT', source: 'https://example.invalid/fixture',
+         texts: ['retained.txt'], artifacts: ['example:fixture']],
+        [id: 'native', name: 'Native', license: 'MIT', source: 'https://example.invalid/native/tree/{revision}/src',
+         texts: ['retained.txt'], sourceTexts: ['LICENSE'], versionFrom: 'native'],
+        [id: 'lua', name: 'Lua', license: 'MIT', source: 'https://example.invalid/lua/tree/{revision}',
+         texts: [], mitLicenseFrom: 'lua.h', versionFrom: 'native'],
+        [id: 'debug', name: 'Debug', license: 'MIT', source: 'https://example.invalid/debug',
+         texts: ['retained.txt'], version: 'test', buildType: 'debug'],
+    ]
+    writeJson(catalog, entries)
+    def nativeInputs = new File(inputs, 'native-inputs.json')
+    writeJson(nativeInputs, [files: ['CMakeLists.txt', 'LICENSE', 'lua.h'], submodules: ['native']])
+    def initialRevision = '123456789abcdef0123456789abcdef0123456789a'
+    def upgradedRevision = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+    def configureFixture = { task, String variant, String revision ->
+        task.catalog.set(catalog)
+        task.licenseTexts.set(texts)
+        task.nativeInputs.set(nativeInputs)
+        task.nativeSources.from(nativeFile, nativeLicense, luaHeader)
+        task.nativeRevisions.set([native: revision])
+        task.repositoryRoot.set(inputs)
+        task.artifacts.from(artifact, extraArtifact)
+        task.coordinates.set(['example:fixture:2.0': [artifact.name, extraArtifact.name]])
+        task.buildType.set(variant)
+        task.outputDirectory.set(new File(root, variant))
+    }
+    def fixture = app.tasks.register('generateFixtureOpenSourceLicenses', generatorType) {
+        configureFixture(it, 'release', initialRevision)
+    }
+    def debugFixture = app.tasks.register('generateDebugFixtureOpenSourceLicenses', generatorType) {
+        configureFixture(it, 'debug', initialRevision)
+    }
+    def upgradedFixture = app.tasks.register('generateUpgradedFixtureOpenSourceLicenses', generatorType) {
+        configureFixture(it, 'release', upgradedRevision)
+        it.outputDirectory.set(new File(root, 'upgraded'))
+    }
+    app.tasks.register('checkLicenseGeneration') {
+        group = 'verification'
+        description = 'Checks license generation against local dependency upgrade fixtures.'
+        dependsOn(fixture, debugFixture, upgradedFixture)
+        doLast {
+            def task = fixture.get()
+            def output = new File(root, 'release')
+            def components = { readJson(new File(output, 'open_source/components.json')) }
+            def provenance = { readJson(new File(output, 'open_source/inputs.json')) }
+            def packagedTexts = {
+                components().collectMany { it.texts }.collect {
+                    def file = new File(output, it.path)
+                    assert file.isFile()
+                    assert file.name == digest(file.bytes) + '.txt'
+                    file.getText('UTF-8')
+                }.toSet()
+            }
+            assert components()*.id.toSet() == ['fixture', 'native', 'lua'].toSet()
+            assert readJson(new File(root, 'debug/open_source/components.json'))*.id.toSet() == ['fixture', 'native', 'lua', 'debug'].toSet()
+            assert components().find { it.id == 'fixture' }.version == '2.0'
+            assert components().find { it.id == 'fixture' }.artifacts == ['example:fixture:2.0']
+            assert components().find { it.id == 'native' }.version == '123456789abc'
+            assert components().find { it.id == 'native' }.source == "https://example.invalid/native/tree/${initialRevision}/src"
+            def upgraded = readJson(new File(root, 'upgraded/open_source/components.json')).find { it.id == 'native' }
+            assert upgraded.version == 'bbbbbbbbbbbb'
+            assert upgraded.source == "https://example.invalid/native/tree/${upgradedRevision}/src"
+            assert packagedTexts() == ['Retained attribution\n', 'Current Maven notice\n',
+                                       'Nested JAR notice\n', 'Current native notice\n', 'Classifier notice\n', luaNotice].toSet()
+            assert provenance().runtimeArtifacts['example:fixture:2.0'].size() == 2
+            assert provenance().runtimeArtifacts['example:fixture:2.0'].find { it.file == artifact.name }.sha256 == digest(artifact.bytes)
+            assert provenance().nativeFiles['CMakeLists.txt'] == digest('changed build input\n'.bytes)
+
+            def before = provenance()
+            nativeFile.setText('new build input\n', 'UTF-8')
+            nativeLicense.setText('Updated native notice\n', 'UTF-8')
+            def updatedLuaNotice = luaNotice.replace('Current Lua Owner', 'Updated Lua Owner')
+            luaHeader.setText(luaSource(updatedLuaNotice), 'UTF-8')
+            artifact.bytes = archive(['META-INF/LICENSE': 'Updated Maven notice\n'.bytes])
+            task.generate()
+            assert provenance().nativeFiles['CMakeLists.txt'] != before.nativeFiles['CMakeLists.txt']
+            assert provenance().runtimeArtifacts['example:fixture:2.0'].sha256 != before.runtimeArtifacts['example:fixture:2.0'].sha256
+            assert packagedTexts().containsAll(['Updated native notice\n', 'Updated Maven notice\n'])
+            assert packagedTexts().contains(updatedLuaNotice)
+            assert !packagedTexts().contains(luaNotice)
+            assert !packagedTexts().contains('Nested JAR notice\n')
+
+            def expectFailure = { String message, Closure action ->
+                try {
+                    action()
+                } catch (IllegalStateException expected) {
+                    assert expected.message.contains(message) : expected.message
+                    return
+                }
+                throw new AssertionError('Expected failure: ' + message)
+            }
+            writeJson(catalog, entries.findAll { it.id != 'fixture' })
+            expectFailure('Missing licenses for runtime modules') { task.generate() }
+            writeJson(catalog, entries + entries.first())
+            expectFailure('Duplicate modules') { task.generate() }
+            writeJson(catalog, entries.collect { it.id == 'fixture' ? it + [artifacts: ['example:fixture:1.0']] : it })
+            expectFailure('without a version') { task.generate() }
+            writeJson(catalog, entries)
+            luaHeader.setText('/* No license here. */', 'UTF-8')
+            expectFailure('Expected one MIT license comment') { task.generate() }
+            luaHeader.setText(luaSource(updatedLuaNotice) + luaSource(luaNotice), 'UTF-8')
+            expectFailure('Expected one MIT license comment') { task.generate() }
+            luaHeader.setText(luaSource(updatedLuaNotice), 'UTF-8')
+            writeJson(catalog, entries.collect { it.id == 'native' ? it + [source: 'https://example.invalid/native/tree/old'] : it })
+            expectFailure('source template') { task.generate() }
+            writeJson(catalog, entries.collect { it.id == 'fixture' ? it + [source: 'https://example.invalid/tree/{revision}'] : it })
+            expectFailure('source template') { task.generate() }
+            writeJson(catalog, entries)
+            retained.setText('', 'UTF-8')
+            expectFailure('Empty license text') { task.generate() }
+            retained.setText('Retained attribution\n', 'UTF-8')
+            assert nativeLicense.delete()
+            expectFailure('Missing native license input') { task.generate() }
+            nativeLicense.setText('Updated native notice\n', 'UTF-8')
+            task.generate()
+            logger.lifecycle('License generation fixtures passed: upgrades, source revisions, extracted notices, fingerprints, variants and failure checks.')
+        }
+    }
+}

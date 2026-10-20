@@ -64,7 +64,7 @@ abstract class GenerateOpenSourceLicenses : DefaultTask() {
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    abstract val nativeAudit: RegularFileProperty
+    abstract val nativeInputs: RegularFileProperty
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -81,7 +81,7 @@ abstract class GenerateOpenSourceLicenses : DefaultTask() {
     abstract val artifacts: ConfigurableFileCollection
 
     @get:Input
-    abstract val coordinates: MapProperty<String, String>
+    abstract val coordinates: MapProperty<String, List<String>>
 
     @get:Input
     abstract val buildType: Property<String>
@@ -92,23 +92,27 @@ abstract class GenerateOpenSourceLicenses : DefaultTask() {
     @Suppress("UNCHECKED_CAST")
     @TaskAction
     fun generate() {
-        val audit = JsonSlurper().parse(nativeAudit.get().asFile) as Map<String, Map<String, String>>
-        audit.getValue("files").forEach { (path, expected) ->
+        fun sha256(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256")
+            .digest(bytes).joinToString("") { "%02x".format(it) }
+        val inputs = JsonSlurper().parse(nativeInputs.get().asFile) as Map<String, List<String>>
+        val nativeHashes = inputs.getValue("files").sorted().associateWith { path ->
             val file = repositoryRoot.get().file(path).asFile
-            check(file.isFile) { "Missing audited native input: $path" }
-            val actual = MessageDigest.getInstance("SHA-256").digest(file.readText().replace("\r\n", "\n").toByteArray())
-                .joinToString("") { "%02x".format(it) }
-            check(actual == expected) { "Native license audit is stale: $path. Review manager/licenses/README.md." }
+            check(file.isFile) { "Missing native license input: $path" }
+            sha256(file.readText().replace("\r\n", "\n").toByteArray())
         }
-        check(nativeRevisions.get() == audit.getValue("submodules")) {
-            "Native submodules changed. Update the license inventory and manager/licenses/native-inputs.json."
+        check(nativeRevisions.get().keys == inputs.getValue("submodules").toSet()) {
+            "Missing native submodule revisions"
         }
         val entries = JsonSlurper().parse(catalog.get().asFile) as List<Map<String, Any>>
         val declared = entries.flatMap { it["artifacts"] as? List<String> ?: emptyList() }
-        check(declared.size == declared.toSet().size) { "Duplicate coordinates in the license catalog" }
-        val missing = coordinates.get().keys - declared.toSet()
+        check(declared.all { it.split(':').size == 2 }) {
+            "License rules must use group:artifact without a version"
+        }
+        check(declared.size == declared.toSet().size) { "Duplicate modules in the license catalog" }
+        val resolved = coordinates.get().toSortedMap()
+        val missing = resolved.keys.filter { it.substringBeforeLast(':') !in declared }
         check(missing.isEmpty()) {
-            "Unaudited runtime dependencies: ${missing.sorted()}. Update manager/licenses/components.json and its license texts."
+            "Missing licenses for runtime modules: $missing. Add their group:artifact and notices to manager/licenses/components.json."
         }
         check(entries.map { it["id"] }.distinct().size == entries.size) { "Duplicate license component IDs" }
         val output = outputDirectory.get().asFile
@@ -117,8 +121,7 @@ abstract class GenerateOpenSourceLicenses : DefaultTask() {
         fun store(text: String): String {
             check(text.isNotBlank()) { "Empty license text" }
             val normalized = text.replace("\r\n", "\n").trim() + "\n"
-            val hash = MessageDigest.getInstance("SHA-256").digest(normalized.toByteArray())
-                .joinToString("") { "%02x".format(it) }
+            val hash = sha256(normalized.toByteArray())
             licenseDir.resolve("$hash.txt").writeText(normalized)
             return "open_source/texts/$hash.txt"
         }
@@ -143,33 +146,75 @@ abstract class GenerateOpenSourceLicenses : DefaultTask() {
         }
         val filesByName = artifacts.files.associateBy { it.name }
         check(filesByName.size == artifacts.files.size) { "Ambiguous runtime artifact filenames" }
+        val artifactHashes = resolved.mapValues { (_, names) ->
+            names.sorted().map { name ->
+                mapOf("file" to name, "sha256" to sha256(filesByName.getValue(name).readBytes()))
+            }
+        }
         val components = entries.mapNotNull { component ->
-            val modules = (component["artifacts"] as? List<String> ?: emptyList())
-                .filter { it in coordinates.get() }.sorted()
+            val rules = component["artifacts"] as? List<String> ?: emptyList()
+            val modules = resolved.keys.filter { it.substringBeforeLast(':') in rules }
             if (component.containsKey("artifacts") && modules.isEmpty()) return@mapNotNull null
             if (component["buildType"] != null && component["buildType"] != buildType.get()) return@mapNotNull null
+            val revision = component["versionFrom"]?.let { nativeRevisions.get().getValue(it as String) }
+            val source = component.getValue("source") as String
+            check((revision != null) == source.contains("{revision}")) {
+                "A versionFrom component must have a {revision} source template: ${component["id"]}"
+            }
             val texts = (component["texts"] as List<String>).map { name ->
                 val file = licenseTexts.get().asFile.resolve(name)
                 check(file.isFile) { "Missing license text: $name" }
                 mapOf("title" to name, "path" to store(file.readText()))
             }.toMutableList()
+            (component["sourceTexts"] as? List<String> ?: emptyList()).forEach { path ->
+                check(path in nativeHashes) { "Untracked license input: $path" }
+                val stored = store(repositoryRoot.get().file(path).asFile.readText())
+                if (texts.none { it["path"] == stored }) {
+                    texts += mapOf("title" to path, "path" to stored)
+                }
+            }
+            (component["mitLicenseFrom"] as? String)?.let { path ->
+                check(path in nativeHashes) { "Untracked license input: $path" }
+                val comments = Regex("/\\*(.*?)\\*/", RegexOption.DOT_MATCHES_ALL)
+                    .findAll(repositoryRoot.get().file(path).asFile.readText())
+                    .map { match ->
+                        match.groupValues[1].trim { it.isWhitespace() || it == '*' }
+                            .lineSequence().map { it.trimStart().removePrefix("*").removePrefix(" ") }
+                            .joinToString("\n").trim()
+                    }
+                    .filter { it.startsWith("Copyright") && it.contains("Permission is hereby granted")
+                        && it.contains("THE SOFTWARE IS PROVIDED") }
+                    .toList()
+                check(comments.size == 1) { "Expected one MIT license comment in $path" }
+                val stored = store(comments.single())
+                if (texts.none { it["path"] == stored }) {
+                    texts += mapOf("title" to path, "path" to stored)
+                }
+            }
             check(texts.isNotEmpty()) { "Missing license for ${component["id"]}" }
             modules.forEach { coordinate ->
-                val file = filesByName.getValue(coordinates.get().getValue(coordinate))
-                collectNotices(file.readBytes()).forEach { (name, path) ->
-                    if (texts.none { it["path"] == path }) {
-                        texts += mapOf("title" to "$coordinate — $name", "path" to path)
+                resolved.getValue(coordinate).sorted().forEach { filename ->
+                    collectNotices(filesByName.getValue(filename).readBytes()).forEach { (name, path) ->
+                        if (texts.none { it["path"] == path }) {
+                            texts += mapOf("title" to "$coordinate — $filename!/$name", "path" to path)
+                        }
                     }
                 }
             }
             mapOf(
                 "id" to component.getValue("id"), "name" to component.getValue("name"),
-                "license" to component.getValue("license"), "source" to component.getValue("source"),
-                "version" to (component["version"] ?: modules.map { it.substringAfterLast(':') }.distinct().joinToString(", ")),
+                "license" to component.getValue("license"), "source" to source.replace("{revision}", revision ?: ""),
+                "version" to (revision?.take(12)
+                    ?: component["version"] ?: modules.map { it.substringAfterLast(':') }.distinct().joinToString(", ")),
                 "artifacts" to modules, "texts" to texts,
             )
         }.sortedBy { (it.getValue("name") as String).lowercase() }
         output.resolve("open_source/components.json").writeText(JsonOutput.prettyPrint(JsonOutput.toJson(components)))
+        output.resolve("open_source/inputs.json").writeText(JsonOutput.prettyPrint(JsonOutput.toJson(mapOf(
+            "runtimeArtifacts" to artifactHashes,
+            "nativeFiles" to nativeHashes,
+            "nativeSubmodules" to nativeRevisions.get().toSortedMap(),
+        ))))
         logger.lifecycle("License catalog: ${components.size} components, ${coordinates.get().size} runtime artifacts (${buildType.get()})")
     }
 }
@@ -804,30 +849,37 @@ android {
 androidComponents {
     onVariants { variant ->
         val runtime = configurations.getByName("${variant.name}RuntimeClasspath").incoming.artifacts
-        val auditFile = rootProject.layout.projectDirectory.file("licenses/native-inputs.json")
+        val inputsFile = rootProject.layout.projectDirectory.file("licenses/native-inputs.json")
         @Suppress("UNCHECKED_CAST")
-        val audit = JsonSlurper().parseText(providers.fileContents(auditFile).asText.get()) as Map<String, Map<String, String>>
+        val inputs = JsonSlurper().parseText(providers.fileContents(inputsFile).asText.get()) as Map<String, List<String>>
         val generate = tasks.register<GenerateOpenSourceLicenses>(
             "generate${variant.name.replaceFirstChar(Char::uppercaseChar)}OpenSourceLicenses"
         ) {
             catalog.set(rootProject.layout.projectDirectory.file("licenses/components.json"))
             licenseTexts.set(rootProject.layout.projectDirectory.dir("licenses/texts"))
-            nativeAudit.set(auditFile)
+            nativeInputs.set(inputsFile)
             repositoryRoot.set(rootProject.layout.projectDirectory.dir(".."))
-            nativeSources.from(audit.getValue("files").keys.map { rootProject.file("../$it") })
-            audit.getValue("submodules").keys.forEach { path ->
+            nativeSources.from(inputs.getValue("files").map { rootProject.file("../$it") })
+            inputs.getValue("submodules").forEach { path ->
+                val submoduleDir = rootProject.file("../$path")
                 nativeRevisions.put(path, providers.exec {
-                    workingDir(rootProject.file("../$path"))
-                    commandLine("git", "rev-parse", "HEAD")
-                }.standardOutput.asText.map(String::trim))
+                    workingDir(submoduleDir)
+                    commandLine("git", "rev-parse", "--show-toplevel", "HEAD")
+                }.standardOutput.asText.map { output ->
+                    val lines = output.trim().lines()
+                    check(lines.size == 2 && File(lines.first()).canonicalFile == submoduleDir.canonicalFile) {
+                        "Uninitialized native submodule: $path. Run git submodule update --init --recursive."
+                    }
+                    lines.last()
+                })
             }
             artifacts.from(runtime.artifactFiles)
             coordinates.set(runtime.resolvedArtifacts.map { resolved ->
-                resolved.associate { artifact ->
+                resolved.groupBy { artifact ->
                     val id = artifact.id.componentIdentifier as? ModuleComponentIdentifier
                         ?: error("Audit local runtime dependency: ${artifact.id}")
-                    "${id.group}:${id.module}:${id.version}" to artifact.file.name
-                }
+                    "${id.group}:${id.module}:${id.version}"
+                }.mapValues { (_, artifacts) -> artifacts.map { it.file.name }.distinct().sorted() }
             })
             buildType.set(variant.buildType ?: variant.name)
             outputDirectory.set(layout.buildDirectory.dir("generated/openSourceLicenses/${variant.name}"))
