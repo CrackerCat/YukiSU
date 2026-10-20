@@ -1329,9 +1329,13 @@ static inline void yz_finalize_self_dso() {
 }
 
 void zygisk_self_destruct(JNIEnv *env, bool isolated) {
+  // yz_self_unmap_tail returns into a caller context captured outside the
+  // core, so unmapping needs either the inline capture trampoline or an entry
+  // stub's capture to be present.
   const bool fully_inline_hooked = zygisk_specialize_fully_inline_hooked();
   const bool hooks_removed = zygisk_self_unhook(env);
-  bool can_unmap = fully_inline_hooked && hooks_removed;
+  const bool captured = fully_inline_hooked || yz_capture_ready();
+  bool can_unmap = hooks_removed && captured;
   yz_drop_runtime_header_pages();
   uintptr_t cbase = 0;
   size_t csize = 0;
@@ -1341,12 +1345,16 @@ void zygisk_self_destruct(JNIEnv *env, bool isolated) {
     yuki::solist::hide_from_solist("libzygisk");
     yuki::solist::hide_from_solist("libyukilinker");
   }
-  if (!fully_inline_hooked)
-    LOGE("self-unmap unavailable: specialize used RegisterNatives fallback");
+  if (!captured)
+    LOGE("self-unmap unavailable: no captured caller context");
   if (!hooks_removed)
     LOGE("self-unmap unavailable: hook restore failed");
   if (!have_range)
     LOGE("self-unmap unavailable: core image bounds are missing");
+  if (can_unmap && have_range && !yz_capture_outside(cbase, csize)) {
+    LOGE("self-unmap unavailable: captured continuation is inside the core");
+    can_unmap = false;
+  }
   if (can_unmap && yukilinker::has_active_tls()) {
     LOGE("self-unmap unavailable: a yukilinker TLS resolver is still active");
     can_unmap = false;
@@ -1364,8 +1372,8 @@ void zygisk_self_destruct(JNIEnv *env, bool isolated) {
          reinterpret_cast<void *>(cbase), csize);
     yz_self_unmap_tail(reinterpret_cast<void *>(cbase), csize);
   }
-  LOGE("self-unmap failed: core remains mapped at %p size=%zu",
-       reinterpret_cast<void *>(cbase), csize);
+  LOGE("self-unmap failed: core remains mapped at %p size=%zu captured=%d",
+       reinterpret_cast<void *>(cbase), csize, captured ? 1 : 0);
   (void)env;
 }
 
