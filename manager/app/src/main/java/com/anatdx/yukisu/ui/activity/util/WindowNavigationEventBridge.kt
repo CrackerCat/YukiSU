@@ -1,6 +1,7 @@
 package com.anatdx.yukisu.ui.activity.util
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalView
@@ -9,7 +10,15 @@ import androidx.navigationevent.NavigationEventDispatcher
 import androidx.navigationevent.NavigationEventHandler
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
+import androidx.navigationevent.compose.rememberNavigationEventDispatcherOwner
 import androidx.navigationevent.findViewTreeNavigationEventDispatcherOwner
+
+@Composable
+internal fun ModalNavigationEventScope(content: @Composable () -> Unit) {
+    // A child dispatcher would still share handlers with the page behind the modal.
+    val owner = rememberNavigationEventDispatcherOwner(parent = null)
+    CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides owner, content = content)
+}
 
 internal fun bridgeWindowBackEvents(
     window: NavigationEventDispatcher,

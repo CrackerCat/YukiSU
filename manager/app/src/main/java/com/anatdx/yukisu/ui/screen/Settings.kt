@@ -43,7 +43,6 @@ import com.ramcosta.composedestinations.generated.destinations.AboutScreenDestin
 import com.ramcosta.composedestinations.generated.destinations.AppProfileTemplateScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.FlashScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.FeatureControlScreenDestination
-import com.anatdx.yukisu.ui.activity.util.WindowNavigationEventBridge
 import com.anatdx.yukisu.ui.kasumi.util.KasumiManager
 import com.ramcosta.composedestinations.generated.destinations.LogViewerScreenDestination
 import com.ramcosta.composedestinations.generated.destinations.UmountManagerScreenDestination
@@ -610,12 +609,11 @@ private fun LogBottomSheet(
     onSaveLog: () -> Unit,
     onShareLog: () -> Unit
 ) {
-    ModalBottomSheet(
+    YukiModalBottomSheet(
         onDismissRequest = onDismiss,
         modifier = Modifier.clickHapticFeedback(),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        WindowNavigationEventBridge()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
