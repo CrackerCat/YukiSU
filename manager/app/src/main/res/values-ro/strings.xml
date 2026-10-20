@@ -647,7 +647,6 @@
     <string name="ci_update_error_metadata_sources_failed">Solicitările către toate sursele de metadate CI au eșuat.</string>
     <string name="ci_update_error_metadata_cache">Nu s-a putut crea memoria cache pentru metadatele CI.</string>
     <string name="ci_update_error_http">%1$s a returnat HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s a returnat un răspuns gol.</string>
     <string name="ci_update_error_response_too_large">Răspunsul de la %1$s este prea mare.</string>
     <string name="ci_update_error_metadata_invalid">Metadate de actualizare CI nevalide.</string>
     <string name="ci_update_error_artifact_source_failed">Descărcarea actualizării CI de la %1$s a eșuat.</string>

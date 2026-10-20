@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">Kõigi CI-metaandmete allikate päringud nurjusid.</string>
     <string name="ci_update_error_metadata_cache">CI-metaandmete vahemälu ei saa luua.</string>
     <string name="ci_update_error_http">%1$s tagastas HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s tagastas tühja vastuse.</string>
     <string name="ci_update_error_response_too_large">Allika %1$s vastus on liiga suur.</string>
     <string name="ci_update_error_metadata_invalid">Vigased CI-uuenduse metaandmed.</string>
     <string name="ci_update_error_artifact_source_failed">CI-uuenduse allalaadimine allikast %1$s nurjus.</string>

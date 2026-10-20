@@ -665,7 +665,6 @@
     <string name="ci_update_error_metadata_sources_failed">ಎಲ್ಲಾ CI ಮೆಟಾಡೇಟಾ ಮೂಲಗಳ ವಿನಂತಿಗಳು ವಿಫಲವಾಗಿವೆ.</string>
     <string name="ci_update_error_metadata_cache">CI ಮೆಟಾಡೇಟಾ ಕ್ಯಾಶ್ ರಚಿಸಲಾಗಲಿಲ್ಲ.</string>
     <string name="ci_update_error_http">%1$s HTTP %2$d ಹಿಂತಿರುಗಿಸಿದೆ.</string>
-    <string name="ci_update_error_empty_response">%1$s ಖಾಲಿ ಪ್ರತಿಕ್ರಿಯೆ ಹಿಂತಿರುಗಿಸಿದೆ.</string>
     <string name="ci_update_error_response_too_large">%1$s ನ ಪ್ರತಿಕ್ರಿಯೆ ತುಂಬಾ ದೊಡ್ಡದಾಗಿದೆ.</string>
     <string name="ci_update_error_metadata_invalid">CI ನವೀಕರಣ ಮೆಟಾಡೇಟಾ ಅಮಾನ್ಯವಾಗಿದೆ.</string>
     <string name="ci_update_error_artifact_source_failed">%1$s ನಿಂದ CI ನವೀಕರಣ ಡೌನ್‌ಲೋಡ್ ವಿಫಲವಾಗಿದೆ.</string>

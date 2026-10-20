@@ -647,7 +647,6 @@
     <string name="ci_update_error_metadata_sources_failed">Запити до всіх джерел метаданих CI завершилися помилкою.</string>
     <string name="ci_update_error_metadata_cache">Не вдалося створити кеш метаданих CI.</string>
     <string name="ci_update_error_http">%1$s повернув HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s повернув порожню відповідь.</string>
     <string name="ci_update_error_response_too_large">Відповідь від %1$s завелика.</string>
     <string name="ci_update_error_metadata_invalid">Недійсні метадані оновлення CI.</string>
     <string name="ci_update_error_artifact_source_failed">Не вдалося завантажити оновлення CI з %1$s.</string>

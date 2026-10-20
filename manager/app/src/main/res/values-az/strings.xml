@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">Bütün CI metaməlumat mənbələrinə sorğular uğursuz oldu.</string>
     <string name="ci_update_error_metadata_cache">CI metaməlumat keşi yaradıla bilmədi.</string>
     <string name="ci_update_error_http">%1$s HTTP %2$d qaytardı.</string>
-    <string name="ci_update_error_empty_response">%1$s boş cavab qaytardı.</string>
     <string name="ci_update_error_response_too_large">%1$s cavabı həddindən artıq böyükdür.</string>
     <string name="ci_update_error_metadata_invalid">CI yeniləməsinin metaməlumatları etibarsızdır.</string>
     <string name="ci_update_error_artifact_source_failed">CI yeniləməsi %1$s mənbəyindən endirilə bilmədi.</string>

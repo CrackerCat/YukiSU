@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">Falha nas solicitações a todas as fontes de metadados CI.</string>
     <string name="ci_update_error_metadata_cache">Não foi possível criar o cache de metadados CI.</string>
     <string name="ci_update_error_http">%1$s retornou HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s retornou uma resposta vazia.</string>
     <string name="ci_update_error_response_too_large">A resposta de %1$s é muito grande.</string>
     <string name="ci_update_error_metadata_invalid">Metadados de atualização CI inválidos.</string>
     <string name="ci_update_error_artifact_source_failed">Falha ao baixar a atualização CI de %1$s.</string>

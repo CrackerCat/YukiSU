@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">הבקשות לכל מקורות נתוני CI נכשלו.</string>
     <string name="ci_update_error_metadata_cache">לא ניתן ליצור מטמון לנתוני CI.</string>
     <string name="ci_update_error_http">%1$s החזיר HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s החזיר תגובה ריקה.</string>
     <string name="ci_update_error_response_too_large">התגובה מ-%1$s גדולה מדי.</string>
     <string name="ci_update_error_metadata_invalid">נתוני עדכון CI אינם תקינים.</string>
     <string name="ci_update_error_artifact_source_failed">הורדת עדכון CI מ-%1$s נכשלה.</string>

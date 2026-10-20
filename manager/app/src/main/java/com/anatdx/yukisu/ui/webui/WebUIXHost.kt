@@ -127,6 +127,7 @@ private fun createActivityWebView(hostOptions: WebUIOptions, ready: CompletableD
         override fun onActivityResult(result: ActivityResult) = forEachWxInterface { it.onActivityResult(result) }
 
         @Deprecated("WebUI X still uses this callback for its legacy file picker")
+        @Suppress("DEPRECATION")
         override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) =
             forEachWxInterface { it.onActivityResult(requestCode, resultCode, data) }
 

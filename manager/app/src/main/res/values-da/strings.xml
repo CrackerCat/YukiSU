@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">Anmodninger til alle CI-metadatakilder mislykkedes.</string>
     <string name="ci_update_error_metadata_cache">Kunne ikke oprette cache til CI-metadata.</string>
     <string name="ci_update_error_http">%1$s returnerede HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s returnerede et tomt svar.</string>
     <string name="ci_update_error_response_too_large">Svaret fra %1$s er for stort.</string>
     <string name="ci_update_error_metadata_invalid">Ugyldige metadata for CI-opdateringen.</string>
     <string name="ci_update_error_artifact_source_failed">Kunne ikke hente CI-opdateringen fra %1$s.</string>

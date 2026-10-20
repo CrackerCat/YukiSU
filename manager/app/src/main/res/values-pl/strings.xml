@@ -647,7 +647,6 @@
     <string name="ci_update_error_metadata_sources_failed">Żądania do wszystkich źródeł metadanych CI nie powiodły się.</string>
     <string name="ci_update_error_metadata_cache">Nie można utworzyć pamięci podręcznej metadanych CI.</string>
     <string name="ci_update_error_http">%1$s zwrócił HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s zwrócił pustą odpowiedź.</string>
     <string name="ci_update_error_response_too_large">Odpowiedź ze źródła %1$s jest zbyt duża.</string>
     <string name="ci_update_error_metadata_invalid">Nieprawidłowe metadane aktualizacji CI.</string>
     <string name="ci_update_error_artifact_source_failed">Nie udało się pobrać aktualizacji CI ze źródła %1$s.</string>

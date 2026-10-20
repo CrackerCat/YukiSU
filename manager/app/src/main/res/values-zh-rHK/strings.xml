@@ -653,7 +653,6 @@
     <string name="ci_update_error_metadata_sources_failed">所有 CI 元數據源均請求失敗。</string>
     <string name="ci_update_error_metadata_cache">無法創建 CI 元數據快取。</string>
     <string name="ci_update_error_http">%1$s 返回了 HTTP %2$d。</string>
-    <string name="ci_update_error_empty_response">%1$s 返回了空響應。</string>
     <string name="ci_update_error_response_too_large">%1$s 的響應過大。</string>
     <string name="ci_update_error_metadata_invalid">CI 更新元數據無效。</string>
     <string name="ci_update_error_artifact_source_failed">從 %1$s 下載 CI 更新失敗。</string>

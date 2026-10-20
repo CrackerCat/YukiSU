@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">Tüm CI meta verisi kaynaklarına yapılan istekler başarısız oldu.</string>
     <string name="ci_update_error_metadata_cache">CI meta verisi önbelleği oluşturulamadı.</string>
     <string name="ci_update_error_http">%1$s, HTTP %2$d döndürdü.</string>
-    <string name="ci_update_error_empty_response">%1$s boş yanıt döndürdü.</string>
     <string name="ci_update_error_response_too_large">%1$s yanıtı çok büyük.</string>
     <string name="ci_update_error_metadata_invalid">CI güncelleme meta verisi geçersiz.</string>
     <string name="ci_update_error_artifact_source_failed">CI güncellemesi %1$s kaynağından indirilemedi.</string>

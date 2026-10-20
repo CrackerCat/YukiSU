@@ -647,7 +647,6 @@
     <string name="ci_update_error_metadata_sources_failed">Pieprasījumi visiem CI metadatu avotiem neizdevās.</string>
     <string name="ci_update_error_metadata_cache">Nevar izveidot CI metadatu kešatmiņu.</string>
     <string name="ci_update_error_http">%1$s atgrieza HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s atgrieza tukšu atbildi.</string>
     <string name="ci_update_error_response_too_large">Avota %1$s atbilde ir pārāk liela.</string>
     <string name="ci_update_error_metadata_invalid">Nederīgi CI atjauninājuma metadati.</string>
     <string name="ci_update_error_artifact_source_failed">CI atjauninājuma lejupielāde no %1$s neizdevās.</string>

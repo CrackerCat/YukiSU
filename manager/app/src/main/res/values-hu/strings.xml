@@ -646,7 +646,6 @@ A</string>
     <string name="ci_update_error_metadata_sources_failed">Az összes CI metaadatforrás lekérdezése sikertelen.</string>
     <string name="ci_update_error_metadata_cache">Nem hozható létre a CI metaadatok gyorsítótára.</string>
     <string name="ci_update_error_http">A(z) %1$s HTTP %2$d választ adott.</string>
-    <string name="ci_update_error_empty_response">A(z) %1$s üres választ adott.</string>
     <string name="ci_update_error_response_too_large">A(z) %1$s válasza túl nagy.</string>
     <string name="ci_update_error_metadata_invalid">A CI frissítés metaadatai érvénytelenek.</string>
     <string name="ci_update_error_artifact_source_failed">A CI frissítés letöltése sikertelen innen: %1$s.</string>

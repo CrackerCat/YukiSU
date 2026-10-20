@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">Zahtjevi prema svim izvorima CI metapodataka nisu uspjeli.</string>
     <string name="ci_update_error_metadata_cache">Nije moguće stvoriti predmemoriju CI metapodataka.</string>
     <string name="ci_update_error_http">%1$s je vratio HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s je vratio prazan odgovor.</string>
     <string name="ci_update_error_response_too_large">Odgovor iz %1$s je prevelik.</string>
     <string name="ci_update_error_metadata_invalid">Metapodaci CI ažuriranja nisu valjani.</string>
     <string name="ci_update_error_artifact_source_failed">Preuzimanje CI ažuriranja iz %1$s nije uspjelo.</string>

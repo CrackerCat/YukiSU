@@ -231,11 +231,7 @@ fun checkNewVersion(): LatestVersionInfo {
                 Log.d("CheckUpdate", "Network request failed: ${response.message}")
                 return defaultValue
             }
-            val body = response.body?.string()
-            if (body == null) {
-                Log.d("CheckUpdate", "Return data is null")
-                return defaultValue
-            }
+            val body = response.body.string()
             Log.d("CheckUpdate", "Return data: $body")
             val json = org.json.JSONObject(body)
 

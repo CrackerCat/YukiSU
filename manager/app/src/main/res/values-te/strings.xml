@@ -665,7 +665,6 @@
     <string name="ci_update_error_metadata_sources_failed">అన్ని CI మెటాడేటా మూలాల అభ్యర్థనలు విఫలమయ్యాయి.</string>
     <string name="ci_update_error_metadata_cache">CI మెటాడేటా కాష్‌ను సృష్టించలేకపోయింది.</string>
     <string name="ci_update_error_http">%1$s HTTP %2$dను ఇచ్చింది.</string>
-    <string name="ci_update_error_empty_response">%1$s ఖాళీ స్పందనను ఇచ్చింది.</string>
     <string name="ci_update_error_response_too_large">%1$s నుండి స్పందన చాలా పెద్దది.</string>
     <string name="ci_update_error_metadata_invalid">CI నవీకరణ మెటాడేటా చెల్లదు.</string>
     <string name="ci_update_error_artifact_source_failed">%1$s నుండి CI నవీకరణ డౌన్‌లోడ్ విఫలమైంది.</string>

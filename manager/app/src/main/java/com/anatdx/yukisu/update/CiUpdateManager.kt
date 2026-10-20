@@ -292,12 +292,6 @@ object CiUpdateManager {
                             )
                         }
                         val body = response.body
-                            ?: error(
-                                message(
-                                    R.string.ci_update_error_empty_response,
-                                    request.url.host,
-                                )
-                            )
                         val contentLength = body.contentLength()
                         check(contentLength < 0 || contentLength <= maxBytes) {
                             message(
@@ -497,7 +491,6 @@ object CiUpdateManager {
                 message(R.string.ci_update_error_http, sourceName, response.code)
             }
             val body = response.body
-                ?: error(message(R.string.ci_update_error_empty_response, sourceName))
             val contentLength = body.contentLength()
             check(contentLength < 0 || contentLength <= MAX_ARCHIVE_BYTES) {
                 message(R.string.ci_update_error_response_too_large, sourceName)

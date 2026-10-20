@@ -112,7 +112,12 @@ internal fun KasumiTabs(selected: KasumiTab, onSelect: (KasumiTab) -> Unit) {
             }
         }
     } else {
-        ScrollableTabRow(selectedTabIndex = selected.ordinal, edgePadding = 16.dp) {
+        SecondaryScrollableTabRow(
+            selectedTabIndex = selected.ordinal,
+            edgePadding = 16.dp,
+            containerColor = TabRowDefaults.primaryContainerColor,
+            contentColor = TabRowDefaults.primaryContentColor,
+        ) {
             KasumiTab.entries.forEach { tab ->
                 Tab(selected = selected == tab, onClick = { onSelect(tab) },
                     text = { Text(stringResource(tab.displayNameRes)) })

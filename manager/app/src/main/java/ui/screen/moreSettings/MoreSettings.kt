@@ -371,11 +371,11 @@ private fun ModuleDescriptionLinesSetting(
                 style = MaterialTheme.typography.labelMedium
             )
         }
+        val sliderState = rememberSliderState(steps = 3, trackRange = 1f..5f)
+        sliderState.value = state.moduleDescriptionMaxLines.toFloat()
         Slider(
-            value = state.moduleDescriptionMaxLines.toFloat(),
-            onValueChange = { handlers.handleModuleDescriptionMaxLinesChange(it.toInt()) },
-            valueRange = 1f..5f,
-            steps = 3
+            state = sliderState,
+            onValueChange = { handlers.handleModuleDescriptionMaxLinesChange(it.toInt()) }
         )
     }
 }
@@ -593,15 +593,15 @@ private fun DpiSliderControls(
             targetValue = state.tempDpi.toFloat(),
             label = "DPI Slider Animation"
         )
+        val sliderState = rememberSliderState(steps = 11, trackRange = 160f..600f)
+        sliderState.value = sliderValue
 
         Slider(
-            value = sliderValue,
+            state = sliderState,
             onValueChange = { newValue ->
                 state.tempDpi = newValue.toInt()
                 state.isDpiCustom = !state.dpiPresets.containsValue(state.tempDpi)
             },
-            valueRange = 160f..600f,
-            steps = 11,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -770,9 +770,11 @@ private fun AlphaSlider(
         targetValue = state.cardAlpha,
         label = "Alpha Slider Animation"
     )
+    val sliderState = rememberSliderState(steps = 20, trackRange = 0f..1f)
+    sliderState.value = alphaSliderValue
 
     Slider(
-        value = alphaSliderValue,
+        state = sliderState,
         onValueChange = { newValue ->
             handlers.handleCardAlphaChange(newValue)
         },
@@ -781,8 +783,6 @@ private fun AlphaSlider(
                 saveCardConfig(handlers.context)
             }
         },
-        valueRange = 0f..1f,
-        steps = 20,
         colors = SliderDefaults.colors(
             thumbColor = MaterialTheme.colorScheme.primary,
             activeTrackColor = MaterialTheme.colorScheme.primary,
@@ -823,9 +823,11 @@ private fun DimSlider(
         targetValue = state.cardDim,
         label = "Dim Slider Animation"
     )
+    val sliderState = rememberSliderState(steps = 20, trackRange = 0f..1f)
+    sliderState.value = dimSliderValue
 
     Slider(
-        value = dimSliderValue,
+        state = sliderState,
         onValueChange = { newValue ->
             handlers.handleCardDimChange(newValue)
         },
@@ -834,8 +836,6 @@ private fun DimSlider(
                 saveCardConfig(handlers.context)
             }
         },
-        valueRange = 0f..1f,
-        steps = 20,
         colors = SliderDefaults.colors(
             thumbColor = MaterialTheme.colorScheme.primary,
             activeTrackColor = MaterialTheme.colorScheme.primary,

@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">Захтеви према свим изворима CI метаподатака нису успели.</string>
     <string name="ci_update_error_metadata_cache">Није могуће створити кеш CI метаподатака.</string>
     <string name="ci_update_error_http">%1$s је вратио HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s је вратио празан одговор.</string>
     <string name="ci_update_error_response_too_large">Одговор из %1$s је превелик.</string>
     <string name="ci_update_error_metadata_invalid">Метаподаци CI ажурирања нису ваљани.</string>
     <string name="ci_update_error_artifact_source_failed">Преузимање CI ажурирања из %1$s није успело.</string>

@@ -150,7 +150,7 @@ private fun fetchRemoteTemplates() {
             if (!response.isSuccessful) {
                 return
             }
-            val remoteTemplateIds = JSONArray(response.body!!.string())
+            val remoteTemplateIds = JSONArray(response.body.string())
             Log.i(TAG, "fetchRemoteTemplates: $remoteTemplateIds")
             0.until(remoteTemplateIds.length()).forEach { i ->
                 val id = remoteTemplateIds.getString(i)
@@ -162,7 +162,7 @@ private fun fetchRemoteTemplates() {
                         if (!response.isSuccessful) {
                             return@forEach
                         }
-                        response.body!!.string()
+                        response.body.string()
                     }
                 }.getOrNull() ?: return@forEach
                 Log.i(TAG, "template: $templateJson")

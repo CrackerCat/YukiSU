@@ -665,7 +665,6 @@
     <string name="ci_update_error_metadata_sources_failed">모든 CI 메타데이터 소스에 대한 요청이 실패했습니다.</string>
     <string name="ci_update_error_metadata_cache">CI 메타데이터 캐시를 만들 수 없습니다.</string>
     <string name="ci_update_error_http">%1$s에서 HTTP %2$d을(를) 반환했습니다.</string>
-    <string name="ci_update_error_empty_response">%1$s에서 빈 응답을 반환했습니다.</string>
     <string name="ci_update_error_response_too_large">%1$s의 응답이 너무 큽니다.</string>
     <string name="ci_update_error_metadata_invalid">CI 업데이트 메타데이터가 유효하지 않습니다.</string>
     <string name="ci_update_error_artifact_source_failed">%1$s에서 CI 업데이트를 다운로드하지 못했습니다.</string>

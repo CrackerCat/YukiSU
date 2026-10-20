@@ -647,7 +647,6 @@
     <string name="ci_update_error_metadata_sources_failed">Aanvragen bij alle bronnen voor CI-metagegevens zijn mislukt.</string>
     <string name="ci_update_error_metadata_cache">Kan geen cache voor CI-metagegevens maken.</string>
     <string name="ci_update_error_http">%1$s gaf HTTP %2$d terug.</string>
-    <string name="ci_update_error_empty_response">%1$s gaf een leeg antwoord terug.</string>
     <string name="ci_update_error_response_too_large">Het antwoord van %1$s is te groot.</string>
     <string name="ci_update_error_metadata_invalid">Ongeldige metagegevens voor CI-update.</string>
     <string name="ci_update_error_artifact_source_failed">Downloaden van CI-update van %1$s mislukt.</string>

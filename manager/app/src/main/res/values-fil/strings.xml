@@ -665,7 +665,6 @@
     <string name="ci_update_error_metadata_sources_failed">Nabigo ang mga kahilingan sa lahat ng pinagmulan ng metadata ng CI.</string>
     <string name="ci_update_error_metadata_cache">Hindi makagawa ng cache ng metadata ng CI.</string>
     <string name="ci_update_error_http">Nagbalik ang %1$s ng HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">Walang laman ang tugon mula sa %1$s.</string>
     <string name="ci_update_error_response_too_large">Masyadong malaki ang tugon mula sa %1$s.</string>
     <string name="ci_update_error_metadata_invalid">Hindi wasto ang metadata ng update sa CI.</string>
     <string name="ci_update_error_artifact_source_failed">Hindi na-download ang update sa CI mula sa %1$s.</string>

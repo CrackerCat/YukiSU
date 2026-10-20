@@ -667,7 +667,6 @@
     <string name="ci_update_error_metadata_sources_failed">すべての CI メタデータ提供元への要求に失敗しました。</string>
     <string name="ci_update_error_metadata_cache">CI メタデータのキャッシュを作成できません。</string>
     <string name="ci_update_error_http">%1$s が HTTP %2$d を返しました。</string>
-    <string name="ci_update_error_empty_response">%1$s が空の応答を返しました。</string>
     <string name="ci_update_error_response_too_large">%1$s の応答が大きすぎます。</string>
     <string name="ci_update_error_metadata_invalid">CI 更新のメタデータが無効です。</string>
     <string name="ci_update_error_artifact_source_failed">%1$s からの CI 更新のダウンロードに失敗しました。</string>

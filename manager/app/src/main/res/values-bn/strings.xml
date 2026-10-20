@@ -665,7 +665,6 @@
     <string name="ci_update_error_metadata_sources_failed">সব CI মেটাডেটা উৎসের অনুরোধ ব্যর্থ হয়েছে।</string>
     <string name="ci_update_error_metadata_cache">CI মেটাডেটা ক্যাশ তৈরি করা যায়নি।</string>
     <string name="ci_update_error_http">%1$s HTTP %2$d ফিরিয়েছে।</string>
-    <string name="ci_update_error_empty_response">%1$s ফাঁকা উত্তর ফিরিয়েছে।</string>
     <string name="ci_update_error_response_too_large">%1$s-এর উত্তর খুব বড়।</string>
     <string name="ci_update_error_metadata_invalid">CI আপডেটের মেটাডেটা অবৈধ।</string>
     <string name="ci_update_error_artifact_source_failed">%1$s থেকে CI আপডেট ডাউনলোড ব্যর্থ।</string>

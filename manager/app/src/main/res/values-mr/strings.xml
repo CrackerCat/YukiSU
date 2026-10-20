@@ -665,7 +665,6 @@
     <string name="ci_update_error_metadata_sources_failed">सर्व CI मेटाडेटा स्रोतांच्या विनंत्या अयशस्वी झाल्या.</string>
     <string name="ci_update_error_metadata_cache">CI मेटाडेटा कॅशे तयार करता आला नाही.</string>
     <string name="ci_update_error_http">%1$s ने HTTP %2$d परत केले.</string>
-    <string name="ci_update_error_empty_response">%1$s ने रिकामे उत्तर दिले.</string>
     <string name="ci_update_error_response_too_large">%1$s चे उत्तर खूप मोठे आहे.</string>
     <string name="ci_update_error_metadata_invalid">CI अपडेट मेटाडेटा अवैध आहे.</string>
     <string name="ci_update_error_artifact_source_failed">%1$s वरून CI अपडेट डाउनलोड करता आला नाही.</string>

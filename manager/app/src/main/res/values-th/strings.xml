@@ -667,7 +667,6 @@
     <string name="ci_update_error_metadata_sources_failed">คำขอไปยังแหล่งเมทาดาทา CI ทั้งหมดล้มเหลว</string>
     <string name="ci_update_error_metadata_cache">ไม่สามารถสร้างแคชเมทาดาทา CI</string>
     <string name="ci_update_error_http">%1$s ส่งคืน HTTP %2$d</string>
-    <string name="ci_update_error_empty_response">%1$s ส่งคืนการตอบกลับว่าง</string>
     <string name="ci_update_error_response_too_large">การตอบกลับจาก %1$s มีขนาดใหญ่เกินไป</string>
     <string name="ci_update_error_metadata_invalid">เมทาดาทาการอัปเดต CI ไม่ถูกต้อง</string>
     <string name="ci_update_error_artifact_source_failed">ดาวน์โหลดการอัปเดต CI จาก %1$s ไม่สำเร็จ</string>

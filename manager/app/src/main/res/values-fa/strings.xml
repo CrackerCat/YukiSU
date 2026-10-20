@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">درخواست به همه منابع فراداده CI ناموفق بود.</string>
     <string name="ci_update_error_metadata_cache">ایجاد حافظه نهان فراداده CI ممکن نیست.</string>
     <string name="ci_update_error_http">%1$s پاسخ HTTP %2$d برگرداند.</string>
-    <string name="ci_update_error_empty_response">%1$s پاسخ خالی برگرداند.</string>
     <string name="ci_update_error_response_too_large">پاسخ %1$s بیش از حد بزرگ است.</string>
     <string name="ci_update_error_metadata_invalid">فراداده به‌روزرسانی CI نامعتبر است.</string>
     <string name="ci_update_error_artifact_source_failed">دریافت به‌روزرسانی CI از %1$s ناموفق بود.</string>

@@ -647,7 +647,6 @@
     <string name="ci_update_error_metadata_sources_failed">فشلت الطلبات إلى جميع مصادر بيانات CI الوصفية.</string>
     <string name="ci_update_error_metadata_cache">تعذر إنشاء ذاكرة تخزين مؤقت لبيانات CI الوصفية.</string>
     <string name="ci_update_error_http">أعاد %1$s رمز HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">أعاد %1$s استجابة فارغة.</string>
     <string name="ci_update_error_response_too_large">استجابة %1$s كبيرة جدًا.</string>
     <string name="ci_update_error_metadata_invalid">البيانات الوصفية لتحديث CI غير صالحة.</string>
     <string name="ci_update_error_artifact_source_failed">فشل تنزيل تحديث CI من %1$s.</string>

@@ -665,7 +665,6 @@
     <string name="ci_update_error_metadata_sources_failed">Permintaan kepada semua sumber metadata CI gagal.</string>
     <string name="ci_update_error_metadata_cache">Tidak dapat mencipta cache metadata CI.</string>
     <string name="ci_update_error_http">%1$s mengembalikan HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s mengembalikan respons kosong.</string>
     <string name="ci_update_error_response_too_large">Respons daripada %1$s terlalu besar.</string>
     <string name="ci_update_error_metadata_invalid">Metadata kemas kini CI tidak sah.</string>
     <string name="ci_update_error_artifact_source_failed">Gagal memuat turun kemas kini CI daripada %1$s.</string>

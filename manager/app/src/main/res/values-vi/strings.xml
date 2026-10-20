@@ -665,7 +665,6 @@
     <string name="ci_update_error_metadata_sources_failed">Yêu cầu tới tất cả nguồn siêu dữ liệu CI đều thất bại.</string>
     <string name="ci_update_error_metadata_cache">Không thể tạo bộ nhớ đệm siêu dữ liệu CI.</string>
     <string name="ci_update_error_http">%1$s trả về HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s trả về phản hồi trống.</string>
     <string name="ci_update_error_response_too_large">Phản hồi từ %1$s quá lớn.</string>
     <string name="ci_update_error_metadata_invalid">Siêu dữ liệu cập nhật CI không hợp lệ.</string>
     <string name="ci_update_error_artifact_source_failed">Không thể tải bản cập nhật CI từ %1$s.</string>

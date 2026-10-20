@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">Nepavyko užklausos visiems CI metaduomenų šaltiniams.</string>
     <string name="ci_update_error_metadata_cache">Nepavyko sukurti CI metaduomenų podėlio.</string>
     <string name="ci_update_error_http">%1$s grąžino HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s grąžino tuščią atsakymą.</string>
     <string name="ci_update_error_response_too_large">Šaltinio %1$s atsakymas per didelis.</string>
     <string name="ci_update_error_metadata_invalid">Netinkami CI atnaujinimo metaduomenys.</string>
     <string name="ci_update_error_artifact_source_failed">Nepavyko atsisiųsti CI atnaujinimo iš %1$s.</string>

@@ -267,7 +267,6 @@
     <string name="ci_update_error_metadata_sources_failed" tools:ignore="MissingTranslation">All CI metadata sources failed.</string>
     <string name="ci_update_error_metadata_cache" tools:ignore="MissingTranslation">Unable to create the CI metadata cache.</string>
     <string name="ci_update_error_http" tools:ignore="MissingTranslation">%1$s returned HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response" tools:ignore="MissingTranslation">%1$s returned an empty response.</string>
     <string name="ci_update_error_response_too_large" tools:ignore="MissingTranslation">%1$s response is too large.</string>
     <string name="ci_update_error_metadata_invalid" tools:ignore="MissingTranslation">The CI update metadata is invalid.</string>
     <string name="ci_update_error_artifact_source_failed" tools:ignore="MissingTranslation">%1$s CI update download failed.</string>

@@ -645,7 +645,6 @@
     <string name="ci_update_error_metadata_sources_failed">Zahteve do vseh virov metapodatkov CI so bile neuspešne.</string>
     <string name="ci_update_error_metadata_cache">Predpomnilnika metapodatkov CI ni mogoče ustvariti.</string>
     <string name="ci_update_error_http">%1$s je vrnil HTTP %2$d.</string>
-    <string name="ci_update_error_empty_response">%1$s je vrnil prazen odgovor.</string>
     <string name="ci_update_error_response_too_large">Odgovor vira %1$s je prevelik.</string>
     <string name="ci_update_error_metadata_invalid">Neveljavni metapodatki posodobitve CI.</string>
     <string name="ci_update_error_artifact_source_failed">Prenos posodobitve CI iz vira %1$s ni uspel.</string>
