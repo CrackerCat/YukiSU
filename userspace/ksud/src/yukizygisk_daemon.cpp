@@ -58,14 +58,6 @@ int remaining_ms(Clock::time_point deadline) {
 }
 
 int endpoint_state_fd(uint32_t abi, void* /*context*/) {
-    yz_runtime_query_cmd capabilities{};
-    if (ksuctl(KSU_IOCTL_YZ_GET_RUNTIME, &capabilities) != 0) {
-        return -1;
-    }
-    if ((capabilities.capabilities & YZ_RUNTIME_CAP_ENDPOINT_STATE) == 0) {
-        errno = EPROTONOSUPPORT;
-        return -1;
-    }
     yz_endpoint_fd_cmd command{YZ_ENDPOINT_VERSION, abi, -1, 0};
     return ksuctl(KSU_IOCTL_YZ_GET_ENDPOINT_STATE_FD, &command) == 0 ? command.fd : -1;
 }
