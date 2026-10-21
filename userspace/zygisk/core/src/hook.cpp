@@ -287,15 +287,14 @@ bool yz_app_zygote_can_unmap(JNIEnv *env, jstring nice_name, jint uid) {
   const size_t len = strlen(name);
   constexpr char kSuffix[] = "_zygote";
   constexpr size_t kSuffixLen = sizeof(kSuffix) - 1;
-  const bool named_app_zygote =
-      len > kSuffixLen + 1 && strcmp(name + len - kSuffixLen, kSuffix) == 0 &&
-      memchr(name, '.', len - kSuffixLen) != nullptr;
+  const bool named_app_zygote = len > kSuffixLen + 1 &&
+                                strcmp(name + len - kSuffixLen, kSuffix) == 0 &&
+                                memchr(name, '.', len - kSuffixLen) != nullptr;
   const int app_id = static_cast<int>(uid % 100000);
   const bool app_uid = app_id >= 10000 && app_id <= 19999;
   if (named_app_zygote)
-    ZLOGI("app zygote %s (uid=%d, app_id=%d): %s", name,
-          static_cast<int>(uid), app_id,
-          app_uid ? "dropping the core" : "keeping the core");
+    ZLOGI("app zygote %s (uid=%d, app_id=%d): %s", name, static_cast<int>(uid),
+          app_id, app_uid ? "dropping the core" : "keeping the core");
   env->ReleaseStringUTFChars(nice_name, name);
   return named_app_zygote && app_uid;
 }
@@ -538,11 +537,10 @@ std::array<JNINativeMethod, kZygoteMethodCount> g_zygote_methods = {{
            if (run_modules)
              zygisk_run_app_post(env, &args);
            if (ctx.pid == 0)
-             finish_app_child(
-                 env,
-                 !is_child_zygote ||
-                     yz_app_zygote_can_unmap(env, nice_name, uid),
-                 is_isolated(uid));
+             finish_app_child(env,
+                              !is_child_zygote ||
+                                  yz_app_zygote_can_unmap(env, nice_name, uid),
+                              is_isolated(uid));
            if (is_child_zygote && ctx.pid == 0)
              close_inherited_module_fds();
            g_ctx = nullptr;
@@ -609,11 +607,10 @@ std::array<JNINativeMethod, kZygoteMethodCount> g_zygote_methods = {{
            if (run_modules)
              zygisk_run_app_post(env, &args);
            if (ctx.pid == 0)
-             finish_app_child(
-                 env,
-                 !is_child_zygote ||
-                     yz_app_zygote_can_unmap(env, nice_name, uid),
-                 is_isolated(uid));
+             finish_app_child(env,
+                              !is_child_zygote ||
+                                  yz_app_zygote_can_unmap(env, nice_name, uid),
+                              is_isolated(uid));
            if (is_child_zygote && ctx.pid == 0)
              close_inherited_module_fds();
            g_ctx = nullptr;
@@ -674,11 +671,10 @@ std::array<JNINativeMethod, kZygoteMethodCount> g_zygote_methods = {{
            if (run_modules)
              zygisk_run_app_post(env, &args);
            if (ctx.pid == 0)
-             finish_app_child(
-                 env,
-                 !is_child_zygote ||
-                     yz_app_zygote_can_unmap(env, nice_name, uid),
-                 is_isolated(uid));
+             finish_app_child(env,
+                              !is_child_zygote ||
+                                  yz_app_zygote_can_unmap(env, nice_name, uid),
+                              is_isolated(uid));
            if (is_child_zygote && ctx.pid == 0)
              close_inherited_module_fds();
            g_ctx = nullptr;
@@ -746,11 +742,10 @@ std::array<JNINativeMethod, kZygoteMethodCount> g_zygote_methods = {{
            if (run_modules)
              zygisk_run_app_post(env, &args);
            if (ctx.pid == 0)
-             finish_app_child(
-                 env,
-                 !is_child_zygote ||
-                     yz_app_zygote_can_unmap(env, nice_name, uid),
-                 is_isolated(uid));
+             finish_app_child(env,
+                              !is_child_zygote ||
+                                  yz_app_zygote_can_unmap(env, nice_name, uid),
+                              is_isolated(uid));
            if (is_child_zygote && ctx.pid == 0)
              close_inherited_module_fds();
            g_ctx = nullptr;

@@ -108,7 +108,7 @@ struct yz_patch_text_cmd {
 #define KSU_IOCTL_YZ_REGISTER_ENDPOINT _IOC(_IOC_READ | _IOC_WRITE, 'K', 84, 0)
 #define KSU_IOCTL_YZ_UNREGISTER_ENDPOINT _IOC(_IOC_WRITE, 'K', 85, 0)
 #define KSU_IOCTL_YZ_GET_ENDPOINT_STATE_FD                                     \
-	_IOC(_IOC_READ | _IOC_WRITE, 'K', 86, 0)
+  _IOC(_IOC_READ | _IOC_WRITE, 'K', 86, 0)
 
 #define YZ_ENDPOINT_VERSION 1
 #define YZ_ENDPOINT_NAME_LENGTH 32
@@ -116,36 +116,36 @@ struct yz_patch_text_cmd {
 /* Fixed-width layout shared by ARM32 and ARM64; sequence protects all fields.
  */
 struct yz_endpoint_state {
-	__u32 sequence;
-	__u32 version;
-	__u32 size;
-	__u32 available;
-	__u32 abi;
-	__u32 pid;
-	__aligned_u64 start_boottime;
-	__aligned_u64 generation;
-	__u32 name_length;
-	__u32 reserved;
-	char name[YZ_ENDPOINT_NAME_LENGTH];
+  __u32 sequence;
+  __u32 version;
+  __u32 size;
+  __u32 available;
+  __u32 abi;
+  __u32 pid;
+  __aligned_u64 start_boottime;
+  __aligned_u64 generation;
+  __u32 name_length;
+  __u32 reserved;
+  char name[YZ_ENDPOINT_NAME_LENGTH];
 };
 
 struct yz_endpoint_register_cmd {
-	__u32 abi;
-	__s32 listener_fd;
-	__aligned_u64 generation;
+  __u32 abi;
+  __s32 listener_fd;
+  __aligned_u64 generation;
 };
 
 struct yz_endpoint_unregister_cmd {
-	__u32 abi;
-	__u32 reserved;
-	__aligned_u64 generation;
+  __u32 abi;
+  __u32 reserved;
+  __aligned_u64 generation;
 };
 
 struct yz_endpoint_fd_cmd {
-	__u32 version;
-	__u32 abi;
-	__s32 fd;
-	__u32 reserved;
+  __u32 version;
+  __u32 abi;
+  __s32 fd;
+  __u32 reserved;
 };
 
 #define YZ_PATCH_V2_REJECTED 0
@@ -226,14 +226,14 @@ struct yz_early_native_entry {
 #define YZ_BOOTSTRAP_PACKET_VERSION 3
 
 struct yz_bootstrap_packet_header {
-	__u32 magic;
-	__u16 version;
-	__u16 header_size;
-	__u16 entry_size;
-	__u16 load_flags;
-	__u32 count;
-	__s32 endpoint_fd;
-	__u32 reserved;
+  __u32 magic;
+  __u16 version;
+  __u16 header_size;
+  __u16 entry_size;
+  __u16 load_flags;
+  __u32 count;
+  __s32 endpoint_fd;
+  __u32 reserved;
 };
 
 struct yz_early_native_packet_entry {
