@@ -109,6 +109,7 @@ void yz_fd_handoff_cancel_all(void);
 
 struct yz_early_packet_state {
 	int packet_fd;
+	int endpoint_fd;
 	int module_fds[YZ_NATIVE_TARGET_MAX];
 	u32 module_fd_count;
 };
@@ -150,9 +151,8 @@ int yz_stage_file_fd(const char *path,
 		     struct ksu_file_load_policy *policy_state);
 void yz_early_packet_state_init(struct yz_early_packet_state *state);
 void yz_close_early_packet_state(struct yz_early_packet_state *state);
-int yz_stage_early_native_packet(u8 target_type, const char *target,
-				 bool compat,
-				 struct yz_early_packet_state *state);
+int yz_stage_bootstrap_packet(u8 target_type, const char *target, bool compat,
+			      struct yz_early_packet_state *state);
 void yz_schedule_injection(bool native, u8 target_type, bool early_native,
 			   const char *label);
 

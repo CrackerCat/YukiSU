@@ -38,4 +38,15 @@ int ksu_yukizygisk_report_runtime(const struct yz_runtime_report_cmd *report);
 int ksu_yukizygisk_get_exit_history_fd(void __user *arg);
 int ksu_yukizygisk_get_health(void __user *arg);
 
+int yz_endpoint_init(void);
+void yz_endpoint_exit(void);
+void yz_endpoint_invalidate(void);
+void yz_endpoint_enable(void);
+void yz_endpoint_suspend(void);
+bool yz_endpoint_supported(void);
+int yz_endpoint_install_fd(u32 abi);
+int yz_endpoint_get_fd(void __user *arg);
+int yz_endpoint_register(void __user *arg);
+int yz_endpoint_unregister(void __user *arg);
+
 #endif

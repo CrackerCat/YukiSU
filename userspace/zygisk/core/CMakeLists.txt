@@ -58,6 +58,7 @@ get_filename_component(REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../../.." ABSOLUTE
 set(CXX_SLIM_SOURCE ${REPO_ROOT}/userspace/common/cxx_slim.cpp)
 
 add_library(zygisk SHARED
+    ../endpoint.cpp
     src/core.cpp
     src/hook.cpp
     src/runtime_log.cpp
@@ -114,6 +115,7 @@ target_link_options(zygisk PRIVATE -Wl,--gc-sections -Wl,--strip-all
 yukisu_enable_clang_tidy(zygisk CXX)
 
 add_library(yukizncore SHARED
+    ../endpoint.cpp
     src/hyos_runtime.cpp
     src/yukizncore.cpp
     src/runtime_log.cpp
@@ -161,6 +163,7 @@ yukisu_enable_clang_tidy(yukizncore CXX)
 # .so that core dlopen+dlsym's at runtime (exports yuki_dlopen_memfd/dlsym/
 # dlclose). Same source as compiled-in; no lsplt/solist deps.
 add_library(yukilinker SHARED
+    ../endpoint.cpp
     src/yukilinker.cpp
     src/runtime_log.cpp
     ${YUKILINKER_ARCH_SOURCES}

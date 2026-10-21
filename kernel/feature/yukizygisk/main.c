@@ -11,6 +11,10 @@ int yz_feature_enable_early(void)
 	int ret = 0;
 
 	mutex_lock(&yz_feature_lock);
+	if (yz_early_native_active() && !yz_endpoint_supported()) {
+		ret = -EOPNOTSUPP;
+		goto out;
+	}
 	if (!READ_ONCE(yukizygisk_enabled) && yz_early_native_active()) {
 		ret = yz_process_exit_enable();
 		if (!ret) {
@@ -22,6 +26,9 @@ int yz_feature_enable_early(void)
 			}
 		}
 	}
+	if (!ret && yz_early_native_active())
+		yz_endpoint_enable();
+out:
 	mutex_unlock(&yz_feature_lock);
 	return ret;
 }
@@ -35,6 +42,10 @@ int yz_feature_set_enabled(bool enabled)
 		goto out;
 
 	if (enabled) {
+		if (!yz_endpoint_supported()) {
+			ret = -EOPNOTSUPP;
+			goto out;
+		}
 		ret = yz_process_exit_enable();
 		if (ret)
 			goto out;
@@ -49,9 +60,11 @@ int yz_feature_set_enabled(bool enabled)
 				yz_exec_disable();
 			goto undo_exit;
 		}
+		yz_endpoint_enable();
 		WRITE_ONCE(yukizygisk_enabled, true);
 	} else {
 		WRITE_ONCE(yukizygisk_enabled, false);
+		yz_endpoint_suspend();
 		yz_early_native_disable();
 		yz_load_policy_disable();
 		yz_exec_disable();
@@ -73,6 +86,10 @@ out:
 
 void ksu_yukizygisk_init(void)
 {
+	int ret = yz_endpoint_init();
+
+	if (ret)
+		pr_err("yukizygisk: endpoint initialization failed: %d\n", ret);
 	yz_exit_history_init();
 	yz_events_init();
 	yz_fd_handoff_init();
@@ -87,4 +104,5 @@ void ksu_yukizygisk_exit(void)
 	yz_exit_history_exit();
 	yz_events_exit();
 	yz_fd_handoff_exit();
+	yz_endpoint_exit();
 }

@@ -1,3 +1,4 @@
+#include "userspace/zygisk/endpoint.hpp"
 #include <lsplt.hpp>
 
 #include "hook.hpp"
@@ -220,22 +221,7 @@ int recv_fd(int sock) {
   return -1;
 }
 
-int connect_zygiskd() {
-  int fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0);
-  if (fd < 0)
-    return -1;
-  sockaddr_un addr{};
-  addr.sun_family = AF_UNIX;
-  size_t len = std::strlen(zygiskd::kSocketName);
-  memcpy(addr.sun_path + 1, zygiskd::kSocketName,
-         len); // abstract: leading NUL
-  auto alen = static_cast<socklen_t>(offsetof(sockaddr_un, sun_path) + 1 + len);
-  if (connect(fd, reinterpret_cast<sockaddr *>(&addr), alen) != 0) {
-    close(fd);
-    return -1;
-  }
-  return fd;
-}
+int connect_zygiskd() { return yukizygisk::endpoint::connect(); }
 
 /* One-shot fd request to zygiskd. */
 int zd_request_fd(ZdRequest req, uint32_t arg) {
@@ -1137,7 +1123,13 @@ zygisk_set_load_config(const yz_config *config) {
 
 extern "C" [[gnu::visibility("default")]] void
 zygisk_core_entry(const char *self_path, void *loader_self, void *core_base,
-                  void *core_size, int /*early_packet_fd_plus1*/) {
+                  void *core_size, int early_packet_fd_plus1) {
+  const int packet_fd =
+      early_packet_fd_plus1 > 0 ? early_packet_fd_plus1 - 1 : -1;
+  const bool endpoint_ready = yukizygisk::endpoint::initialize(packet_fd, true);
+  yukizygisk::endpoint::close_packet(packet_fd, false);
+  if (!endpoint_ready)
+    return;
   g_loader_base = reinterpret_cast<uintptr_t>(loader_self);
   g_self_base = reinterpret_cast<uintptr_t>(core_base);
   g_self_size = reinterpret_cast<size_t>(core_size);
@@ -1159,7 +1151,12 @@ zygisk_bootstrap_handoff_complete() {
 }
 
 extern "C" [[gnu::visibility("default")]] void
-zygisk_core_entry_direct(int /*core_fd*/) {
+zygisk_core_entry_direct(int /*core_fd*/, int packet_fd_plus1) {
+  const int packet_fd = packet_fd_plus1 > 0 ? packet_fd_plus1 - 1 : -1;
+  const bool endpoint_ready = yukizygisk::endpoint::initialize(packet_fd, true);
+  yukizygisk::endpoint::close_packet(packet_fd, false);
+  if (!endpoint_ready)
+    return;
   core_start(nullptr);
   prepare_system_core_unmap(
       reinterpret_cast<uintptr_t>(zygisk_core_entry_direct));
@@ -1239,8 +1236,13 @@ static void prepare_system_core_unmap(uintptr_t entry) {
 #if defined(__arm__)
 extern "C" [[gnu::visibility("default")]] void
 zygisk_core_entry_tango(uint32_t got, uint32_t original, uint32_t stub,
-                        uint32_t size) {
-  if (got != 0 && original != 0 && stub != 0 && size == 176 &&
+                        uint32_t size, int packet_fd_plus1) {
+  const int packet_fd = packet_fd_plus1 > 0 ? packet_fd_plus1 - 1 : -1;
+  const bool endpoint_ready = yukizygisk::endpoint::initialize(packet_fd, true);
+  yukizygisk::endpoint::close_packet(packet_fd, false);
+  if (!endpoint_ready)
+    return;
+  if (got != 0 && original != 0 && stub != 0 && size == 208 &&
       yz_patch_text(got, &original, sizeof(original))) {
     g_tango_stub = stub;
     g_tango_stub_size = size;
@@ -1370,6 +1372,7 @@ void zygisk_self_destruct(JNIEnv *env, bool isolated) {
     yz_finalize_self_dso();
     LOGI("self-unmap handoff: base=%p size=%zu",
          reinterpret_cast<void *>(cbase), csize);
+    yukizygisk::endpoint::release();
     yz_self_unmap_tail(reinterpret_cast<void *>(cbase), csize);
   }
   LOGE("self-unmap failed: core remains mapped at %p size=%zu captured=%d",

@@ -65,6 +65,9 @@ static void enqueue(uint32_t type, uint32_t generation, uint32_t sender = 0) {
 struct Monitor {
     void on_exit(const yz_zygote_exit_event &event) { generations.push_back(event.generation); }
 } g_crash_monitor;
+struct History { bool enabled() const { return false; } } g_exit_history;
+static std::vector<yz_target_exit_event> g_legacy_native_exits;
+static void flush_legacy_native_exits() { g_legacy_native_exits.clear(); }
 static void read_yzconfig() {}
 static bool rescan_modules_for_reload() { return true; }
 namespace yzpolicy {
@@ -101,8 +104,13 @@ with tempfile.TemporaryDirectory(prefix='yz-host-tests-') as temporary:
     binary = build / 'netlink_test'
     run(compiler, *flags, str(source), '-o', str(binary))
     run(str(binary))
+    endpoint = root / 'userspace/zygisk/endpoint.cpp'
+    binary = build / 'endpoint_test'
+    run(compiler, *flags, '-pthread',
+        str(root / 'userspace/zygisk/tests/endpoint_test.cpp'), str(endpoint), '-o', str(binary))
+    run(str(binary))
     load_config = root / 'userspace/zygisk/tests/load_config_test.cpp'
     if load_config.is_file():
         binary = build / 'load_config_test'
-        run(compiler, *flags, '-pthread', str(load_config), '-o', str(binary))
+        run(compiler, *flags, '-pthread', str(load_config), str(endpoint), '-o', str(binary))
         run(str(binary))

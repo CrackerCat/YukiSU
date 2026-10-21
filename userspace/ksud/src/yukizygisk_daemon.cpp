@@ -57,10 +57,25 @@ int remaining_ms(Clock::time_point deadline) {
     return static_cast<int>(std::max<int64_t>(0, remaining));
 }
 
+int endpoint_state_fd(uint32_t abi, void* /*context*/) {
+    yz_runtime_query_cmd capabilities{};
+    if (ksuctl(KSU_IOCTL_YZ_GET_RUNTIME, &capabilities) != 0) {
+        return -1;
+    }
+    if ((capabilities.capabilities & YZ_RUNTIME_CAP_ENDPOINT_STATE) == 0) {
+        errno = EPROTONOSUPPORT;
+        return -1;
+    }
+    yz_endpoint_fd_cmd command{YZ_ENDPOINT_VERSION, abi, -1, 0};
+    return ksuctl(KSU_IOCTL_YZ_GET_ENDPOINT_STATE_FD, &command) == 0 ? command.fd : -1;
+}
+
 const char* availability_name(health::Availability value) {
     switch (value) {
     case health::Availability::Available:
         return "available";
+    case health::Availability::Unpublished:
+        return "not_published";
     case health::Availability::Missing:
         return "missing";
     case health::Availability::Unresponsive:
@@ -359,7 +374,7 @@ json::Value yukizygisk_kernel_health(uint32_t capabilities) {
 }
 
 json::Value yukizygisk_daemon_health() {
-    const auto replies = health::query_all();
+    const auto replies = health::query_all(endpoint_state_fd, nullptr);
     json::Value result = json::Value::array();
     for (size_t index = 0; index < replies.size(); ++index) {
         const auto& reply = replies[index];
@@ -453,7 +468,8 @@ int ensure_yukizygisk_daemons(uint32_t abi) {
         (void)fprintf(stderr, "yzctl: 32-bit daemon is not required by this configuration\n");
         return 2;
     }
-    const auto initial = health::query_all(std::min(1000, remaining_ms(deadline)));
+    const auto initial =
+        health::query_all(endpoint_state_fd, nullptr, std::min(1000, remaining_ms(deadline)));
     int result = 0;
     for (const uint32_t selected : {2U, 1U}) {
         if ((abi != 0 && abi != selected) || (selected == 1 && !require32))
@@ -479,7 +495,8 @@ int ensure_yukizygisk_daemons(uint32_t abi) {
             }
             continue;
         }
-        if (current.availability != health::Availability::Missing) {
+        if (current.availability != health::Availability::Missing &&
+            current.availability != health::Availability::Unpublished) {
             (void)fprintf(stderr, "yzctl: daemon%u %s; existing instance left running\n",
                           selected == 2 ? 64U : 32U, availability_name(current.availability));
             result = std::max(result, 2);
@@ -507,7 +524,8 @@ int ensure_yukizygisk_daemons(uint32_t abi) {
             result = std::max(result, launched);
             continue;
         }
-        const auto confirmed = health::query(selected, std::min(1000, remaining_ms(deadline)));
+        const auto confirmed = health::query(endpoint_state_fd, nullptr, selected,
+                                             std::min(1000, remaining_ms(deadline)));
         if (confirmed.availability != health::Availability::Available ||
             confirmed.snapshot.pid != static_cast<uint32_t>(spawned) ||
             (confirmed.snapshot.flags & health::Ready) == 0) {
