@@ -62,6 +62,7 @@ import com.anatdx.yukisu.ui.util.LocalNavigationLeaveGuard
 import com.anatdx.yukisu.ui.util.LocalSnackbarHost
 import com.anatdx.yukisu.ui.util.NavigationLeaveGuard
 import com.anatdx.yukisu.ui.util.install
+import com.anatdx.yukisu.ui.util.migrateFeatureDefaults
 import com.anatdx.yukisu.ui.util.resetTaskDescriptionToAppName
 import com.anatdx.yukisu.ui.viewmodel.HomeViewModel
 import com.anatdx.yukisu.ui.viewmodel.SuperUserViewModel
@@ -107,7 +108,7 @@ class MainActivity : ComponentActivity() {
             window.isNavigationBarContrastEnforced = false
 
             super.onCreate(savedInstanceState)
-            if (savedInstanceState == null) intent?.let(intentDispatcher::submit)
+            intentDispatcher.initialize(intent)
             lifecycleScope.launch(Dispatchers.IO) {
                 RamdiskExternalFiles(File(cacheDir, "ramdisk_external")).cleanExpired()
             }
@@ -178,6 +179,10 @@ class MainActivity : ComponentActivity() {
                             try {
                                 if (snapshot.data?.scheme == "ksu" || snapshot.hasExtra("shortcut_type")) {
                                     val link = resolveModuleIntent(snapshot)
+                                    if (link != null && !Natives.isManager) {
+                                        navigator.navigate(HomeScreenDestination) { launchSingleTop = true }
+                                        intentDispatcher.managerAccess.awaitReady()
+                                    }
                                     intentDispatcher.queue.complete()
                                     when (link?.type) {
                                         ModuleLink.Type.Action -> navigator.navigate(
@@ -336,13 +341,18 @@ class MainActivity : ComponentActivity() {
             ThemeUtils.onActivityResume()
 
             lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
+                val manager = withContext(Dispatchers.IO) {
                     val manager = runCatching { Natives.isManager }.getOrDefault(false)
                     if (manager && !KsuCli.SHELL.isRoot) {
                         KsuCli.refreshShells(checkKsud = false)
                     }
+                    if (manager) {
+                        migrateFeatureDefaults(KsuCli.SHELL)
+                    }
                     KsudIntegrity.refresh(this@MainActivity, notifyOnMismatch = false)
+                    manager
                 }
+                if (manager) onManagerAccessChanged()
                 if (isInitialized) {
                     refreshData()
                 }
@@ -390,9 +400,13 @@ class MainActivity : ComponentActivity() {
         intentDispatcher.submit(intent)
     }
 
+    internal fun onManagerAccessChanged() {
+        intentDispatcher.managerAccess.notifyChanged()
+    }
+
     private fun resolveModuleIntent(intent: Intent): ModuleLink? {
         if (intent.data?.scheme == "ksu") {
-            if (intent.action != Intent.ACTION_VIEW || !Natives.isManager) return null
+            if (intent.action != Intent.ACTION_VIEW) return null
             return ModuleLink.parse(intent.data?.toString(), Shortcut.intentToken(this))
         }
         val type = when (intent.getStringExtra("shortcut_type")) {

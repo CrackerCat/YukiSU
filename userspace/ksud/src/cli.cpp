@@ -199,6 +199,8 @@ int cmd_feature(const std::vector<std::string>& args) {
         return feature_load_config();
     } else if (subcmd == "save") {
         return feature_save_config();
+    } else if (subcmd == "migrate-defaults") {
+        return migrate_feature_defaults();
     }
 
     terminal::errorf("Unknown feature subcommand: %s\n", subcmd.c_str());

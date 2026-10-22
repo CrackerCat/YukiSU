@@ -244,14 +244,14 @@ static jobject app_profile_to_java(JNIEnv *env, struct app_profile profile,
     }
 
     // Apps on the default root profile report an empty selinux_domain (the
-    // kernel zeros rp_config for use_default). Surface the default su domain so
-    // switching such an app to a custom profile carries a valid, non-empty
+    // kernel zeros rp_config for use_default). Surface the default ksu domain
+    // so switching such an app to a custom profile carries a valid, non-empty
     // domain instead of being rejected by the kernel's profile_valid.
     const char *sel_domain = profile.rp_config.profile.selinux_domain;
     GetEnvironment()->SetObjectField(
         env, obj, domainField,
         GetEnvironment()->NewStringUTF(
-            env, sel_domain[0] != '\0' ? sel_domain : "u:r:su:s0"));
+            env, sel_domain[0] != '\0' ? sel_domain : "u:r:ksu:s0"));
     GetEnvironment()->SetIntField(env, obj, namespacesField,
                                   profile.rp_config.profile.namespaces);
     GetEnvironment()->SetLongField(
@@ -487,10 +487,10 @@ NativeBridge(setAppProfile, jboolean, jobject profile) {
     strcpy(p.rp_config.profile.selinux_domain, cdomain);
     GetEnvironment()->ReleaseStringUTFChars(env, (jstring)domain, cdomain);
     // A custom root profile must carry a non-empty SELinux domain or the kernel
-    // rejects it (profile_valid). Fall back to the default su domain.
+    // rejects it (profile_valid). Fall back to the default ksu domain.
     if (!p.rp_config.use_default &&
         p.rp_config.profile.selinux_domain[0] == '\0') {
-      strcpy(p.rp_config.profile.selinux_domain, "u:r:su:s0");
+      strcpy(p.rp_config.profile.selinux_domain, "u:r:ksu:s0");
     }
 
     p.rp_config.profile.namespaces =

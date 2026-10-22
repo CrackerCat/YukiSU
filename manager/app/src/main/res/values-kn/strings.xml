@@ -597,7 +597,7 @@
     <string name="profile_no_new_privs">ಮತ್ತೆ ಸವಲತ್ತು ಹೆಚ್ಚಿಸುವುದನ್ನು ನಿಷೇಧಿಸಿ</string>
     <string name="profile_no_new_privs_summary">ಈ ಪ್ರೊಫೈಲ್ ಮೂಲಕ ಸವಲತ್ತು ಹೆಚ್ಚಿಸಿಕೊಂಡ ಪ್ರಕ್ರಿಯೆಗಳು ಮತ್ತು ಅವುಗಳ ಉಪಪ್ರಕ್ರಿಯೆಗಳು KernelSU ಮೂಲಕ ಮತ್ತೆ ಸವಲತ್ತು ಹೆಚ್ಚಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಾಗುವುದಿಲ್ಲ, ಉದಾಹರಣೆಗೆ su ಮತ್ತೆ ಚಲಾಯಿಸುವುದು ಅಥವಾ GRANT_ROOT ಕರೆಮಾಡುವುದು. ಸಕ್ರಿಯಗೊಳಿಸುವುದು ಸೂಕ್ತ.</string>
     <string name="settings_default_no_new_privs">ಪೂರ್ವನಿಯೋಜಿತ ಮರು ಸವಲತ್ತು ಹೆಚ್ಚಳ ತಡೆ (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">ಮ್ಯಾನೇಜರ್ ಮತ್ತು shell ಸೇರಿದಂತೆ ಪೂರ್ವನಿಯೋಜಿತ root ಪ್ರೊಫೈಲ್‌ನಲ್ಲಿ ಮತ್ತೆ ಸವಲತ್ತು ಹೆಚ್ಚಿಸುವುದನ್ನು ನಿಷೇಧಿಸಿ. ಪೂರ್ವನಿಯೋಜಿತವಾಗಿ ಆಫ್ ಆಗಿರುತ್ತದೆ.</string>
+    <string name="settings_default_no_new_privs_summary">ಮ್ಯಾನೇಜರ್ ಮತ್ತು shell ಸೇರಿದಂತೆ ಪೂರ್ವನಿಯೋಜಿತ root ಪ್ರೊಫೈಲ್‌ನಲ್ಲಿ ಮತ್ತೆ ಸವಲತ್ತು ಹೆಚ್ಚಿಸುವುದನ್ನು ನಿಷೇಧಿಸಿ. ಪೂರ್ವನಿಯೋಜಿತವಾಗಿ ಆನ್ ಆಗಿರುತ್ತದೆ.</string>
     <string name="settings_yukizygisk_summary">ಪ್ರಾಯೋಗಿಕ ವೈಶಿಷ್ಟ್ಯ. ಅಂತರ್ನಿರ್ಮಿತ ಕರ್ನಲ್ ಮಟ್ಟದ Zygisk ಇಂಜೆಕ್ಟರ್ ಬಳಸುತ್ತದೆ ಮತ್ತು ZN ಮಾಡ್ಯೂಲ್‌ಗಳಿಗೆ ಹೊಂದಿಕೊಳ್ಳುತ್ತದೆ.</string>
     <string name="settings_yukizygisk_toast_on">ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ, ಮರುಪ್ರಾರಂಭದ ನಂತರ ಜಾರಿಗೆ ಬರುತ್ತದೆ</string>
     <string name="settings_yukizygisk_toast_off">ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ, ಮರುಪ್ರಾರಂಭದ ನಂತರ ಜಾರಿಗೆ ಬರುತ್ತದೆ</string>

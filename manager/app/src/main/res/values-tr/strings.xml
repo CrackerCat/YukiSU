@@ -569,7 +569,7 @@
     <string name="profile_no_new_privs">Yeniden yetki yükseltmeyi engelle</string>
     <string name="profile_no_new_privs_summary">Bu yapılandırmayla yetki kazanan süreçler ve alt süreçleri, su komutunu yeniden çalıştırmak veya GRANT_ROOT çağırmak gibi yollarla KernelSU üzerinden tekrar yetki yükseltemez. Etkinleştirilmesi önerilir.</string>
     <string name="settings_default_no_new_privs">Varsayılan kaçış koruması (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Yönetici ve shell dahil varsayılan root profilinde tekrar yetki yükseltmeyi engeller. Varsayılan olarak kapalıdır.</string>
+    <string name="settings_default_no_new_privs_summary">Yönetici ve shell dahil varsayılan root profilinde tekrar yetki yükseltmeyi engeller. Varsayılan olarak açıktır.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Deneysel özellik: ZN modülleriyle uyumlu, çekirdek düzeyinde yerleşik Zygisk enjektörünü kullanır.</string>
     <string name="settings_yukizygisk_toast_on">Açıldı. Yeniden başlatınca uygulanır</string>

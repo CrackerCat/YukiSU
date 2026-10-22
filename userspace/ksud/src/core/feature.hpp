@@ -15,6 +15,7 @@ void feature_list();
 int feature_check(const std::string& id);
 int feature_load_config();
 int feature_save_config();
+int migrate_feature_defaults();
 
 // Binary config management
 std::optional<std::map<uint32_t, uint64_t>> load_binary_config();

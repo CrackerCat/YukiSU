@@ -571,7 +571,7 @@
     <string name="profile_no_new_privs">Interdire toute nouvelle élévation de privilèges</string>
     <string name="profile_no_new_privs_summary">Les processus élevés avec ce profil et leurs descendants ne pourront plus obtenir de privilèges via KernelSU, par exemple en exécutant à nouveau su ou en appelant GRANT_ROOT. Activation recommandée.</string>
     <string name="settings_default_no_new_privs">Protection par défaut contre l’évasion (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Interdire toute nouvelle élévation de privilèges avec le profil root par défaut, y compris pour le gestionnaire et le shell. Désactivé par défaut.</string>
+    <string name="settings_default_no_new_privs_summary">Interdire toute nouvelle élévation de privilèges avec le profil root par défaut, y compris pour le gestionnaire et le shell. Activé par défaut.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Fonction expérimentale utilisant l’injecteur Zygisk intégré au niveau du noyau, compatible avec les modules ZN.</string>
     <string name="settings_yukizygisk_toast_on">Activé. Prend effet après redémarrage.</string>

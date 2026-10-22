@@ -570,7 +570,7 @@ A</string>
     <string name="profile_no_new_privs">Ismételt jogosultságnövelés tiltása</string>
     <string name="profile_no_new_privs_summary">Az ezzel a konfigurációval emelt jogosultságot kapott folyamatok és gyermekfolyamataik nem növelhetik újra jogosultságukat a KernelSU-val, például su újbóli futtatásával vagy GRANT_ROOT hívásával. Ajánlott bekapcsolni.</string>
     <string name="settings_default_no_new_privs">Alapértelmezett kitörésvédelem (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Tiltja az ismételt jogosultságnövelést az alapértelmezett root profilban, a kezelőben és a shellben is. Alapértelmezés szerint kikapcsolva.</string>
+    <string name="settings_default_no_new_privs_summary">Tiltja az ismételt jogosultságnövelést az alapértelmezett root profilban, a kezelőben és a shellben is. Alapértelmezés szerint bekapcsolva.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Kísérleti funkció: beépített, kernelszintű Zygisk-injektort használ, amely kompatibilis a ZN modulokkal.</string>
     <string name="settings_yukizygisk_toast_on">Bekapcsolva. Újraindítás után lép életbe</string>

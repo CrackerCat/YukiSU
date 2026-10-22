@@ -28,6 +28,8 @@ import com.anatdx.yukisu.ui.util.rememberSnackbarController
 import com.anatdx.yukisu.ui.util.getFeatureStatus
 import com.anatdx.yukisu.ui.util.getFeatureValue
 import com.anatdx.yukisu.ui.util.getFeatureValueOrNull
+import com.anatdx.yukisu.ui.util.getRootShell
+import com.anatdx.yukisu.ui.util.migrateFeatureDefaults
 import com.anatdx.yukisu.ui.util.restartAdbd
 import com.anatdx.yukisu.ui.util.setFeatureValue
 import com.ramcosta.composedestinations.annotation.Destination
@@ -162,6 +164,17 @@ fun FeatureControlScreen(navigator: DestinationsNavigator) {
     val enhancedSecurity = rememberFeatureToggleState(Natives.FEATURE_ENHANCED_SECURITY)
     val magiskCompat = rememberFeatureToggleState(Natives.FEATURE_MAGISK_COMPAT)
     val defaultNoNewPrivs = rememberFeatureToggleState(Natives.FEATURE_DEFAULT_NO_NEW_PRIVS)
+    LaunchedEffect(Unit) {
+        defaultNoNewPrivs.saving = true
+        try {
+            withContext(Dispatchers.IO) {
+                migrateFeatureDefaults(getRootShell())
+            }
+            defaultNoNewPrivs.checked = getFeatureValue(Natives.FEATURE_DEFAULT_NO_NEW_PRIVS)
+        } finally {
+            defaultNoNewPrivs.saving = false
+        }
+    }
     val yukiZygisk = rememberFeatureToggleState(Natives.FEATURE_YUKIZYGISK)
     val hideBootloader = rememberFeatureToggleState(Natives.FEATURE_HIDE_BOOTLOADER)
 

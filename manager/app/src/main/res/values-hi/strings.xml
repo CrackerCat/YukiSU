@@ -597,7 +597,7 @@
     <string name="profile_no_new_privs">दोबारा विशेषाधिकार बढ़ाने से रोकें</string>
     <string name="profile_no_new_privs_summary">इस प्रोफ़ाइल से विशेषाधिकार पाने वाली प्रक्रियाएँ और उनकी संतान प्रक्रियाएँ KernelSU से दोबारा विशेषाधिकार नहीं पा सकेंगी, जैसे फिर से su चलाकर या GRANT_ROOT बुलाकर। इसे सक्षम करना अनुशंसित है।</string>
     <string name="settings_default_no_new_privs">डिफ़ॉल्ट एस्केप सुरक्षा (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">डिफ़ॉल्ट root प्रोफ़ाइल में प्रबंधक और shell सहित दोबारा विशेषाधिकार बढ़ाने से रोकें। डिफ़ॉल्ट रूप से बंद है।</string>
+    <string name="settings_default_no_new_privs_summary">डिफ़ॉल्ट root प्रोफ़ाइल में प्रबंधक और shell सहित दोबारा विशेषाधिकार बढ़ाने से रोकें। डिफ़ॉल्ट रूप से चालू है।</string>
     <string name="settings_yukizygisk_summary">प्रयोगात्मक सुविधा, जो अंतर्निहित कर्नेल-स्तरीय Zygisk इंजेक्टर का उपयोग करती है और ZN मॉड्यूल के साथ संगत है।</string>
     <string name="settings_yukizygisk_toast_on">चालू किया गया। रीस्टार्ट के बाद लागू होगा।</string>
     <string name="settings_yukizygisk_toast_off">बंद किया गया। रीस्टार्ट के बाद लागू होगा।</string>

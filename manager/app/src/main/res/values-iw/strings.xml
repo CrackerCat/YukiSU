@@ -569,7 +569,7 @@
     <string name="profile_no_new_privs">חסימת העלאת הרשאות חוזרת</string>
     <string name="profile_no_new_privs_summary">תהליכים שקיבלו הרשאות באמצעות תצורה זו ותהליכי הבן שלהם לא יוכלו להעלות הרשאות שוב דרך KernelSU, למשל בהפעלה חוזרת של su או בקריאה ל-GRANT_ROOT. מומלץ להפעיל.</string>
     <string name="settings_default_no_new_privs">הגנת ברירת מחדל מפני יציאה מההגבלות (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">חסימת העלאת הרשאות חוזרת בפרופיל root המוגדר כברירת מחדל, כולל המנהל ו-shell. כבוי כברירת מחדל.</string>
+    <string name="settings_default_no_new_privs_summary">חסימת העלאת הרשאות חוזרת בפרופיל root המוגדר כברירת מחדל, כולל המנהל ו-shell. מופעל כברירת מחדל.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">תכונה ניסיונית המשתמשת במזריק Zygisk מובנה ברמת הליבה, עם תאימות למודולי ZN.</string>
     <string name="settings_yukizygisk_toast_on">הופעל. ייכנס לתוקף לאחר הפעלה מחדש</string>

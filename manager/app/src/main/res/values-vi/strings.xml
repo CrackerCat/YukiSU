@@ -597,7 +597,7 @@
     <string name="profile_no_new_privs">Cấm nâng quyền lần nữa</string>
     <string name="profile_no_new_privs_summary">Tiến trình đã nâng quyền bằng hồ sơ này và các tiến trình con sẽ không thể nâng quyền lần nữa qua KernelSU, chẳng hạn chạy lại su hoặc gọi GRANT_ROOT. Nên bật tùy chọn này.</string>
     <string name="settings_default_no_new_privs">Mặc định ngăn nâng quyền lại (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Cấm nâng quyền lần nữa trong hồ sơ root mặc định, gồm trình quản lý và shell. Mặc định tắt.</string>
+    <string name="settings_default_no_new_privs_summary">Cấm nâng quyền lần nữa trong hồ sơ root mặc định, gồm trình quản lý và shell. Mặc định bật.</string>
     <string name="settings_yukizygisk_summary">Tính năng thử nghiệm sử dụng bộ chèn Zygisk cấp nhân tích hợp, tương thích với mô-đun ZN.</string>
     <string name="settings_yukizygisk_toast_on">Đã bật, có hiệu lực sau khi khởi động lại</string>
     <string name="settings_yukizygisk_toast_off">Đã tắt, có hiệu lực sau khi khởi động lại</string>

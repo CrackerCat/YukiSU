@@ -10,6 +10,7 @@ import android.system.Os
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.LocalActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
@@ -69,6 +70,7 @@ import com.anatdx.yukisu.integrity.KsudIntegrity
 import com.anatdx.yukisu.integrity.KsudIntegrityStatus
 import com.anatdx.yukisu.magica.MagicaHelper
 import com.anatdx.yukisu.superkey.SuperKeyHelper
+import com.anatdx.yukisu.ui.MainActivity
 import com.anatdx.yukisu.ui.component.KsuIsValid
 import com.anatdx.yukisu.ui.component.rememberConfirmDialog
 import com.anatdx.yukisu.ui.component.rememberLoadingDialog
@@ -107,6 +109,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun HomeScreen(navigator: DestinationsNavigator) {
     val context = LocalContext.current
+    val activity = LocalActivity.current as? MainActivity
     val viewModel = viewModel<HomeViewModel>()
     val coroutineScope = rememberCoroutineScope()
     val loadingDialog = rememberLoadingDialog()
@@ -241,6 +244,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                                     withContext(Dispatchers.IO) {
                                         KsuCli.refreshShells()
                                     }
+                                    activity?.onManagerAccessChanged()
                                     // 强制刷新数据
                                     viewModel.refreshData(context, forceRefresh = true)
                                     withContext(Dispatchers.IO) {
@@ -275,6 +279,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
                                 }
                                 if (success) {
                                     superKeyAuthSuccess = true
+                                    activity?.onManagerAccessChanged()
                                     // 强制刷新数据
                                     viewModel.refreshData(context, forceRefresh = true)
                                     withContext(Dispatchers.IO) {

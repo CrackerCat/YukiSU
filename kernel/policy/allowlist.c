@@ -54,7 +54,7 @@ static void init_default_profiles(void)
 	       sizeof(default_root_profile.capabilities.effective));
 	default_root_profile.namespaces = KSU_NS_INHERITED;
 	strcpy(default_root_profile.selinux_domain, KSU_DEFAULT_SELINUX_DOMAIN);
-	default_root_profile.flags = 0;
+	default_root_profile.flags = FLAG_KSU_NO_NEW_PRIVS;
 
 	// Keep modules mounted for apps without an explicit profile by default.
 	default_non_root_profile.umount_modules = false;
@@ -623,28 +623,7 @@ static void migrate_profile(u32 version, struct app_profile *profile)
 		return;
 	}
 
-	/*
-	 * v2 -> : mirror image of upstream's su->ksu migration. YukiSU moved
-	 * the other way (ksu->su), so rewrite the legacy "u:r:ksu:s0" domain to
-	 * our current default. Do NOT copy upstream's "u:r:su:s0".
-	 */
-	if (version == 2) {
-		char *domain = profile->rp_config.profile.selinux_domain;
-		const size_t domain_len =
-		    sizeof(profile->rp_config.profile.selinux_domain);
-
-		if (strncmp(domain, "u:r:ksu:s0", domain_len) == 0) {
-			strscpy_pad(domain, KSU_DEFAULT_SELINUX_DOMAIN,
-				    domain_len);
-			pr_info("migrated profile domain to %s: %s\n",
-				KSU_DEFAULT_SELINUX_DOMAIN, profile->key);
-		}
-	}
-
-	/* pre-v4 -> v4: the flags field is new. Leave it neutral (0) so the
-	 * global "app profile 防逃逸" toggle (KSU_FEATURE_DEFAULT_NO_NEW_PRIVS,
-	 * applied to default_root_profile) is the single source of the
-	 * NO_NEW_PRIVS default. Per-profile overrides still win once set. */
+	/* Preserve custom domains and initialize only the new pre-v4 field. */
 	if (version < KSU_APP_PROFILE_VER)
 		profile->rp_config.profile.flags = 0;
 

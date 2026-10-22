@@ -571,7 +571,7 @@
     <string name="profile_no_new_privs">Verdere rechtenverhoging voorkomen</string>
     <string name="profile_no_new_privs_summary">Processen die via dit profiel verhoogde rechten krijgen en hun onderliggende processen kunnen via KernelSU geen verdere rechten verkrijgen, bijvoorbeeld door opnieuw su uit te voeren of GRANT_ROOT aan te roepen. Inschakelen aanbevolen.</string>
     <string name="settings_default_no_new_privs">Standaardbescherming tegen ontsnappen (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Verdere rechtenverhoging in het standaard-rootprofiel voorkomen, inclusief beheerder en shell. Standaard uitgeschakeld.</string>
+    <string name="settings_default_no_new_privs_summary">Verdere rechtenverhoging in het standaard-rootprofiel voorkomen, inclusief beheerder en shell. Standaard ingeschakeld.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Experimentele functie met de ingebouwde Zygisk-injector op kernelniveau, compatibel met ZN-modules.</string>
     <string name="settings_yukizygisk_toast_on">Ingeschakeld. Wordt actief na opnieuw opstarten.</string>

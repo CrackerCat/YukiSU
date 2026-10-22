@@ -571,7 +571,7 @@
     <string name="profile_no_new_privs">منع رفع الصلاحيات مجددًا</string>
     <string name="profile_no_new_privs_summary">العمليات التي تحصل على صلاحيات بهذا الإعداد وعملياتها الفرعية لن تتمكن من رفع الصلاحيات مجددًا عبر KernelSU، مثل إعادة تشغيل su أو استدعاء GRANT_ROOT. يوصى بتفعيله.</string>
     <string name="settings_default_no_new_privs">الحماية الافتراضية من تجاوز القيود (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">منع رفع الصلاحيات مجددًا في ملف root الافتراضي، بما فيه المدير وshell. معطّل افتراضيًا.</string>
+    <string name="settings_default_no_new_privs_summary">منع رفع الصلاحيات مجددًا في ملف root الافتراضي، بما فيه المدير وshell. مفعّل افتراضيًا.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">ميزة تجريبية تستخدم حاقن Zygisk المدمج على مستوى النواة، والمتوافق مع وحدات ZN.</string>
     <string name="settings_yukizygisk_toast_on">فُعّل. يسري بعد إعادة التشغيل</string>

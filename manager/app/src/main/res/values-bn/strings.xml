@@ -597,7 +597,7 @@
     <string name="profile_no_new_privs">আবার অধিকার বৃদ্ধি নিষিদ্ধ করুন</string>
     <string name="profile_no_new_privs_summary">এই প্রোফাইল দিয়ে অধিকার বাড়ানো প্রসেস ও তার চাইল্ড প্রসেসগুলি KernelSU দিয়ে আবার অধিকার বাড়াতে পারবে না, যেমন আবার su চালিয়ে বা GRANT_ROOT কল করে। চালু রাখা বাঞ্ছনীয়।</string>
     <string name="settings_default_no_new_privs">ডিফল্ট পুনরায় অধিকার বৃদ্ধি প্রতিরোধ (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">ডিফল্ট root প্রোফাইলে, ম্যানেজার ও shell-সহ, পুনরায় অধিকার বৃদ্ধি নিষিদ্ধ করুন। ডিফল্টভাবে বন্ধ।</string>
+    <string name="settings_default_no_new_privs_summary">ডিফল্ট root প্রোফাইলে, ম্যানেজার ও shell-সহ, পুনরায় অধিকার বৃদ্ধি নিষিদ্ধ করুন। ডিফল্টভাবে চালু।</string>
     <string name="settings_yukizygisk_summary">পরীক্ষামূলক বৈশিষ্ট্য। অন্তর্নির্মিত কার্নেল-স্তরের Zygisk ইনজেক্টর ব্যবহার করে এবং ZN মডিউলের সঙ্গে সামঞ্জস্যপূর্ণ।</string>
     <string name="settings_yukizygisk_toast_on">চালু হয়েছে, পুনরায় চালুর পর কার্যকর হবে</string>
     <string name="settings_yukizygisk_toast_off">বন্ধ হয়েছে, পুনরায় চালুর পর কার্যকর হবে</string>

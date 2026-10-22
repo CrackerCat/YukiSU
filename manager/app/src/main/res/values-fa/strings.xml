@@ -569,7 +569,7 @@
     <string name="profile_no_new_privs">جلوگیری از افزایش مجدد دسترسی</string>
     <string name="profile_no_new_privs_summary">پردازش‌هایی که با این پیکربندی دسترسی بالاتر گرفته‌اند و فرزندانشان دیگر نمی‌توانند از طریق KernelSU، مانند اجرای دوباره su یا فراخوانی GRANT_ROOT، دسترسی خود را افزایش دهند. فعال‌سازی توصیه می‌شود.</string>
     <string name="settings_default_no_new_privs">محافظت پیش‌فرض در برابر خروج از محدودیت (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">جلوگیری از افزایش مجدد دسترسی در نمایه پیش‌فرض root، شامل مدیر و shell. به‌طور پیش‌فرض خاموش است.</string>
+    <string name="settings_default_no_new_privs_summary">جلوگیری از افزایش مجدد دسترسی در نمایه پیش‌فرض root، شامل مدیر و shell. به‌طور پیش‌فرض روشن است.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">ویژگی آزمایشی با تزریق‌کننده داخلی Zygisk در سطح هسته، سازگار با ماژول‌های ZN.</string>
     <string name="settings_yukizygisk_toast_on">روشن شد؛ پس از راه‌اندازی مجدد اعمال می‌شود</string>

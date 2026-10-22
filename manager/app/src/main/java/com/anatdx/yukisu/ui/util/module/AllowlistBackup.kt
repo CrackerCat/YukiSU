@@ -118,7 +118,11 @@ internal object AllowlistBackup {
                 groups = item.ints("groups"), capabilities = item.ints("capabilities"),
                 capabilitiesPermitted = item.ints("capabilitiesPermitted"),
                 capabilitiesInheritable = item.ints("capabilitiesInheritable"),
-                context = item.string("context"), namespace = item.int("namespace"), flags = item["flags"].integer(),
+                context = item.string("context").let { context ->
+                    if (context == "u:r:su:s0" && (!item.boolean("allowSu") || item.boolean("rootUseDefault"))) {
+                        Natives.KERNEL_SU_DOMAIN
+                    } else context
+                }, namespace = item.int("namespace"), flags = item["flags"].integer(),
                 nonRootUseDefault = item.boolean("nonRootUseDefault"), umountModules = item.boolean("umountModules"),
                 rules = item.string("sepolicyRules")
             ), if (version == 2) {

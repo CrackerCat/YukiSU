@@ -102,6 +102,7 @@ const std::vector<Command>& commands() {
         {"feature check", "Check feature support", "<ID>", 1, 1},
         {"feature load", "Apply saved feature configuration", ""},
         {"feature save", "Persist current feature configuration", ""},
+        {"feature migrate-defaults", "Apply one-time feature default migrations", ""},
         {"install",
          "Install userspace components",
          "",

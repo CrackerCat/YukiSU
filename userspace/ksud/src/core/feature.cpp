@@ -33,6 +33,9 @@ const std::string& get_feature_config_path() {
 }
 constexpr uint32_t FEATURE_MAGIC = 0x7f4b5355;
 constexpr uint32_t FEATURE_VERSION = 1;
+// Configuration metadata, never passed to the kernel as a feature ID.
+constexpr uint32_t DEFAULTS_VERSION_RECORD = UINT32_MAX;
+constexpr uint64_t DEFAULTS_VERSION = 1;
 constexpr const char* LEGACY_HIDE_BOOTLOADER_CONFIG = "/data/adb/ksu/.hide_bootloader";
 
 bool sync_feature_directory() {
@@ -407,6 +410,8 @@ std::map<uint32_t, uint64_t> get_current_feature_values() {
 int save_feature_config_files(const std::map<uint32_t, uint64_t>& features) {
     const std::string config_path = std::string(FEATURE_CONFIG_PATH);
     std::string text = "# KernelSU feature configuration\n";
+    if (const auto version = features.find(DEFAULTS_VERSION_RECORD); version != features.end())
+        text += "defaults_version=" + std::to_string(version->second) + '\n';
     for (const auto& [name, id] : get_feature_map()) {
         auto it = features.find(id);
         if (it == features.end())
@@ -416,13 +421,13 @@ int save_feature_config_files(const std::map<uint32_t, uint64_t>& features) {
         text += std::to_string(it->second);
         text += '\n';
     }
-    if (!write_file_atomic(config_path, text) || !sync_feature_directory()) {
-        LOGE("Failed to persist text feature configuration");
-        return 1;
-    }
-
+    // The binary config is authoritative when both representations are current.
     if (save_binary_config(features) != 0) {
         LOGE("Failed to save feature binary config");
+        return 1;
+    }
+    if (!write_file_atomic(config_path, text) || !sync_feature_directory()) {
+        LOGE("Failed to persist text feature configuration");
         return 1;
     }
 
@@ -437,7 +442,76 @@ bool is_sucompat_feature_id(uint32_t feature_id) {
 
 std::map<uint32_t, uint64_t> parse_text_feature_config(const std::string& content);
 
+uint64_t defaults_version(const std::map<uint32_t, uint64_t>& features) {
+    const auto version = features.find(DEFAULTS_VERSION_RECORD);
+    return version != features.end() ? version->second : 0;
+}
+
+// The version and value share one atomic config write. The transition lock
+// serializes recovery of either representation with subsequent user settings.
+int migrate_feature_defaults_locked(std::map<uint32_t, uint64_t>* explicit_features = nullptr) {
+    auto binary = load_binary_config();
+    auto text = explicit_features
+                    ? *explicit_features
+                    : parse_text_feature_config(read_file(FEATURE_CONFIG_PATH).value_or(""));
+    const auto binary_version = binary ? defaults_version(*binary) : 0;
+    const auto text_version = defaults_version(text);
+    if (!binary && text.empty() && access(get_feature_config_path().c_str(), F_OK) == 0) {
+        LOGE("Cannot migrate invalid feature configuration without a text backup");
+        return 1;
+    }
+    auto features = binary && binary_version >= text_version ? std::move(*binary) : std::move(text);
+
+    const auto version = defaults_version(features);
+    if (explicit_features) {
+        if (version != 0)
+            (*explicit_features)[DEFAULTS_VERSION_RECORD] = version;
+        if (version >= DEFAULTS_VERSION) {
+            const auto value = features.find(KSU_FEATURE_DEFAULT_NO_NEW_PRIVS);
+            if (value != features.end())
+                explicit_features->try_emplace(KSU_FEATURE_DEFAULT_NO_NEW_PRIVS, value->second);
+            return 0;
+        }
+        features = *explicit_features;
+    }
+    if (version >= DEFAULTS_VERSION) {
+        if (binary_version == version && text_version == version)
+            return sync_feature_directory() ? 0 : 1;
+        // A legacy writer may retain metadata in only one representation.
+        const auto value = features.find(KSU_FEATURE_DEFAULT_NO_NEW_PRIVS);
+        const auto [_, supported] = get_feature(KSU_FEATURE_DEFAULT_NO_NEW_PRIVS);
+        if (value != features.end() && supported &&
+            !is_feature_forced(KSU_FEATURE_DEFAULT_NO_NEW_PRIVS) &&
+            set_feature(KSU_FEATURE_DEFAULT_NO_NEW_PRIVS, value->second) < 0)
+            return 1;
+        return save_feature_config_files(features);
+    }
+
+    const auto [_, supported] = get_feature(KSU_FEATURE_DEFAULT_NO_NEW_PRIVS);
+    if (!supported)
+        return 0;
+    if (is_feature_forced(KSU_FEATURE_DEFAULT_NO_NEW_PRIVS)) {
+        LOGE("Cannot migrate default_no_new_privs while forced by boot config");
+        return 1;
+    }
+
+    features[KSU_FEATURE_DEFAULT_NO_NEW_PRIVS] = 1;
+    features[DEFAULTS_VERSION_RECORD] = DEFAULTS_VERSION;
+    if (set_feature(KSU_FEATURE_DEFAULT_NO_NEW_PRIVS, 1) < 0)
+        return 1;
+    if (explicit_features) {
+        *explicit_features = std::move(features);
+        return 0;
+    }
+    if (save_feature_config_files(features) != 0)
+        return 1;
+    LOGI("Migrated default_no_new_privs to enabled");
+    return 0;
+}
+
 int feature_save_config_locked() {
+    if (migrate_feature_defaults_locked() != 0)
+        return 1;
     auto saved = load_binary_config().value_or(
         parse_text_feature_config(read_file(FEATURE_CONFIG_PATH).value_or("")));
     const bool su_forced = is_feature_forced(KSU_FEATURE_SU_COMPAT);
@@ -603,7 +677,8 @@ int feature_set(const std::string& id, uint64_t value) {
         return 1;
     }
 
-    if (!is_sucompat_feature_id(feature_id) && feature_id != KSU_FEATURE_KASUMI) {
+    if (!is_sucompat_feature_id(feature_id) && feature_id != KSU_FEATURE_KASUMI &&
+        feature_id != KSU_FEATURE_DEFAULT_NO_NEW_PRIVS) {
         return feature_set_impl(id, feature_id, value);
     }
 
@@ -611,6 +686,8 @@ int feature_set(const std::string& id, uint64_t value) {
     if (!transition.locked()) {
         return 1;
     }
+    if (migrate_feature_defaults_locked() != 0)
+        return 1;
     if (feature_id == KSU_FEATURE_KASUMI && value == 0)
         return feature_update_locked(id, feature_id, value, false);
     return feature_set_impl(id, feature_id, value);
@@ -627,8 +704,15 @@ int feature_set_and_save(const std::string& id, uint64_t value) {
     if (!transition.locked()) {
         return 1;
     }
+    if (migrate_feature_defaults_locked() != 0)
+        return 1;
 
     return feature_update_locked(id, feature_id, value, true);
+}
+
+int migrate_feature_defaults() {
+    const SucompatTransitionLock transition;
+    return transition.locked() ? migrate_feature_defaults_locked() : 1;
 }
 
 void feature_list() {
@@ -689,7 +773,9 @@ std::map<uint32_t, uint64_t> parse_text_feature_config(const std::string& conten
             return;
         const std::string key(trim_view(line.substr(0, eq)));
         const std::string val(trim_view(line.substr(eq + 1)));
-        const auto [feature_id, valid] = parse_feature_id(key);
+        const auto [feature_id, valid] = key == "defaults_version"
+                                             ? std::pair{DEFAULTS_VERSION_RECORD, true}
+                                             : parse_feature_id(key);
         if (!valid)
             return;
         uint64_t value = 0;
@@ -710,45 +796,31 @@ int feature_load_config() {
     if (!transition.locked()) {
         return 1;
     }
-
     const std::string config_path = std::string(FEATURE_CONFIG_PATH);
     auto content = read_file(config_path);
+    if (!content) {
+        if (migrate_feature_defaults_locked() != 0)
+            return 1;
+        content = read_file(config_path);
+    }
     if (!content) {
         LOGI("No feature config file found");
         return 0;
     }
 
-    std::map<uint32_t, uint64_t> loaded_features;
-    for_each_line(*content, [&](std::string_view raw_line) {
-        const std::string_view line = trim_view(raw_line);
-        if (line.empty() || line[0] == '#')
-            return;
-
-        const size_t eq = line.find('=');
-        if (eq == std::string_view::npos)
-            return;
-
-        const std::string key(trim_view(line.substr(0, eq)));
-        const std::string val(trim_view(line.substr(eq + 1)));
-
-        auto [feature_id, valid] = parse_feature_id(key);
-        if (valid) {
-            uint64_t value = 0;
-            if (parse_uint64(val, &value)) {
-                loaded_features[feature_id] = value;
-                if (!is_feature_forced(feature_id) && feature_id != KSU_FEATURE_SU_COMPAT &&
-                    feature_id != KSU_FEATURE_MAGISK_COMPAT &&
-                    feature_id != KSU_FEATURE_KASUMI_SUCOMPAT) {
-                    set_feature(feature_id, value);
-                    LOGI("Loaded feature %s = %" PRIu64, key.c_str(), value);
-                }
-            } else {
-                LOGW("Invalid value for feature %s: %s", key.c_str(), val.c_str());
-            }
-        }
-    });
-
+    auto loaded_features = parse_text_feature_config(*content);
     const auto requested_features = loaded_features;
+    // Keep explicit input authoritative while carrying forward migration state.
+    if (migrate_feature_defaults_locked(&loaded_features) != 0)
+        return 1;
+    for (const auto& [feature_id, value] : loaded_features) {
+        if (feature_id == DEFAULTS_VERSION_RECORD || is_feature_forced(feature_id) ||
+            is_sucompat_feature_id(feature_id))
+            continue;
+        set_feature(feature_id, value);
+        LOGI("Loaded feature %s = %" PRIu64, feature_id_to_name(feature_id), value);
+    }
+
     if (apply_sucompat_config(loaded_features) < 0)
         return 1;
 
@@ -757,6 +829,7 @@ int feature_load_config() {
                                 : save_binary_config(loaded_features);
     if (save_result != 0) {
         LOGW("Failed to sync loaded feature configuration");
+        return 1;
     }
 
     return 0;
@@ -905,7 +978,7 @@ int apply_config_locked(std::map<uint32_t, uint64_t>& features) {
 
     int applied = 0;
     for (const auto& [id, value] : features) {
-        if (is_feature_forced(id))
+        if (id == DEFAULTS_VERSION_RECORD || is_feature_forced(id))
             continue;
         if (id == KSU_FEATURE_SU_COMPAT || id == KSU_FEATURE_MAGISK_COMPAT ||
             id == KSU_FEATURE_KASUMI_SUCOMPAT) {
@@ -955,6 +1028,8 @@ int init_features() {
     if (!transition.locked()) {
         return 1;
     }
+    if (migrate_feature_defaults_locked() != 0)
+        return 1;
 
     LOGI("Initializing features from config...");
 

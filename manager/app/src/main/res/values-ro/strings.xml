@@ -571,7 +571,7 @@
     <string name="profile_no_new_privs">Împiedică o nouă escaladare a privilegiilor</string>
     <string name="profile_no_new_privs_summary">Procesele care obțin privilegii cu acest profil și procesele lor copil nu vor mai putea obține privilegii prin KernelSU, de exemplu executând din nou su sau apelând GRANT_ROOT. Se recomandă activarea.</string>
     <string name="settings_default_no_new_privs">Protecție implicită împotriva evadării (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Împiedică o nouă escaladare a privilegiilor în profilul root implicit, inclusiv pentru administrator și shell. Dezactivată implicit.</string>
+    <string name="settings_default_no_new_privs_summary">Împiedică o nouă escaladare a privilegiilor în profilul root implicit, inclusiv pentru administrator și shell. Activată implicit.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Funcție experimentală care utilizează injectorul Zygisk integrat la nivel de nucleu, compatibil cu modulele ZN.</string>
     <string name="settings_yukizygisk_toast_on">Activat. Se aplică după repornire.</string>

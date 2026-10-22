@@ -571,7 +571,7 @@
     <string name="profile_no_new_privs">Erneute Rechteausweitung verhindern</string>
     <string name="profile_no_new_privs_summary">Prozesse, die mit diesem Profil erhöhte Rechte erhalten, und ihre Kindprozesse können über KernelSU keine weiteren Rechte erlangen, etwa durch erneutes Ausführen von su oder Aufrufen von GRANT_ROOT. Aktivierung empfohlen.</string>
     <string name="settings_default_no_new_privs">Ausbruchsschutz im Standardprofil (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Erneute Rechteausweitung im Standard-root-Profil einschließlich Manager und Shell verhindern. Standardmäßig deaktiviert.</string>
+    <string name="settings_default_no_new_privs_summary">Erneute Rechteausweitung im Standard-root-Profil einschließlich Manager und Shell verhindern. Standardmäßig aktiviert.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Experimentelle Funktion: integrierter Zygisk-Injektor auf Kernel-Ebene, kompatibel mit ZN-Modulen.</string>
     <string name="settings_yukizygisk_toast_on">Aktiviert. Wird nach einem Neustart wirksam.</string>

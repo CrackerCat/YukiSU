@@ -571,7 +571,7 @@
     <string name="profile_no_new_privs">Заборонити повторне підвищення привілеїв</string>
     <string name="profile_no_new_privs_summary">Процеси, які отримали привілеї з цією конфігурацією, та їхні дочірні процеси не зможуть повторно підвищити привілеї через KernelSU, наприклад повторним запуском su або викликом GRANT_ROOT. Радимо ввімкнути.</string>
     <string name="settings_default_no_new_privs">Типовий захист від виходу за обмеження (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Забороняє повторне підвищення привілеїв у типовому профілі root, включно з менеджером і shell. Типово вимкнено.</string>
+    <string name="settings_default_no_new_privs_summary">Забороняє повторне підвищення привілеїв у типовому профілі root, включно з менеджером і shell. Типово ввімкнено.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Експериментальна функція: вбудований інжектор Zygisk на рівні ядра, сумісний із модулями ZN.</string>
     <string name="settings_yukizygisk_toast_on">Увімкнено. Набуде чинності після перезавантаження</string>

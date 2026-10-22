@@ -83,6 +83,10 @@ object KsuCli {
         private set
     var GLOBAL_MNT_SHELL: Shell = createRootShell(true)
         private set
+
+    init {
+        migrateFeatureDefaults(SHELL)
+    }
     
     /** Recreate shell instances and optionally reconcile the installed ksud. */
     fun refreshShells(checkKsud: Boolean = true) {
@@ -105,6 +109,7 @@ object KsuCli {
         
         SHELL = createRootShell()
         GLOBAL_MNT_SHELL = createRootShell(true)
+        migrateFeatureDefaults(SHELL)
         Log.d(TAG, "Shells refreshed, SHELL.isRoot=${SHELL.isRoot}, GLOBAL_MNT_SHELL.isRoot=${GLOBAL_MNT_SHELL.isRoot}")
         
         // After authentication, check if ksud needs to be installed/updated
@@ -511,6 +516,13 @@ fun createRootShell(globalMnt: Boolean = false): Shell {
 /** Build a "ksud <args>" command string. Use this instead of pasting
  *  `${getKsuDaemonPath()}` next to a subcommand literal. */
 internal fun ksudCmd(args: String): String = "${shellArg(getKsuDaemonPath())} $args"
+
+fun migrateFeatureDefaults(shell: Shell): Boolean {
+    if (!Natives.isManager || !shell.isRoot) return false
+    return ShellUtils.fastCmdResult(shell, ksudCmd("feature migrate-defaults")).also {
+        if (!it) Log.e(TAG, "Failed to migrate feature defaults; will retry on next manager access")
+    }
+}
 
 fun execKsud(args: String, newShell: Boolean = false): Boolean {
     return if (newShell) {

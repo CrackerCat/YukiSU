@@ -1031,6 +1031,78 @@ out_unlock:
 	return ret;
 }
 
+static void apply_root_domain_rules(struct policydb *db, const char *domain)
+{
+	ksu_permissive(db, domain);
+	ksu_typeattribute(db, domain, "mlstrustedsubject");
+	ksu_typeattribute(db, domain, "netdomain");
+	ksu_typeattribute(db, domain, "bluetoothdomain");
+
+	// allow all!
+	ksu_allow(db, domain, ALL, ALL, ALL);
+
+	// allow us do any ioctl
+	if (db->policyvers >= POLICYDB_VERSION_XPERMS_IOCTL) {
+		ksu_allowxperm(db, domain, ALL, "blk_file", ALL);
+		ksu_allowxperm(db, domain, ALL, "fifo_file", ALL);
+		ksu_allowxperm(db, domain, ALL, "chr_file", ALL);
+		ksu_allowxperm(db, domain, ALL, "file", ALL);
+	}
+
+	// our ksud triggered by init
+	ksu_allow(db, "init", domain, ALL, ALL);
+
+	// copied from Magisk rules
+	// suRights
+	ksu_allow(db, "servicemanager", domain, "dir", "search");
+	ksu_allow(db, "servicemanager", domain, "dir", "read");
+	ksu_allow(db, "servicemanager", domain, "file", "open");
+	ksu_allow(db, "servicemanager", domain, "file", "read");
+	ksu_allow(db, "servicemanager", domain, "process", "getattr");
+	ksu_allow(db, ALL, domain, "process", "sigchld");
+
+	// allowLog
+	ksu_allow(db, "logd", domain, "dir", "search");
+	ksu_allow(db, "logd", domain, "file", "read");
+	ksu_allow(db, "logd", domain, "file", "open");
+	ksu_allow(db, "logd", domain, "file", "getattr");
+
+	// dumpsys
+	ksu_allow(db, ALL, domain, "fd", "use");
+	ksu_allow(db, ALL, domain, "fifo_file", "write");
+	ksu_allow(db, ALL, domain, "fifo_file", "read");
+	ksu_allow(db, ALL, domain, "fifo_file", "open");
+	ksu_allow(db, ALL, domain, "fifo_file", "getattr");
+	ksu_allow(db, ALL, domain, "unix_stream_socket", "read");
+	ksu_allow(db, ALL, domain, "unix_stream_socket", "write");
+	ksu_allow(db, ALL, domain, "unix_stream_socket", "connectto");
+	ksu_allow(db, ALL, domain, "unix_stream_socket", "getopt");
+	ksu_allow(db, ALL, domain, "unix_stream_socket", "getattr");
+
+	// Use memfd created by a root domain.
+	ksu_allow(db, ALL, domain, "memfd_file", "execute");
+	ksu_allow(db, ALL, domain, "memfd_file", "getattr");
+	ksu_allow(db, ALL, domain, "memfd_file", "map");
+	ksu_allow(db, ALL, domain, "memfd_file", "read");
+	ksu_allow(db, ALL, domain, "memfd_file", "write");
+
+	// bootctl
+	ksu_allow(db, "hwservicemanager", domain, "dir", "search");
+	ksu_allow(db, "hwservicemanager", domain, "file", "read");
+	ksu_allow(db, "hwservicemanager", domain, "file", "open");
+	ksu_allow(db, "hwservicemanager", domain, "process", "getattr");
+
+	// Allow all binder transactions
+	ksu_allow(db, ALL, domain, "binder", ALL);
+
+	// Allow system_server to kill root processes.
+	ksu_allow(db, "system_server", domain, "process", "getpgid");
+	ksu_allow(db, "system_server", domain, "process", "sigkill");
+
+	// https://android-review.googlesource.com/c/platform/system/logging/+/3725346
+	ksu_dontaudit(db, "untrusted_app", domain, "dir", "getattr");
+}
+
 void apply_kernelsu_rules(void)
 {
 	struct policydb *db;
@@ -1046,82 +1118,18 @@ void apply_kernelsu_rules(void)
 
 	db = get_policydb();
 
-	ksu_permissive(db, KERNEL_SU_DOMAIN);
-	ksu_typeattribute(db, KERNEL_SU_DOMAIN, "mlstrustedsubject");
-	ksu_typeattribute(db, KERNEL_SU_DOMAIN, "netdomain");
-	ksu_typeattribute(db, KERNEL_SU_DOMAIN, "bluetoothdomain");
-
+	ksu_type(db, KERNEL_SU_DOMAIN, "domain");
 	// Create unconstrained file type
 	ksu_type(db, KERNEL_SU_FILE, "file_type");
 	ksu_typeattribute(db, KERNEL_SU_FILE, "mlstrustedobject");
 	ksu_allow(db, ALL, KERNEL_SU_FILE, ALL, ALL);
 
-	// allow all!
-	ksu_allow(db, KERNEL_SU_DOMAIN, ALL, ALL, ALL);
-
-	// allow us do any ioctl
-	if (db->policyvers >= POLICYDB_VERSION_XPERMS_IOCTL) {
-		ksu_allowxperm(db, KERNEL_SU_DOMAIN, ALL, "blk_file", ALL);
-		ksu_allowxperm(db, KERNEL_SU_DOMAIN, ALL, "fifo_file", ALL);
-		ksu_allowxperm(db, KERNEL_SU_DOMAIN, ALL, "chr_file", ALL);
-		ksu_allowxperm(db, KERNEL_SU_DOMAIN, ALL, "file", ALL);
-	}
-
-	// our ksud triggered by init
-	ksu_allow(db, "init", KERNEL_SU_DOMAIN, ALL, ALL);
-
-	// copied from Magisk rules
-	// suRights
-	ksu_allow(db, "servicemanager", KERNEL_SU_DOMAIN, "dir", "search");
-	ksu_allow(db, "servicemanager", KERNEL_SU_DOMAIN, "dir", "read");
-	ksu_allow(db, "servicemanager", KERNEL_SU_DOMAIN, "file", "open");
-	ksu_allow(db, "servicemanager", KERNEL_SU_DOMAIN, "file", "read");
-	ksu_allow(db, "servicemanager", KERNEL_SU_DOMAIN, "process", "getattr");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "process", "sigchld");
-
-	// allowLog
-	ksu_allow(db, "logd", KERNEL_SU_DOMAIN, "dir", "search");
-	ksu_allow(db, "logd", KERNEL_SU_DOMAIN, "file", "read");
-	ksu_allow(db, "logd", KERNEL_SU_DOMAIN, "file", "open");
-	ksu_allow(db, "logd", KERNEL_SU_DOMAIN, "file", "getattr");
-
-	// dumpsys
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "fd", "use");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "fifo_file", "write");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "fifo_file", "read");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "fifo_file", "open");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "fifo_file", "getattr");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "unix_stream_socket", "read");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "unix_stream_socket", "write");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "unix_stream_socket", "connectto");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "unix_stream_socket", "getopt");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "unix_stream_socket", "getattr");
-
-	// use memfd created by su domain
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "memfd_file", "execute");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "memfd_file", "getattr");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "memfd_file", "map");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "memfd_file", "read");
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "memfd_file", "write");
-
-	// bootctl
-	ksu_allow(db, "hwservicemanager", KERNEL_SU_DOMAIN, "dir", "search");
-	ksu_allow(db, "hwservicemanager", KERNEL_SU_DOMAIN, "file", "read");
-	ksu_allow(db, "hwservicemanager", KERNEL_SU_DOMAIN, "file", "open");
-	ksu_allow(db, "hwservicemanager", KERNEL_SU_DOMAIN, "process",
-		  "getattr");
-
-	// Allow all binder transactions
-	ksu_allow(db, ALL, KERNEL_SU_DOMAIN, "binder", ALL);
-
-	// Allow system server kill su process
-	ksu_allow(db, "system_server", KERNEL_SU_DOMAIN, "process", "getpgid");
-	ksu_allow(db, "system_server", KERNEL_SU_DOMAIN, "process", "sigkill");
+	apply_root_domain_rules(db, KERNEL_SU_DOMAIN);
+	/* Keep explicit legacy custom profiles functional. */
+	apply_root_domain_rules(db, KSU_LEGACY_SU_DOMAIN);
 
 	// YukiZygisk system_server trampolines.
 	ksu_allow(db, "system_server", "system_server", "process", "execmem");
-	// https://android-review.googlesource.com/c/platform/system/logging/+/3725346
-	ksu_dontaudit(db, "untrusted_app", KERNEL_SU_DOMAIN, "dir", "getattr");
 	mutex_unlock(&selinux_state.policy_mutex);
 	mutex_unlock(&ksu_rules);
 }

@@ -571,7 +571,7 @@
     <string name="profile_no_new_privs">Zablokuj ponowne podnoszenie uprawnień</string>
     <string name="profile_no_new_privs_summary">Procesy uzyskujące uprawnienia z tym profilem oraz ich procesy potomne nie będą mogły ponownie uzyskać uprawnień przez KernelSU, np. ponownie uruchamiając su lub wywołując GRANT_ROOT. Zaleca się włączenie.</string>
     <string name="settings_default_no_new_privs">Domyślna ochrona przed ucieczką (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Domyślny profil root, obejmujący menedżer i powłokę, blokuje ponowne podnoszenie uprawnień. Domyślnie wyłączone.</string>
+    <string name="settings_default_no_new_privs_summary">Domyślny profil root, obejmujący menedżer i powłokę, blokuje ponowne podnoszenie uprawnień. Domyślnie włączone.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Eksperymentalny wbudowany mechanizm wstrzykiwania Zygisk na poziomie jądra, zgodny z modułami ZN.</string>
     <string name="settings_yukizygisk_toast_on">Włączono; zmiana wymaga ponownego uruchomienia</string>

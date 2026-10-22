@@ -569,7 +569,7 @@
     <string name="profile_no_new_privs">Təkrar səlahiyyət yüksəltməni qadağan et</string>
     <string name="profile_no_new_privs_summary">Bu konfiqurasiya ilə səlahiyyət qazanan proseslər və onların alt prosesləri, məsələn, su-nu yenidən icra etməklə və ya GRANT_ROOT çağırmaqla KernelSU üzərindən təkrar səlahiyyət yüksəldə bilməyəcək. Aktivləşdirmək tövsiyə olunur.</string>
     <string name="settings_default_no_new_privs">Standart məhdudiyyətdən çıxma qoruması (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Menecer və shell daxil olmaqla standart root profilində təkrar səlahiyyət yüksəltməni qadağan edir. Standart olaraq söndürülüb.</string>
+    <string name="settings_default_no_new_privs_summary">Menecer və shell daxil olmaqla standart root profilində təkrar səlahiyyət yüksəltməni qadağan edir. Standart olaraq aktivdir.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Təcrübi funksiya: ZN modulları ilə uyğun olan nüvə səviyyəli daxili Zygisk inyektorundan istifadə edir.</string>
     <string name="settings_yukizygisk_toast_on">Açıldı. Yenidən başladıqdan sonra qüvvəyə minir</string>

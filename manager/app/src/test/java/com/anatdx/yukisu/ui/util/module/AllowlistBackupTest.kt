@@ -74,7 +74,7 @@ class AllowlistBackupTest {
         listOf("2147483648", "-1", "1.0", "1e3", "18446744073709551617").forEach {
             assertFails { AllowlistBackup.parse(json().replace("\"appUid\": 10123", "\"appUid\": $it")) }
         }
-        listOf("\"context\": \"u:r:su:s0\"" to "\"context\": \"bad\\u0000context\"",
+        listOf("\"context\": \"${Natives.KERNEL_SU_DOMAIN}\"" to "\"context\": \"bad\\u0000context\"",
             "\"flags\": 0" to "\"flags\": 2", "\"rootUid\": 0" to "\"rootUid\": 1",
             "\"umountModules\": false" to "\"umountModules\": true",
             "\"profileKey\": \"test.app\"" to "\"profileKey\": \"../escape\"")
@@ -108,6 +108,21 @@ class AllowlistBackupTest {
         assertEquals(1, document.version)
         assertTrue(document.apps.single().signingCertificates.isEmpty())
         assertFails { AllowlistBackup.encode(document) }
+    }
+
+    @Test fun legacyDefaultDomainsMigrateWithoutChangingCustomProfiles() {
+        val root = entry(10124, "test.root").let {
+            it.copy(profile = it.profile.copy(allowSu = true))
+        }
+        val custom = entry(10125, "test.custom").let {
+            it.copy(profile = it.profile.copy(allowSu = true, rootUseDefault = false,
+                context = "u:r:su:s0", flags = 0, rules = "allow su app_data_file file read;"))
+        }
+        val original = document(entry(), root, custom)
+        val legacy = AllowlistBackup.encode(original).replace("u:r:ksu:s0", "u:r:su:s0")
+        val restored = AllowlistBackup.parse(legacy)
+        assertEquals(original, restored)
+        assertEquals("u:r:su:s0", restored.apps.last().profile.context)
     }
 
     @Test fun v2RequiresExactPackageCertificateCoverageAndValidDistinctDigests() {

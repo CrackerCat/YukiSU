@@ -161,6 +161,15 @@
         </receiver>
 
         <receiver
+            android:name=".boot.ManagerUpdateReceiver"
+            android:exported="false"
+            android:process=":boot">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
             android:name=".magica.BootCompletedReceiver"
             android:directBootAware="true"
             android:enabled="false"

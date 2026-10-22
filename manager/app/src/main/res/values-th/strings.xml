@@ -599,7 +599,7 @@
     <string name="profile_no_new_privs">ห้ามยกระดับสิทธิ์ซ้ำ</string>
     <string name="profile_no_new_privs_summary">โปรเซสที่ยกระดับสิทธิ์ด้วยโปรไฟล์นี้และโปรเซสลูกจะไม่สามารถยกระดับสิทธิ์ผ่าน KernelSU อีก เช่น เรียกใช้ su ซ้ำหรือเรียก GRANT_ROOT แนะนำให้เปิดใช้</string>
     <string name="settings_default_no_new_privs">ป้องกันการยกระดับสิทธิ์ซ้ำโดยค่าเริ่มต้น (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">ห้ามยกระดับสิทธิ์ซ้ำในโปรไฟล์ root เริ่มต้น รวมตัวจัดการและ shell ปิดไว้โดยค่าเริ่มต้น</string>
+    <string name="settings_default_no_new_privs_summary">ห้ามยกระดับสิทธิ์ซ้ำในโปรไฟล์ root เริ่มต้น รวมตัวจัดการและ shell เปิดไว้โดยค่าเริ่มต้น</string>
     <string name="settings_yukizygisk_summary">ฟีเจอร์ทดลอง ใช้ตัวฉีด Zygisk ระดับเคอร์เนลในตัว และรองรับโมดูล ZN</string>
     <string name="settings_yukizygisk_toast_on">เปิดแล้ว มีผลหลังรีสตาร์ต</string>
     <string name="settings_yukizygisk_toast_off">ปิดแล้ว มีผลหลังรีสตาร์ต</string>

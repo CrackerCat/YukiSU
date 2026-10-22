@@ -11,7 +11,7 @@ import com.anatdx.yukisu.ui.util.rootAvailable
  * @date 2022/12/8.
  */
 object Natives {
-    const val KERNEL_SU_DOMAIN = "u:r:su:s0"
+    const val KERNEL_SU_DOMAIN = "u:r:ksu:s0"
 
     const val MINIMAL_NEW_IOCTL_KERNEL = 10000
 

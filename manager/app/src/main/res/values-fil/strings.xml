@@ -597,7 +597,7 @@
     <string name="profile_no_new_privs">Ipagbawal ang muling pagtaas ng pribilehiyo</string>
     <string name="profile_no_new_privs_summary">Ang mga prosesong nagtaas ng pribilehiyo gamit ang profile na ito at ang kanilang mga child process ay hindi na maaaring magtaas muli ng pribilehiyo sa pamamagitan ng KernelSU, gaya ng muling pagpapatakbo ng su o pagtawag sa GRANT_ROOT. Inirerekomendang paganahin ito.</string>
     <string name="settings_default_no_new_privs">Default na paghadlang sa muling pagtaas ng pribilehiyo (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Ipagbawal ang muling pagtaas ng pribilehiyo sa default na root profile, kasama ang manager at shell. Naka-off bilang default.</string>
+    <string name="settings_default_no_new_privs_summary">Ipagbawal ang muling pagtaas ng pribilehiyo sa default na root profile, kasama ang manager at shell. Naka-on bilang default.</string>
     <string name="settings_yukizygisk_summary">Eksperimental na tampok na gumagamit ng built-in na Zygisk injector sa antas ng kernel at compatible sa mga ZN module.</string>
     <string name="settings_yukizygisk_toast_on">Pinagana, magkakabisa pagkatapos mag-restart</string>
     <string name="settings_yukizygisk_toast_off">Hindi pinagana, magkakabisa pagkatapos mag-restart</string>

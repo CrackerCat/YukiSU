@@ -18,7 +18,8 @@
  * string-based comparison path; this degrades performance only and
  * does not cause a functional failure.
  */
-static u32 cached_su_sid __read_mostly = 0;
+static u32 cached_ksu_sid __read_mostly = 0;
+static u32 cached_legacy_su_sid __read_mostly = 0;
 static u32 cached_zygote_sid __read_mostly = 0;
 static u32 cached_init_sid __read_mostly = 0;
 static u32 cached_adbd_sid __read_mostly = 0;
@@ -124,13 +125,19 @@ void cache_sid(void)
 	int err;
 
 	err = security_secctx_to_secid(
-	    KERNEL_SU_CONTEXT, strlen(KERNEL_SU_CONTEXT), &cached_su_sid);
+	    KERNEL_SU_CONTEXT, strlen(KERNEL_SU_CONTEXT), &cached_ksu_sid);
 	if (err) {
 		pr_warn("Failed to cache kernel su domain SID: %d\n", err);
-		cached_su_sid = 0;
+		cached_ksu_sid = 0;
 	} else {
-		pr_info("Cached su SID: %u\n", cached_su_sid);
+		pr_info("Cached ksu SID: %u\n", cached_ksu_sid);
 	}
+
+	err = security_secctx_to_secid(KSU_LEGACY_SU_CONTEXT,
+				       strlen(KSU_LEGACY_SU_CONTEXT),
+				       &cached_legacy_su_sid);
+	if (err)
+		cached_legacy_su_sid = 0;
 
 	err = security_secctx_to_secid(ZYGOTE_CONTEXT, strlen(ZYGOTE_CONTEXT),
 				       &cached_zygote_sid);
@@ -207,7 +214,8 @@ static bool is_sid_match(const struct cred *cred, u32 cached_sid,
 
 bool is_task_ksu_domain(const struct cred *cred)
 {
-	return is_sid_match(cred, cached_su_sid, KERNEL_SU_CONTEXT);
+	return is_sid_match(cred, cached_ksu_sid, KERNEL_SU_CONTEXT) ||
+	       is_sid_match(cred, cached_legacy_su_sid, KSU_LEGACY_SU_CONTEXT);
 }
 
 bool is_ksu_domain()

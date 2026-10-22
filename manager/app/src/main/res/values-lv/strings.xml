@@ -571,7 +571,7 @@
     <string name="profile_no_new_privs">Aizliegt atkārtotu privilēģiju paaugstināšanu</string>
     <string name="profile_no_new_privs_summary">Procesi, kas iegūst privilēģijas ar šo profilu, un to bērnprocesi vairs nevarēs paaugstināt privilēģijas ar KernelSU, piemēram, atkārtoti izpildot su vai izsaucot GRANT_ROOT. Ieteicams iespējot.</string>
     <string name="settings_default_no_new_privs">Noklusējuma aizsardzība pret izlaušanos (no-new-privs)</string>
-    <string name="settings_default_no_new_privs_summary">Noklusējuma root profils, tostarp pārvaldniekam un čaulai, aizliedz atkārtotu privilēģiju paaugstināšanu. Pēc noklusējuma izslēgts.</string>
+    <string name="settings_default_no_new_privs_summary">Noklusējuma root profils, tostarp pārvaldniekam un čaulai, aizliedz atkārtotu privilēģiju paaugstināšanu. Pēc noklusējuma ieslēgts.</string>
     <string name="settings_yukizygisk">YukiZygisk</string>
     <string name="settings_yukizygisk_summary">Eksperimentāls iebūvēts kodola līmeņa Zygisk injicētājs ar ZN moduļu atbalstu.</string>
     <string name="settings_yukizygisk_toast_on">Iespējots; stājas spēkā pēc restartēšanas</string>
