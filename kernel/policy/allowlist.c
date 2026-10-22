@@ -15,6 +15,7 @@
 #include <linux/compiler_types.h>
 #include <linux/rcupdate.h>
 
+#include "infra/task_work.h"
 #include "policy/allowlist.h"
 #include "feature/shell_su_adb_only.h"
 #include "policy/feature.h"
@@ -582,6 +583,7 @@ unlock:
 	revert_creds(old_cred);
 free_cb:
 	kfree(_cb);
+	module_put(THIS_MODULE);
 }
 
 void persistent_allow_list(void)
@@ -603,7 +605,7 @@ void persistent_allow_list(void)
 		goto put_task;
 	}
 	cb->func = do_persistent_allow_list;
-	if (task_work_add(tsk, cb, TWA_RESUME)) {
+	if (ksu_task_work_add(tsk, cb)) {
 		kfree(cb);
 		pr_warn("save_allow_list add task_work failed\n");
 	}

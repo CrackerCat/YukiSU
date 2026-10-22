@@ -8,6 +8,8 @@
 #include <linux/input-event-codes.h>
 #include <linux/kprobes.h>
 #include <linux/mm.h>
+#include <linux/module.h>
+#include <linux/mutex.h>
 #include <linux/namei.h>
 #include <linux/printk.h>
 #include <linux/rcupdate.h>
@@ -21,6 +23,7 @@
 #include <linux/version.h>
 #include <linux/workqueue.h>
 
+#include "infra/hook_lifetime.h"
 #include "policy/allowlist.h"
 #include "arch.h"
 #include "feature/selinux_hide.h"
@@ -64,6 +67,8 @@ static void stop_input_hook(void);
 
 static struct work_struct stop_init_rc_hook_work;
 static struct work_struct stop_input_hook_work;
+static DEFINE_MUTEX(input_hook_lock);
+static bool input_hook_registered;
 
 static void ksu_initialize_selinux(void)
 {
@@ -284,6 +289,7 @@ void ksu_execveat_hook_ksud(const struct pt_regs *regs)
 static ssize_t (*orig_read)(struct file *, char __user *, size_t, loff_t *);
 static ssize_t (*orig_read_iter)(struct kiocb *, struct iov_iter *);
 static struct file_operations fops_proxy;
+static DEFINE_MUTEX(init_rc_fops_lock);
 static ssize_t ksu_rc_pos = 0;
 const size_t ksu_rc_len = sizeof(KERNEL_SU_RC) - 1;
 
@@ -533,6 +539,8 @@ static bool is_init_rc(struct file *fp)
 
 static void ksu_handle_sys_read(unsigned int fd)
 {
+	static bool rc_hooked;
+	const struct file_operations *ops;
 	struct file *file = fget(fd);
 	if (!file) {
 		return;
@@ -542,19 +550,14 @@ static void ksu_handle_sys_read(unsigned int fd)
 		goto skip;
 	}
 
-	static bool rc_hooked = false;
+	mutex_lock(&init_rc_fops_lock);
 	if (rc_hooked) {
 		stop_init_rc_hook();
-		goto skip;
+		goto unlock;
 	}
-	rc_hooked = true;
-
-	load_module_rc_once();
-
-	pr_info("read init.rc, comm: %s, rc_count: %zu, module_rc: %zu\n",
-		current->comm, ksu_rc_len, module_rc_len);
 
 	memcpy(&fops_proxy, file->f_op, sizeof(struct file_operations));
+	fops_proxy.owner = THIS_MODULE;
 	orig_read = file->f_op->read;
 	if (orig_read) {
 		fops_proxy.read = read_proxy;
@@ -563,8 +566,18 @@ static void ksu_handle_sys_read(unsigned int fd)
 	if (orig_read_iter) {
 		fops_proxy.read_iter = read_iter_proxy;
 	}
-	file->f_op = &fops_proxy;
+	ops = fops_get(&fops_proxy);
+	if (!ops)
+		goto unlock;
 
+	load_module_rc_once();
+	pr_info("read init.rc, comm: %s, rc_count: %zu, module_rc: %zu\n",
+		current->comm, ksu_rc_len, module_rc_len);
+	replace_fops(file, ops);
+	rc_hooked = true;
+
+unlock:
+	mutex_unlock(&init_rc_fops_lock);
 skip:
 	fput(file);
 }
@@ -576,7 +589,7 @@ skip:
 static syscall_fn_t orig_sys_read;
 static syscall_fn_t orig_sys_fstat;
 
-static long __nocfi ksu_sys_read(const struct pt_regs *regs)
+static long __nocfi ksu_sys_read_impl(const struct pt_regs *regs)
 {
 	unsigned int fd = PT_REGS_PARM1(regs);
 
@@ -584,7 +597,16 @@ static long __nocfi ksu_sys_read(const struct pt_regs *regs)
 	return orig_sys_read(regs);
 }
 
-static long __nocfi ksu_sys_fstat(const struct pt_regs *regs)
+static long __nocfi ksu_sys_read(const struct pt_regs *regs)
+{
+	int index = ksu_hook_enter(KSU_HOOK_INITRC);
+	long ret = ksu_sys_read_impl(regs);
+
+	ksu_hook_leave(KSU_HOOK_INITRC, index);
+	return ret;
+}
+
+static long __nocfi ksu_sys_fstat_impl(const struct pt_regs *regs)
 {
 	unsigned int fd = PT_REGS_PARM1(regs);
 	long ret;
@@ -616,6 +638,15 @@ static long __nocfi ksu_sys_fstat(const struct pt_regs *regs)
 		}
 	}
 	fput(file);
+	return ret;
+}
+
+static long __nocfi ksu_sys_fstat(const struct pt_regs *regs)
+{
+	int index = ksu_hook_enter(KSU_HOOK_INITRC);
+	long ret = ksu_sys_fstat_impl(regs);
+
+	ksu_hook_leave(KSU_HOOK_INITRC, index);
 	return ret;
 }
 
@@ -702,7 +733,12 @@ static void do_stop_init_rc_hook(struct work_struct *work)
 
 static void do_stop_input_hook(struct work_struct *work)
 {
-	unregister_kprobe(&input_event_kp);
+	mutex_lock(&input_hook_lock);
+	if (input_hook_registered) {
+		unregister_kprobe(&input_event_kp);
+		input_hook_registered = false;
+	}
+	mutex_unlock(&input_hook_lock);
 }
 
 static void stop_init_rc_hook(void)
@@ -737,6 +773,9 @@ void ksu_ksud_init(void)
 {
 	int ret;
 
+	INIT_WORK(&stop_init_rc_hook_work, do_stop_init_rc_hook);
+	INIT_WORK(&stop_input_hook_work, do_stop_input_hook);
+
 	/* Install syscall table hooks for init.rc injection */
 	ret = ksu_syscall_table_hook(__NR_read, ksu_sys_read, &orig_sys_read);
 	pr_info("ksud: sys_read table hook: %d\n", ret);
@@ -746,15 +785,17 @@ void ksu_ksud_init(void)
 	pr_info("ksud: sys_fstat table hook: %d\n", ret);
 
 	/* Input event kprobe (for safe mode detection) */
+	mutex_lock(&input_hook_lock);
 	ret = register_kprobe(&input_event_kp);
+	input_hook_registered = !ret;
+	mutex_unlock(&input_hook_lock);
 	pr_info("ksud: input_event_kp: %d\n", ret);
-
-	INIT_WORK(&stop_init_rc_hook_work, do_stop_init_rc_hook);
-	INIT_WORK(&stop_input_hook_work, do_stop_input_hook);
 }
 
 void ksu_ksud_exit(void)
 {
-	/* Syscall table hooks are cleaned up by ksu_syscall_hook_exit() */
-	unregister_kprobe(&input_event_kp);
+	/* Syscall table hooks are cleaned up by ksu_syscall_hook_exit(). */
+	do_stop_input_hook(NULL);
+	cancel_work_sync(&stop_input_hook_work);
+	cancel_work_sync(&stop_init_rc_hook_work);
 }

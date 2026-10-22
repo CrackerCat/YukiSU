@@ -1,3 +1,4 @@
+#include "infra/task_work.h"
 #include "infra/mount_policy.h"
 #include <asm/unistd.h>
 #include <linux/anon_inodes.h>
@@ -67,6 +68,8 @@ static void ksu_install_fd_tw_func(struct callback_head *cb)
 	}
 
 	kfree(tw);
+
+	module_put(THIS_MODULE);
 }
 
 #ifdef CONFIG_KSU_SUPERKEY
@@ -88,6 +91,7 @@ static void ksu_superkey_auth_tw_func(struct callback_head *cb)
 	if (copy_from_user(&cmd, tw->cmd_user, sizeof(cmd))) {
 		pr_err("superkey auth: copy_from_user failed\n");
 		kfree(tw);
+		module_put(THIS_MODULE);
 		return;
 	}
 
@@ -115,6 +119,7 @@ static void ksu_superkey_auth_tw_func(struct callback_head *cb)
 		// Silent fail - don't reveal KSU existence
 		superkey_on_auth_fail();
 		kfree(tw);
+		module_put(THIS_MODULE);
 		return;
 	}
 
@@ -133,6 +138,8 @@ static void ksu_superkey_auth_tw_func(struct callback_head *cb)
 	}
 
 	kfree(tw);
+
+	module_put(THIS_MODULE);
 }
 #endif // #ifdef CONFIG_KSU_SUPERKEY
 
@@ -160,7 +167,7 @@ static int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd,
 		tw->outp = (int __user *)*arg;
 		tw->cb.func = ksu_install_fd_tw_func;
 
-		if (task_work_add(current, &tw->cb, TWA_RESUME)) {
+		if (ksu_task_work_add(current, &tw->cb)) {
 			kfree(tw);
 			pr_warn("install fd add task_work failed\n");
 		}
@@ -179,7 +186,7 @@ static int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd,
 		sk_tw->cmd_user = (struct ksu_superkey_reboot_cmd __user *)*arg;
 		sk_tw->cb.func = ksu_superkey_auth_tw_func;
 
-		if (task_work_add(current, &sk_tw->cb, TWA_RESUME)) {
+		if (ksu_task_work_add(current, &sk_tw->cb)) {
 			kfree(sk_tw);
 			pr_warn("superkey auth add task_work failed\n");
 		}
@@ -230,6 +237,7 @@ static void ksu_superkey_prctl_tw_func(struct callback_head *cb)
 	if (copy_from_user(&cmd, tw->cmd_user, sizeof(cmd))) {
 		pr_err("superkey prctl auth: copy_from_user failed\n");
 		kfree(tw);
+		module_put(THIS_MODULE);
 		return;
 	}
 
@@ -249,6 +257,7 @@ static void ksu_superkey_prctl_tw_func(struct callback_head *cb)
 			delta);
 		superkey_on_auth_fail();
 		kfree(tw);
+		module_put(THIS_MODULE);
 		return;
 	}
 
@@ -286,6 +295,7 @@ static void ksu_superkey_prctl_tw_func(struct callback_head *cb)
 		// Silent fail - don't reveal KSU existence
 		superkey_on_auth_fail();
 		kfree(tw);
+		module_put(THIS_MODULE);
 		return;
 	}
 
@@ -303,6 +313,8 @@ static void ksu_superkey_prctl_tw_func(struct callback_head *cb)
 	}
 
 	kfree(tw);
+
+	module_put(THIS_MODULE);
 }
 
 // prctl hook handler for SuperKey authentication
@@ -372,7 +384,7 @@ static int ksu_handle_prctl_superkey(int option, unsigned long arg2)
 	tw->cmd_user = (struct ksu_superkey_prctl_cmd __user *)arg2;
 	tw->cb.func = ksu_superkey_prctl_tw_func;
 
-	if (task_work_add(current, &tw->cb, TWA_RESUME)) {
+	if (ksu_task_work_add(current, &tw->cb)) {
 		kfree(tw);
 		pr_warn("superkey prctl auth add task_work failed\n");
 	}

@@ -9,6 +9,7 @@
 #include <linux/kobject.h>
 #include <linux/module.h>
 #include <linux/moduleparam.h>
+#include "infra/hook_lifetime.h"
 #include "preinit/preinit.h"
 #include <linux/rcupdate.h>
 #include <linux/sched.h>
@@ -283,6 +284,7 @@ static void kernelsu_exit(void)
 	ksu_hook_exit();
 	ksu_kasumi_exit();
 	ksu_supercalls_exit();
+	ksu_hook_synchronize(KSU_HOOK_INITRC);
 
 	if (!ksu_late_loaded) {
 		ksu_ksud_exit();
@@ -313,6 +315,9 @@ static void kernelsu_exit(void)
 	ksu_uts_view_exit();
 	ksu_feature_exit();
 	ksu_module_blacklist_exit();
+
+	/* Module references drop before task-work callback epilogues return. */
+	synchronize_rcu_tasks();
 
 	if (ksu_cred) {
 		put_cred(ksu_cred);

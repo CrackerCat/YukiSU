@@ -14,6 +14,7 @@
 #include <linux/types.h>
 #include <linux/version.h>
 
+#include "infra/hook_lifetime.h"
 #include "feature/sucompat_exec.h"
 #include "feature/sucompat_prompt.h"
 #include "feature/sucompat_vfs.h"
@@ -202,7 +203,7 @@ static int ksu_su_exec_set_arg0(struct linux_binprm *bprm)
 	return 0;
 }
 
-static int __nocfi ksu_su_bprm_creds_for_exec(struct linux_binprm *bprm)
+static int __nocfi ksu_su_bprm_creds_for_exec_impl(struct linux_binprm *bprm)
 {
 	ksu_bprm_creds_for_exec_fn original =
 	    (ksu_bprm_creds_for_exec_fn)READ_ONCE(ksu_su_creds_hook.original);
@@ -296,8 +297,17 @@ out_log:
 	return ret;
 }
 
-static int __nocfi ksu_su_bprm_creds_from_file(struct linux_binprm *bprm,
-					       ksu_su_caps_file_t *file)
+static int __nocfi ksu_su_bprm_creds_for_exec(struct linux_binprm *bprm)
+{
+	int index = ksu_hook_enter(KSU_HOOK_LSM);
+	int ret = ksu_su_bprm_creds_for_exec_impl(bprm);
+
+	ksu_hook_leave(KSU_HOOK_LSM, index);
+	return ret;
+}
+
+static int __nocfi ksu_su_bprm_creds_from_file_impl(struct linux_binprm *bprm,
+						    ksu_su_caps_file_t *file)
 {
 	ksu_bprm_creds_from_file_fn original =
 	    (ksu_bprm_creds_from_file_fn)READ_ONCE(ksu_su_caps_hook.original);
@@ -335,7 +345,18 @@ static int __nocfi ksu_su_bprm_creds_from_file(struct linux_binprm *bprm,
 	return 0;
 }
 
-static void __nocfi ksu_su_bprm_committing_creds(ksu_su_commit_bprm_t *bprm)
+static int __nocfi ksu_su_bprm_creds_from_file(struct linux_binprm *bprm,
+					       ksu_su_caps_file_t *file)
+{
+	int index = ksu_hook_enter(KSU_HOOK_LSM);
+	int ret = ksu_su_bprm_creds_from_file_impl(bprm, file);
+
+	ksu_hook_leave(KSU_HOOK_LSM, index);
+	return ret;
+}
+
+static void __nocfi
+ksu_su_bprm_committing_creds_impl(ksu_su_commit_bprm_t *bprm)
 {
 	ksu_bprm_committing_creds_fn original =
 	    (ksu_bprm_committing_creds_fn)READ_ONCE(
@@ -371,6 +392,14 @@ static void __nocfi ksu_su_bprm_committing_creds(ksu_su_commit_bprm_t *bprm)
 	ctx->stage = KSU_SU_EXEC_COMMITTED;
 	ksu_su_exec_emit_log(ctx, 0);
 	pr_info("kasumi: sucompat: native exec uid=%u fd=%d\n", ctx->uid, fd);
+}
+
+static void __nocfi ksu_su_bprm_committing_creds(ksu_su_commit_bprm_t *bprm)
+{
+	int index = ksu_hook_enter(KSU_HOOK_LSM);
+
+	ksu_su_bprm_committing_creds_impl(bprm);
+	ksu_hook_leave(KSU_HOOK_LSM, index);
 }
 
 bool ksu_sucompat_exec_ready(void)

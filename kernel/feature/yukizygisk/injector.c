@@ -13,6 +13,7 @@
 #include <linux/uaccess.h>
 #include <asm/cacheflush.h>
 
+#include "infra/task_work.h"
 #include "internal.h"
 #include "tango.h"
 #include "selinux/selinux.h"
@@ -658,6 +659,7 @@ out:
 		yz_runtime_set_state((u32)current->tgid, runtime_generation,
 				     YZ_RUNTIME_STATE_FAILED);
 	kfree(tw);
+	module_put(THIS_MODULE);
 }
 
 void yz_schedule_injection(bool native, u8 target_type, bool early_native,
@@ -679,7 +681,7 @@ void yz_schedule_injection(bool native, u8 target_type, bool early_native,
 		yz_copy_name(tw->label, sizeof(tw->label), label);
 	}
 	init_task_work(&tw->cb, yz_inject_tw_func);
-	if (task_work_add(current, &tw->cb, TWA_RESUME))
+	if (ksu_task_work_add(current, &tw->cb))
 		kfree(tw);
 }
 

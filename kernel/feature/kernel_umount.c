@@ -1,3 +1,4 @@
+#include "infra/task_work.h"
 #include "infra/mount_policy.h"
 #include <linux/cred.h>
 #include <linux/compiler.h>
@@ -414,6 +415,7 @@ static void umount_tw_func(struct callback_head *cb)
 	if (tw->mountinfo)
 		filp_close(tw->mountinfo, NULL);
 	kfree(tw);
+	module_put(THIS_MODULE);
 }
 
 static bool ksu_parent_scan_context(struct task_struct *parent)
@@ -557,7 +559,7 @@ int ksu_handle_umount(uid_t old_uid, uid_t new_uid)
 		tw->mountinfo = mountinfo;
 	}
 
-	int err = task_work_add(current, &tw->cb, TWA_RESUME);
+	int err = ksu_task_work_add(current, &tw->cb);
 	if (!err)
 		return 0;
 

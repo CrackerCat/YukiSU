@@ -13,6 +13,7 @@
 #include <linux/uaccess.h>
 #include <asm/cacheflush.h>
 
+#include "infra/hook_lifetime.h"
 #include "hook/lsm_hook.h"
 #include "tango.h"
 #include "internal.h"
@@ -477,8 +478,8 @@ static int yz_tango_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
 static struct ksu_lsm_hook yz_tango_hook = KSU_LSM_HOOK_INIT(
     file_mprotect, "selinux_file_mprotect", yz_tango_mprotect, 0);
 
-static int yz_tango_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
-			     unsigned long prot)
+static int yz_tango_mprotect_impl(struct vm_area_struct *vma,
+				  unsigned long reqprot, unsigned long prot)
 {
 	typeof(((union security_list_options *)0)->file_mprotect) original =
 	    READ_ONCE(yz_tango_hook.original);
@@ -509,6 +510,16 @@ static int yz_tango_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
 		kfree(work);
 		module_put(THIS_MODULE);
 	}
+	return ret;
+}
+
+static int yz_tango_mprotect(struct vm_area_struct *vma, unsigned long reqprot,
+			     unsigned long prot)
+{
+	int index = ksu_hook_enter(KSU_HOOK_LSM);
+	int ret = yz_tango_mprotect_impl(vma, reqprot, prot);
+
+	ksu_hook_leave(KSU_HOOK_LSM, index);
 	return ret;
 }
 

@@ -1,4 +1,5 @@
 #include <linux/rculist.h>
+#include "infra/task_work.h"
 #include "infra/mount_policy.h"
 #include "kasumi_entrypoints.h"
 #include <asm/unistd.h>
@@ -109,6 +110,9 @@ static struct ksu_get_info_cmd get_current_info(void)
 		cmd.uapi_version = compat.uapi_version;
 
 	cmd.flags |= KSU_GET_INFO_FLAG_LKM;
+#ifdef CONFIG_MODULE_UNLOAD
+	cmd.flags |= KSU_GET_INFO_FLAG_SAFE_UNLOAD;
+#endif
 	if (ksu_bundled)
 		cmd.flags |= KSU_GET_INFO_FLAG_BUNDLED;
 	if (is_manager()) {
@@ -1431,6 +1435,7 @@ static void yz_unmap_tw_func(struct callback_head *cb)
 				"pc=0x%lx retries=%u\n",
 				current->pid, pc, tw->retry);
 			kfree(tw);
+			module_put(THIS_MODULE);
 			return;
 		}
 	}
@@ -1442,6 +1447,7 @@ static void yz_unmap_tw_func(struct callback_head *cb)
 		vm_munmap(tw->addr[i], tw->size[i]);
 	}
 	kfree(tw);
+	module_put(THIS_MODULE);
 }
 
 static int do_yz_unmap_pid(void __user *arg)
@@ -1480,7 +1486,7 @@ static int do_yz_unmap_pid(void __user *arg)
 		tw->addr[i] = (unsigned long)cmd.addr[i];
 		tw->size[i] = (unsigned long)cmd.size[i];
 	}
-	if (task_work_add(task, &tw->cb, TWA_RESUME)) {
+	if (ksu_task_work_add(task, &tw->cb)) {
 		kfree(tw);
 		put_task_struct(task);
 		return -ESRCH;
@@ -1525,7 +1531,7 @@ static int do_yz_unmap_self(void __user *arg)
 		tw->addr[i] = (unsigned long)cmd.addr[i];
 		tw->size[i] = (unsigned long)cmd.size[i];
 	}
-	if (task_work_add(current, &tw->cb, TWA_RESUME)) {
+	if (ksu_task_work_add(current, &tw->cb)) {
 		kfree(tw);
 		return -ESRCH;
 	}

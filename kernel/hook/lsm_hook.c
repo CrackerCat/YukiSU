@@ -7,6 +7,7 @@
 #include <linux/rcupdate.h>
 #include <linux/string.h>
 
+#include "infra/hook_lifetime.h"
 #include "infra/symbol_resolver.h"
 #include "klog.h" // IWYU pragma: keep
 #include "lsm_hook.h"
@@ -489,7 +490,7 @@ void ksu_lsm_unhook(struct ksu_lsm_hook *hook)
 	}
 #endif // #if LINUX_VERSION_CODE >= KERNEL_VERSIO...
 
-	synchronize_rcu();
+	ksu_hook_synchronize(KSU_HOOK_LSM);
 	pr_info("lsm_hook: restored %s hook slot %px to %px\n",
 		hook->head_name ?: "unknown", slot, hook->original);
 	ksu_lsm_hook_untrack(hook);

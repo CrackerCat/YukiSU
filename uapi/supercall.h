@@ -77,6 +77,7 @@ struct ksu_become_daemon_cmd {
   (1U << 3) // reserved (no PR-build concept yet)
 #define KSU_GET_INFO_FLAG_BUNDLED (1U << 4)
 #define KSU_GET_INFO_FLAG_PREINIT (1U << 5)
+#define KSU_GET_INFO_FLAG_SAFE_UNLOAD (1U << 16)
 
 /*
  * Batch kernel image symbol lookup. Returns the number of symbols found; the

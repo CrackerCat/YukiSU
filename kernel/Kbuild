@@ -48,6 +48,7 @@ include $(src)/feature/yukizygisk/Kbuild
 ccflags-y += -DCONFIG_KSU_YUKIZYGISK
 endif
 kernelsu-objs += infra/symbol_resolver.o
+kernelsu-objs += infra/hook_lifetime.o
 kernelsu-objs += runtime/boot_event.o
 kernelsu-objs += runtime/ksud_integration.o
 kernelsu-objs += infra/seccomp_cache.o

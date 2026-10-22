@@ -1,3 +1,4 @@
+#include "infra/hook_lifetime.h"
 #include "selinux_hide.h"
 #include "policy/feature.h"
 #include "hook/lsm_hook.h"
@@ -17,6 +18,7 @@
 #include <linux/mm.h>
 #include <linux/moduleparam.h>
 #include <linux/mutex.h>
+#include <linux/module.h>
 #include <linux/printk.h>
 #include <linux/string.h>
 #include <linux/uaccess.h>
@@ -101,7 +103,7 @@ static write_op_fn orig_context_write, orig_access_write;
 #define ksu_task_security_struct cred_security_struct
 #endif
 
-static ssize_t my_write_context(struct file *file, char *buf, size_t size)
+static ssize_t my_write_context_impl(struct file *file, char *buf, size_t size)
 {
 	// apply to all app uids
 	if (likely(current_uid().val < 10000)) {
@@ -143,7 +145,16 @@ out:
 	return length;
 }
 
-static ssize_t my_write_access(struct file *file, char *buf, size_t size)
+static ssize_t my_write_context(struct file *file, char *buf, size_t size)
+{
+	int index = ksu_hook_enter(KSU_HOOK_SELINUXFS);
+	ssize_t ret = my_write_context_impl(file, buf, size);
+
+	ksu_hook_leave(KSU_HOOK_SELINUXFS, index);
+	return ret;
+}
+
+static ssize_t my_write_access_impl(struct file *file, char *buf, size_t size)
 {
 	// apply to all app uids
 	if (likely(current_uid().val < 10000)) {
@@ -207,6 +218,15 @@ out:
 	return length;
 }
 
+static ssize_t my_write_access(struct file *file, char *buf, size_t size)
+{
+	int index = ksu_hook_enter(KSU_HOOK_SELINUXFS);
+	ssize_t ret = my_write_access_impl(file, buf, size);
+
+	ksu_hook_leave(KSU_HOOK_SELINUXFS, index);
+	return ret;
+}
+
 static int my_setprocattr(const char *name, void *value, size_t size);
 struct ksu_lsm_hook selinux_setprocattr_hook =
     KSU_LSM_HOOK_INIT(setprocattr, "selinux_setprocattr", my_setprocattr, 0);
@@ -244,7 +264,8 @@ static u32 ptrace_parent_sid(void)
 }
 
 typedef int (*setprocattr_fn)(const char *name, void *value, size_t size);
-static int __nocfi my_setprocattr(const char *name, void *value, size_t size)
+static int __nocfi my_setprocattr_impl(const char *name, void *value,
+				       size_t size)
 {
 	if (likely(current_uid().val < 10000)) {
 		goto call_orig;
@@ -323,12 +344,23 @@ call_orig:
 								   size);
 }
 
+static int __nocfi my_setprocattr(const char *name, void *value, size_t size)
+{
+	int index = ksu_hook_enter(KSU_HOOK_LSM);
+	int ret = my_setprocattr_impl(name, value, size);
+
+	ksu_hook_leave(KSU_HOOK_LSM, index);
+	return ret;
+}
+
 static DEFINE_MUTEX(selinux_hide_mutex);
 static bool ksu_selinux_hide_enabled __read_mostly = false;
 static bool ksu_selinux_hide_running __read_mostly = false;
 
 static DEFINE_STATIC_KEY_FALSE(fake_status_initialize_key);
 static struct page *fake_status;
+static struct file_operations fake_status_fops;
+static bool fake_status_fops_ready;
 
 static void initialize_fake_status(void)
 {
@@ -386,7 +418,8 @@ typedef int (*sel_open_handle_status_fn)(struct inode *inode,
 static sel_open_handle_status_fn orig_sel_open_handle_status;
 static sel_open_handle_status_fn *sel_open_handle_status_slot;
 
-static int my_sel_open_handle_status(struct inode *inode, struct file *filp)
+static int my_sel_open_handle_status_impl(struct inode *inode,
+					  struct file *filp)
 {
 	void *data;
 	int ret;
@@ -394,11 +427,23 @@ static int my_sel_open_handle_status(struct inode *inode, struct file *filp)
 	if (likely(current_uid().val >= 10000 && ksu_selinux_hide_enabled)) {
 		mutex_lock(&selinux_state.status_lock);
 		data = fake_status;
-		mutex_unlock(&selinux_state.status_lock);
 		if (data) {
-			filp->private_data = data;
-			return 0;
+			const struct file_operations *ops;
+
+			if (!fake_status_fops_ready) {
+				fake_status_fops = *filp->f_op;
+				fake_status_fops.owner = THIS_MODULE;
+				fake_status_fops_ready = true;
+			}
+			ops = fops_get(&fake_status_fops);
+			if (ops) {
+				replace_fops(filp, ops);
+				filp->private_data = data;
+				mutex_unlock(&selinux_state.status_lock);
+				return 0;
+			}
 		}
+		mutex_unlock(&selinux_state.status_lock);
 	}
 
 	ret = orig_sel_open_handle_status(inode, filp);
@@ -406,6 +451,15 @@ static int my_sel_open_handle_status(struct inode *inode, struct file *filp)
 	    !fake_status)
 		initialize_fake_status();
 
+	return ret;
+}
+
+static int my_sel_open_handle_status(struct inode *inode, struct file *filp)
+{
+	int index = ksu_hook_enter(KSU_HOOK_SELINUXFS);
+	int ret = my_sel_open_handle_status_impl(inode, filp);
+
+	ksu_hook_leave(KSU_HOOK_SELINUXFS, index);
 	return ret;
 }
 
@@ -485,7 +539,6 @@ static void ksu_selinux_hide_unhook()
 		ret = ksu_patch_text(context_write, &orig_context_write,
 				     sizeof(orig_context_write),
 				     KSU_PATCH_TEXT_FLUSH_DCACHE);
-		orig_context_write = NULL;
 		if (ret) {
 			pr_err("selinux_hide: exit: patch_text context_write "
 			       "err: %d\n",
@@ -496,7 +549,6 @@ static void ksu_selinux_hide_unhook()
 		ret = ksu_patch_text(access_write, &orig_access_write,
 				     sizeof(orig_access_write),
 				     KSU_PATCH_TEXT_FLUSH_DCACHE);
-		orig_access_write = NULL;
 		if (ret) {
 			pr_err("selinux_hide: exit: patch_text access_write "
 			       "err: %d\n",
@@ -508,7 +560,6 @@ static void ksu_selinux_hide_unhook()
 				     &orig_sel_open_handle_status,
 				     sizeof(orig_sel_open_handle_status),
 				     KSU_PATCH_TEXT_FLUSH_DCACHE);
-		orig_sel_open_handle_status = NULL;
 		if (ret) {
 			pr_err("selinux_hide: exit: patch_text "
 			       "sel_open_handle_status err: %d\n",
@@ -516,6 +567,10 @@ static void ksu_selinux_hide_unhook()
 		}
 	}
 	ksu_lsm_unhook(&selinux_setprocattr_hook);
+	ksu_hook_synchronize(KSU_HOOK_SELINUXFS);
+	orig_context_write = NULL;
+	orig_access_write = NULL;
+	orig_sel_open_handle_status = NULL;
 }
 
 static void ksu_selinux_hide_disable()
@@ -613,7 +668,6 @@ static void hook_selinux_status_open(void)
 		       "err: %d\n",
 		       ret);
 		sel_open_handle_status_slot = NULL;
-		orig_sel_open_handle_status = NULL;
 	}
 }
 

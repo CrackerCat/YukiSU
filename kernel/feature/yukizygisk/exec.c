@@ -10,6 +10,7 @@
 #include <linux/uaccess.h>
 #include <linux/version.h>
 
+#include "infra/hook_lifetime.h"
 #include "api.h"
 #include "arch.h"
 #include "internal.h"
@@ -229,7 +230,7 @@ static bool yz_is_init_child(void)
 	return is_init_child;
 }
 
-static void __nocfi yz_bprm_committed_creds(yz_bprm_arg_t *bprm)
+static void __nocfi yz_bprm_committed_creds_impl(yz_bprm_arg_t *bprm)
 {
 	const char *filename = bprm ? bprm->filename : NULL;
 	char native_label[YZ_NATIVE_TARGET_VALUE_MAX] = {};
@@ -278,6 +279,14 @@ static void __nocfi yz_bprm_committed_creds(yz_bprm_arg_t *bprm)
 			yz_schedule_injection(by_native, native_target_type,
 					      early_native, native_label);
 	}
+}
+
+static void __nocfi yz_bprm_committed_creds(yz_bprm_arg_t *bprm)
+{
+	int index = ksu_hook_enter(KSU_HOOK_LSM);
+
+	yz_bprm_committed_creds_impl(bprm);
+	ksu_hook_leave(KSU_HOOK_LSM, index);
 }
 
 void yz_exec_init(void)
