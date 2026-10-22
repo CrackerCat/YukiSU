@@ -233,7 +233,10 @@ private fun getLocaleString(json: JSONObject, key: String): String {
     return fallback
 }
 
-private fun fromJSON(templateJson: JSONObject): TemplateViewModel.TemplateInfo? {
+private fun fromJSON(
+    templateJson: JSONObject,
+    defaultNoNewPrivs: Boolean = Natives.isDefaultNoNewPrivsEnabled(),
+): TemplateViewModel.TemplateInfo? {
     return runCatching {
         val groupsJsonArray = templateJson.optJSONArray("groups")
         val capabilitiesJsonArray = templateJson.optJSONArray("capabilities")
@@ -260,7 +263,9 @@ private fun fromJSON(templateJson: JSONObject): TemplateViewModel.TemplateInfo? 
                 capabilitiesJsonArray, Capabilities::class.java
             ).map { it.cap },
             context = context,
-            flags = getEnumOrdinals(flagsJsonArray, Natives.Profile.RootProfileFlag::class.java).toRawFlags(),
+            flags = flagsJsonArray?.let {
+                getEnumOrdinals(it, Natives.Profile.RootProfileFlag::class.java).toRawFlags()
+            } ?: if (defaultNoNewPrivs) Natives.FLAG_KSU_NO_NEW_PRIVS else 0L,
             rules = rulesJsonArray?.mapCatching<String, String>({ it }, {
                 Log.e(TAG, "ignore invalid rule: $it", it)
             }).orEmpty()
