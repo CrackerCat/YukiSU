@@ -2003,12 +2003,20 @@ fun hasMagisk(): Boolean {
 }
 
 fun isSepolicyValid(rules: String?): Boolean {
-    if (rules == null) return true
+    if (rules.isNullOrBlank()) return true
     return execKsud("sepolicy check ${shellArg(rules)}")
 }
 
-fun getSepolicy(pkg: String): String =
-    ksudReadLines("profile get-sepolicy ${shellArg(pkg)}").joinToString("\n")
+fun getSepolicy(pkg: String): String {
+    val result = getRootShell().newJob()
+        .add(ksudCmd("profile get-sepolicy ${shellArg(pkg)}"))
+        .to(ArrayList(), null).exec()
+    if (!result.isSuccess) {
+        Log.w(TAG, "Failed to read sepolicy for $pkg: ${result.code}")
+        return ""
+    }
+    return result.out.filter { it.isNotBlank() }.joinToString("\n") { it.trim() }
+}
 
 fun setSepolicy(pkg: String, rules: String): Boolean {
     val ok = execKsud("profile set-sepolicy ${shellArg(pkg)} ${shellArg(rules)}")

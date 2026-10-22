@@ -10,11 +10,32 @@
 
 namespace ksud {
 
+namespace {
+
+bool is_legacy_empty_sepolicy(const std::string& package, std::string_view policy) {
+    return trim_view(policy) == "No sepolicy profile for " + package;
+}
+
+int apply_profile_sepolicy(const std::string& package) {
+    const auto content = read_file(std::string(PROFILE_SELINUX_DIR) + package);
+    if (!content) {
+        LOGE("Failed to read sepolicy profile for %s", package.c_str());
+        return 1;
+    }
+    // Older managers persisted this diagnostic as rules. Keep the bytes for backups.
+    if (is_legacy_empty_sepolicy(package, *content))
+        return 0;
+    return sepolicy_live_patch(*content);
+}
+
+}  // namespace
+
 int profile_get_sepolicy(const std::string& package) {
     const std::string path = std::string(PROFILE_SELINUX_DIR) + package;
     auto content = read_file(path);
     if (content) {
-        printf("%s", content->c_str());
+        if (!is_legacy_empty_sepolicy(package, *content))
+            printf("%s", content->c_str());
         return 0;
     }
     terminal::errorf("No sepolicy profile for %s\n", package.c_str());
@@ -32,7 +53,7 @@ int profile_set_sepolicy(const std::string& package, const std::string& policy) 
         return 1;
     }
 
-    return sepolicy_apply_file(path);
+    return apply_profile_sepolicy(package);
 }
 
 int profile_get_template(const std::string& id) {
@@ -96,8 +117,7 @@ int apply_profile_sepolies() {
         if (entry->d_name[0] == '.')
             continue;
 
-        const std::string path = std::string(PROFILE_SELINUX_DIR) + entry->d_name;
-        if (sepolicy_apply_file(path) == 0) {
+        if (apply_profile_sepolicy(entry->d_name) == 0) {
             LOGI("Applied sepolicy for %s", entry->d_name);
         } else {
             LOGW("Failed to apply sepolicy for %s", entry->d_name);

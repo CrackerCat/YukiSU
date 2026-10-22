@@ -133,9 +133,10 @@ fun AppProfileScreen(
             if (p.allowSu) p.rules = getSepolicy(profileKey)
         }
     }
-    var profile by rememberSaveable {
+    var savedProfile by rememberSaveable {
         mutableStateOf(initialProfile)
     }
+    val profile = savedProfile.withoutLegacySepolicyDiagnostic(profileKey)
     var dynamicManagerChecked by rememberSaveable(packageName, appInfo.uid) {
         mutableStateOf(false)
     }
@@ -268,14 +269,18 @@ fun AppProfileScreen(
             },
             onProfileChange = { updatedProfile ->
                 scope.launch {
-                    val profileToSave = if (appInfo.special) updatedProfile.copy(allowSu = false) else updatedProfile
+                    val normalizedProfile = updatedProfile.withoutLegacySepolicyDiagnostic(profileKey)
+                    val profileToSave = if (appInfo.special) normalizedProfile.copy(allowSu = false) else normalizedProfile
                     if (profileToSave.allowSu) {
                         // sync with allowlist.c - forbid_system_uid
                         if (appInfo.uid < 2000 && appInfo.uid != 1000) {
                             snackBarHost.showSnackbar(suNotAllowed)
                             return@launch
                         }
-                        if (!profileToSave.rootUseDefault && profileToSave.rules.isNotEmpty() && !setSepolicy(profileKey, profileToSave.rules)) {
+                        val rulesSaved = saveProfileSepolicy(profile.rules, profileToSave) { rules ->
+                            setSepolicy(profileKey, rules)
+                        }
+                        if (!rulesSaved) {
                             snackBarHost.showSnackbar(failToUpdateSepolicy)
                             return@launch
                         }
@@ -283,7 +288,7 @@ fun AppProfileScreen(
                     if (!Natives.setAppProfile(profileToSave)) {
                         snackBarHost.showSnackbar(failToUpdateAppProfile.format(appInfo.uid))
                     } else {
-                        profile = profileToSave
+                        savedProfile = profileToSave
                         superUserViewModel.updateUidProfileLocally(appInfo.uid, profileToSave)
                         scope.launch {
                             superUserViewModel.refreshAppConfigurations()
