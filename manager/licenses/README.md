@@ -33,6 +33,10 @@ source URL; Gradle substitutes the same full commit while preserving any path
 suffix. Lua uses `mitLicenseFrom` to extract the complete MIT license comment
 from the current `lua.h`. A missing or ambiguous license comment fails generation.
 Every source text must be in `native-inputs.json` so Gradle tracks it.
+LZ4 and its bundled xxHash use the revision of
+`userspace/ksud/third_party/MagiskbootAlone/external/lz4`; SipHash uses the libzip
+submodule revision. Keep these nested sources in the input list when updating
+their parent dependency.
 Retained notices also cover shaded libraries, JavaScript and
 source imports that cannot be identified from Maven metadata alone.
 

@@ -124,7 +124,8 @@ else()
 endif()
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}${_LINKER_FLAGS}")
 
-foreach(source IN ITEMS lua/lua.h mbedtls/CMakeLists.txt mbedtls/framework/CMakeLists.txt lz4/lib/lz4.c)
+foreach(source IN ITEMS lua/lua.h mbedtls/CMakeLists.txt mbedtls/framework/CMakeLists.txt
+                        MagiskbootAlone/external/lz4/lib/lz4.c)
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${source}")
         message(FATAL_ERROR
             "Missing native submodule source: ${source}. "
@@ -223,15 +224,8 @@ add_subdirectory("${mbedtls_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/third_part
 
 include(cmake/ArchiveLibraries.cmake)
 
-# LZ4 - prefer Magisk vendored inside MagiskbootAlone submodule (same ABI as Magisk magiskboot)
-set(LZ4_IN_MAGISKBOOT_ALONE ${CMAKE_SOURCE_DIR}/third_party/MagiskbootAlone/external/lz4)
-if(EXISTS ${LZ4_IN_MAGISKBOOT_ALONE}/lz4.c)
-    set(LZ4_LIB_DIR ${LZ4_IN_MAGISKBOOT_ALONE})
-    message(STATUS "Using vendored LZ4 (MagiskbootAlone/external/lz4) for magiskboot: ${LZ4_LIB_DIR}")
-else()
-    set(LZ4_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/lz4/lib")
-    message(STATUS "Using LZ4 submodule for magiskboot: ${LZ4_LIB_DIR}")
-endif()
+set(LZ4_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/MagiskbootAlone/external/lz4/lib")
+message(STATUS "Using MagiskbootAlone's LZ4 submodule: ${LZ4_LIB_DIR}")
 
 # Generated sources / embedded assets
 set(ASSETS_DIR ${CMAKE_SOURCE_DIR}/assets)
@@ -322,7 +316,7 @@ if(EXISTS ${MAGISKBOOT_ALONE_DIR}/src/magiskboot_main.cpp)
     set(MAGISKBOOT_ALONE_AVAILABLE 1)
     message(STATUS "MagiskbootAlone: building magiskboot into ksud (multi-call)")
 else()
-    message(WARNING "MagiskbootAlone submodule not found at ${MAGISKBOOT_ALONE_DIR}; run: git submodule update --init")
+    message(WARNING "MagiskbootAlone submodule not found at ${MAGISKBOOT_ALONE_DIR}; run: git submodule update --init --recursive")
 endif()
 
 set(BOOTCTL_ALONE_DIR ${MAGISKTOOLS_ALONE_DIR}/bootctlAlone)

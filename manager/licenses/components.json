@@ -855,7 +855,7 @@
     "license": "MIT",
     "source": "https://github.com/Rouyashiki/lua/tree/{revision}",
     "texts": [],
-    "evidence": "userspace/ksud/third_party/lua submodule @ 7579fc9d7ed90240487251dfb69168f8e64e9294; lua.h copyright/license; the C ABI header adaptation is applied only in the build directory.",
+    "evidence": "userspace/ksud/third_party/lua/lua.h supplies the current copyright/license; the submodule revision is recorded in the generated open_source/inputs.json. The C ABI header adaptation is applied only in the build directory.",
     "versionFrom": "userspace/ksud/third_party/lua",
     "mitLicenseFrom": "userspace/ksud/third_party/lua/lua.h"
   },
@@ -867,7 +867,7 @@
     "texts": [
       "mbedtls.txt"
     ],
-    "evidence": "userspace/ksud/third_party/mbedtls submodule @ ccc12be679247960cd7147073a2e51a460c1b27e (upstream v3.6.2 with the framework URL redirected to Rouyashiki); LICENSE; nested framework revision is recorded in the generated open_source/inputs.json. The default configuration disables Everest and p256-m implementations; their generated static archives contain no defined symbols. They do not introduce additional runtime code in this build.",
+    "evidence": "userspace/ksud/third_party/mbedtls/LICENSE; both Mbed TLS and its nested framework use Rouyashiki forks, with their revisions recorded in the generated open_source/inputs.json. The default configuration disables Everest and p256-m implementations; their generated static archives contain no defined symbols. They do not introduce additional runtime code in this build.",
     "sourceTexts": [
       "userspace/ksud/third_party/mbedtls/LICENSE"
     ],
@@ -881,7 +881,7 @@
     "texts": [
       "libzip.txt"
     ],
-    "evidence": "userspace/ksud/third_party/libzip submodule @ b26af3afd67e6b01e1e38a446ecb950e47fff146; CMakeLists.txt, LICENSE; userspace/ksud/cmake/ArchiveLibraries.cmake.",
+    "evidence": "userspace/ksud/third_party/libzip/CMakeLists.txt and LICENSE; userspace/ksud/cmake/ArchiveLibraries.cmake selects the compiled features. The submodule revision is recorded in the generated open_source/inputs.json.",
     "sourceTexts": [
       "userspace/ksud/third_party/libzip/LICENSE"
     ],
@@ -891,28 +891,26 @@
     "id": "lz4",
     "name": "LZ4",
     "license": "BSD-2-Clause",
-    "source": "https://github.com/Rouyashiki/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd/external/lz4",
+    "source": "https://github.com/Rouyashiki/lz4/tree/{revision}",
     "texts": [
-      "lz4.txt",
-      "lz4-fallback.txt"
+      "lz4.txt"
     ],
-    "version": "MagiskbootAlone 4cd9f6cab3bc",
-    "evidence": "userspace/ksud/third_party/MagiskbootAlone/external/lz4/lz4.c copyright/license; KSUD MAGISKBOOT_SOURCES links the vendored copy. Offline fallback: userspace/ksud/third_party/lz4 submodule @ ebb370ca83af193212df4dcbadcc5d87bc0de2f0 (v1.10.0), https://github.com/Rouyashiki/lz4/tree/ebb370ca83af193212df4dcbadcc5d87bc0de2f0.",
+    "evidence": "userspace/ksud/third_party/MagiskbootAlone/external/lz4/lib/LICENSE; KSUD MAGISKBOOT_SOURCES uses the LZ4 revision pinned by the MagiskbootAlone submodule.",
     "sourceTexts": [
-      "userspace/ksud/third_party/lz4/lib/LICENSE"
-    ]
+      "userspace/ksud/third_party/MagiskbootAlone/external/lz4/lib/LICENSE"
+    ],
+    "versionFrom": "userspace/ksud/third_party/MagiskbootAlone/external/lz4"
   },
   {
     "id": "xxhash",
     "name": "xxHash",
     "license": "BSD-2-Clause",
-    "source": "https://github.com/Rouyashiki/MagiskbootAlone/tree/4cd9f6cab3bc0dcbad1bb4e257c00695043965bd/external/lz4",
+    "source": "https://github.com/Rouyashiki/lz4/blob/{revision}/lib/xxhash.c",
     "texts": [
-      "xxhash.txt",
-      "xxhash-fallback.txt"
+      "xxhash.txt"
     ],
-    "version": "MagiskbootAlone 4cd9f6cab3bc",
-    "evidence": "userspace/ksud/third_party/MagiskbootAlone/external/lz4/xxhash.c copyright/license; KSUD MAGISKBOOT_SOURCES links the vendored copy. Offline fallback: userspace/ksud/third_party/lz4 submodule @ ebb370ca83af193212df4dcbadcc5d87bc0de2f0 (v1.10.0), https://github.com/Rouyashiki/lz4/tree/ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+    "evidence": "userspace/ksud/third_party/MagiskbootAlone/external/lz4/lib/xxhash.c copyright/license; bundled with the LZ4 revision pinned by MagiskbootAlone.",
+    "versionFrom": "userspace/ksud/third_party/MagiskbootAlone/external/lz4"
   },
   {
     "id": "bzip2",
@@ -1140,7 +1138,7 @@
     "texts": [
       "liblzma.txt"
     ],
-    "evidence": "userspace/ksud/third_party/xz submodule @ d3e650e63c110e830fd5391e7f8b45df0b91d3da; CMakeLists.txt, COPYING, COPYING.0BSD; userspace/ksud/cmake/ArchiveLibraries.cmake.",
+    "evidence": "userspace/ksud/third_party/xz/CMakeLists.txt, COPYING and COPYING.0BSD; userspace/ksud/cmake/ArchiveLibraries.cmake builds liblzma. The submodule revision is recorded in the generated open_source/inputs.json.",
     "sourceTexts": [
       "userspace/ksud/third_party/xz/COPYING",
       "userspace/ksud/third_party/xz/COPYING.0BSD"
@@ -1155,7 +1153,7 @@
     "texts": [
       "libbzip2.txt"
     ],
-    "evidence": "userspace/ksud/third_party/bzip2 submodule @ 6a8690fc8d26c815e798c588f796eabe9d684cf0; Makefile, LICENSE; userspace/ksud/cmake/ArchiveLibraries.cmake. The SPDX bzip2-1.0.6 identifier covers these 1.0.8 terms; it is a license identifier, not the library version.",
+    "evidence": "userspace/ksud/third_party/bzip2/Makefile and LICENSE; userspace/ksud/cmake/ArchiveLibraries.cmake builds libbzip2. The submodule revision is recorded in the generated open_source/inputs.json. The SPDX bzip2-1.0.6 identifier covers these 1.0.8 terms; it is a license identifier, not the library version.",
     "sourceTexts": [
       "userspace/ksud/third_party/bzip2/LICENSE"
     ],
@@ -1165,13 +1163,13 @@
     "id": "siphash",
     "name": "SipHash (libzip)",
     "license": "CC0-1.0",
-    "version": "libzip 1.12",
-    "source": "https://github.com/Rouyashiki/libzip/blob/b26af3afd67e6b01e1e38a446ecb950e47fff146/lib/siphash.c",
+    "source": "https://github.com/Rouyashiki/libzip/blob/{revision}/lib/siphash.c",
     "texts": [
       "CC0-1.0.txt",
       "siphash-NOTICE.txt"
     ],
-    "evidence": "libzip/lib/CMakeLists.txt compiles siphash.c; zip_hash.c calls siphash. Both siphash.c and siphash.h carry the CC0 dedication, separate from libzip's BSD-3-Clause license."
+    "evidence": "libzip/lib/CMakeLists.txt compiles siphash.c; zip_hash.c calls siphash. Both siphash.c and siphash.h carry the CC0 dedication, separate from libzip's BSD-3-Clause license.",
+    "versionFrom": "userspace/ksud/third_party/libzip"
   },
   {
     "id": "public-suffix-list",
