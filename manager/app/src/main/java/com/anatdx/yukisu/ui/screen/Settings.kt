@@ -8,6 +8,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -188,20 +190,30 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                             }
                         )
 
-                        var builtinMountEnabled by remember { mutableStateOf<Boolean?>(null) }
+                        var builtinMountEnabled by rememberSaveable { mutableStateOf<Boolean?>(null) }
+                        var builtinLoading by remember { mutableStateOf(true) }
                         var builtinSaving by remember { mutableStateOf(false) }
                         LaunchedEffect(Unit) {
                             try { builtinMountEnabled = KasumiManager.isBuiltinMountEnabled() }
                             catch (error: Exception) {
                                 if (error is CancellationException) throw error
+                            } finally {
+                                builtinLoading = false
                             }
                         }
                         SwitchItem(
                             icon = Icons.Filled.Storage,
                             title = stringResource(R.string.kasumi_builtin_mount),
-                            summary = stringResource(R.string.kasumi_builtin_mount_desc),
-                            checked = builtinMountEnabled == true,
-                            enabled = builtinMountEnabled != null && !builtinSaving,
+                            summary = stringResource(
+                                if (builtinMountEnabled == null && !builtinLoading) {
+                                    R.string.operation_failed
+                                } else {
+                                    R.string.kasumi_builtin_mount_desc
+                                }
+                            ),
+                            checked = builtinMountEnabled,
+                            enabled = !builtinLoading && !builtinSaving,
+                            loading = builtinLoading,
                             onCheckedChange = { enable ->
                                 if (!builtinSaving) {
                                     builtinSaving = true
@@ -742,30 +754,42 @@ fun SwitchItem(
     icon: ImageVector,
     title: String,
     summary: String? = null,
-    checked: Boolean,
+    checked: Boolean?,
     enabled: Boolean = true,
     groupPosition: SettingsItemPosition = SettingsItemPosition.Middle,
+    loading: Boolean = false,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val switchEnabled = enabled && checked != null && !loading
     val expressiveShape = if (groupPosition == SettingsItemPosition.Only) {
         MaterialTheme.shapes.large
     } else {
         ListItemDefaults.segmentedShapes(groupPosition.index, groupPosition.count).shape
     }
-    val titleColor = if (enabled) {
+    val titleColor = if (switchEnabled) {
         MaterialTheme.colorScheme.onSurface
     } else {
         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
     }
-    val summaryColor = if (enabled) {
+    val summaryColor = if (switchEnabled) {
         MaterialTheme.colorScheme.onSurfaceVariant
     } else {
         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
     }
     val iconTint = when {
-        !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-        checked -> MaterialTheme.colorScheme.primary
+        !switchEnabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+        checked == true -> MaterialTheme.colorScheme.primary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val toggleModifier = if (checked != null) {
+        Modifier.toggleable(
+            value = checked,
+            enabled = switchEnabled,
+            role = Role.Switch,
+            onValueChange = onCheckedChange,
+        )
+    } else {
+        Modifier
     }
 
     Row(
@@ -783,11 +807,11 @@ fun SwitchItem(
                         .background(
                             MaterialTheme.colorScheme.surfaceContainer.copy(alpha = cardAlpha)
                         )
-                        .clickable(enabled = enabled) { onCheckedChange(!checked) }
                 } else {
-                    Modifier.clickable(enabled = enabled) { onCheckedChange(!checked) }
+                    Modifier
                 }
             )
+            .then(toggleModifier)
             .padding(horizontal = SPACING_LARGE, vertical = 12.dp),
         verticalAlignment = if (isExpressiveUi) Alignment.CenterVertically else Alignment.Top
     ) {
@@ -809,11 +833,24 @@ fun SwitchItem(
                 )
             }
         }
-        YukiSwitch(
-            checked = checked,
-            enabled = enabled,
-            onCheckedChange = onCheckedChange
-        )
+        if (checked != null) {
+            YukiSwitch(
+                checked = checked,
+                enabled = switchEnabled,
+                onCheckedChange = null
+            )
+        } else {
+            Box(
+                modifier = Modifier.size(width = 52.dp, height = 32.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (loading) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                } else {
+                    Text(text = "—", color = summaryColor)
+                }
+            }
+        }
     }
 }
 
