@@ -6,6 +6,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material3.*
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,14 +42,13 @@ fun SettingsCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 20.dp)
+                .padding(bottom = ManagerUi.GroupSpacing)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = ManagerUi.SectionTitlePadding, vertical = ManagerUi.SectionTitlePadding)
             ) {
                 if (icon != null) {
                     YukiIcon(
@@ -81,7 +82,7 @@ fun SettingsCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp)
+                        .heightIn(min = 48.dp)
                         .padding(horizontal = 16.dp)
                 ) {
                     if (icon != null) {
@@ -144,7 +145,7 @@ fun SettingItem(
                     Modifier.clickable(onClick = onClick)
                 }
             )
-            .padding(horizontal = 16.dp, vertical = 5.dp),
+            .padding(horizontal = ManagerUi.CardPadding, vertical = if (isExpressiveUi) 12.dp else 5.dp),
         verticalAlignment = if (isExpressiveUi) Alignment.CenterVertically else Alignment.Top
     ) {
         MoreSettingsLeadingIcon(icon = icon, tint = iconTint)
@@ -209,12 +210,12 @@ fun SwitchSettingItem(
                                 alpha = CardConfig.cardAlpha
                             )
                         )
-                        .clickable(enabled = enabled) { onChange(!checked) }
+                        .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onChange)
                 } else {
-                    Modifier.clickable(enabled = enabled) { onChange(!checked) }
+                    Modifier.toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onChange)
                 }
             )
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = ManagerUi.CardPadding, vertical = if (isExpressiveUi) 12.dp else 10.dp),
         verticalAlignment = if (isExpressiveUi) Alignment.CenterVertically else Alignment.Top
     ) {
         MoreSettingsLeadingIcon(
@@ -234,7 +235,6 @@ fun SwitchSettingItem(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = if (isExpressiveUi) FontWeight.Normal else null,
-                lineHeight = 20.sp,
             )
             if (summary != null) {
                 Spacer(modifier = Modifier.height(2.dp))
@@ -242,7 +242,6 @@ fun SwitchSettingItem(
                     text = summary,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 16.sp,
                 )
             }
         }
@@ -250,7 +249,7 @@ fun SwitchSettingItem(
         YukiSwitch(
             checked = checked,
             enabled = enabled,
-            onCheckedChange = onChange
+            onCheckedChange = null
         )
     }
 }

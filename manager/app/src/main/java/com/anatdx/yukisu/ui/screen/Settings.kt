@@ -62,6 +62,7 @@ import com.anatdx.yukisu.ui.theme.CardConfig.cardAlpha
 import com.anatdx.yukisu.ui.theme.ExpressiveListGroupMinHeight
 import com.anatdx.yukisu.ui.theme.getCardColors
 import com.anatdx.yukisu.ui.theme.getCardElevation
+import com.anatdx.yukisu.ui.theme.ManagerUi
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.util.*
 import kotlinx.coroutines.CancellationException
@@ -515,7 +516,7 @@ private fun SettingsGroupCard(
                 text = title,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = SPACING_MEDIUM),
+                modifier = Modifier.padding(horizontal = ManagerUi.SectionTitlePadding, vertical = ManagerUi.SectionTitlePadding),
                 color = MaterialTheme.colorScheme.primary
             )
             Column(content = content)

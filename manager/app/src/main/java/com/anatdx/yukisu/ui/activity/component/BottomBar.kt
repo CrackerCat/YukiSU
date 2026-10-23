@@ -160,7 +160,7 @@ private fun DestinationIcon(
         }
         YukiIcon(
             imageVector = imageVector,
-            contentDescription = stringResource(destination.label)
+            contentDescription = null
         )
     }
 

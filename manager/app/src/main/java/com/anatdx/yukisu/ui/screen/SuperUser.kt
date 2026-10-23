@@ -1112,15 +1112,6 @@ private fun AppGroupItem(
                     Text(summaryText)
 
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        if (appGroup.isDynamicManager) {
-                            LabelItem(
-                                text = "ACTIVE",
-                                style = LabelItemDefaults.style.copy(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                )
-                            )
-                        }
                         if (appGroup.allowSu) {
                             LabelItem(text = "ROOT")
                         } else {

@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.getSystemService
@@ -348,14 +349,10 @@ fun LabelText(label: String) {
         Text(
             text = label,
             modifier = Modifier.padding(vertical = 2.dp, horizontal = 5.dp),
-            style = TextStyle(
-                fontSize = 8.sp,
-                color = if (isExpressiveUi) {
-                    MaterialTheme.colorScheme.onSecondaryContainer
-                } else {
-                    Color.White
-                },
-            )
+            style = if (isExpressiveUi) MaterialTheme.typography.labelSmall else TextStyle(fontSize = 8.sp),
+            color = if (isExpressiveUi) MaterialTheme.colorScheme.onSecondaryContainer else Color.White,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

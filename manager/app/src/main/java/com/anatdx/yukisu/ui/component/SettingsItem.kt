@@ -72,7 +72,7 @@ fun SwitchItem(
                     YukiIcon(
                         modifier = Modifier.then(stateAlpha),
                         imageVector = icon,
-                        contentDescription = title
+                        contentDescription = null
                     )
                 }
             },
@@ -80,7 +80,7 @@ fun SwitchItem(
                 YukiSwitch(
                     checked = checked,
                     enabled = enabled,
-                    onCheckedChange = onCheckedChange,
+                    onCheckedChange = null,
                     interactionSource = interactionSource
                 )
             },
