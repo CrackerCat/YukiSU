@@ -30,6 +30,7 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.*
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.getCardColors
 import com.anatdx.yukisu.ui.theme.getCardElevation
@@ -998,7 +999,7 @@ private fun LogViewerTopBar(
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(
+            colors = getTopAppBarColors(
                 containerColor = cardColor,
                 scrolledContainerColor = cardColor
             ),

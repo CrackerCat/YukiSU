@@ -96,6 +96,7 @@ import com.anatdx.yukisu.ui.component.DownloadProgressDialog
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.component.YukiSwitch
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.CardStyleProvider.getCardColors
 import com.anatdx.yukisu.ui.theme.CardStyleProvider.getCardElevation
@@ -297,7 +298,7 @@ private fun RepositoryTopAppBar(
     } else {
         colorScheme.background
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = containerColor,
         scrolledContainerColor = containerColor,
     )

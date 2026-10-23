@@ -81,6 +81,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.ExpressiveListGroupMinHeight
 import com.anatdx.yukisu.ui.util.rememberSnackbarController
@@ -890,7 +891,7 @@ private fun YukiZygiskTopBar(
             )
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     )

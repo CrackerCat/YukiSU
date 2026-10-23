@@ -48,6 +48,7 @@ import com.anatdx.yukisu.superkey.SuperKeyHelper
 import com.anatdx.yukisu.ui.component.KeyEventBlocker
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.CardConfig.cardAlpha
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
@@ -840,7 +841,7 @@ private fun TopBar(
             )
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = cardColor,
         scrolledContainerColor = cardColor
     )

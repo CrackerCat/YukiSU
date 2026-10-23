@@ -57,6 +57,7 @@ import com.anatdx.yukisu.ui.component.rememberConfirmDialog
 import com.anatdx.yukisu.ui.component.profile.AppProfileConfig
 import com.anatdx.yukisu.ui.component.profile.RootProfileConfig
 import com.anatdx.yukisu.ui.component.profile.TemplateConfig
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.CardConfig.cardAlpha
 import com.anatdx.yukisu.ui.theme.getCardColors
@@ -224,7 +225,7 @@ fun AppProfileScreen(
         topBar = {
             TopBar(
                 title = if (isSharedUid) "UID ${appInfo.uid}" else appInfo.label,
-                colors = TopAppBarDefaults.topAppBarColors(
+                colors = getTopAppBarColors(
                     containerColor = cardColor,
                     scrolledContainerColor = cardColor
                 ),

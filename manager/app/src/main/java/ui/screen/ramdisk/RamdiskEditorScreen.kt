@@ -47,7 +47,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -101,6 +100,7 @@ import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.activity.util.LocalPredictiveBackEnabled
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
 import com.anatdx.yukisu.ui.component.YukiIcon
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.BackgroundLayer
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
@@ -1947,9 +1947,9 @@ private class RamdiskBrowserSession(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ramdiskTopBarColors() = TopAppBarDefaults.topAppBarColors(
-    containerColor = (if (CardConfig.isCustomBackgroundEnabled) MaterialTheme.colorScheme.surfaceContainerLow
-        else MaterialTheme.colorScheme.background).copy(alpha = CardConfig.cardAlpha),
+private fun ramdiskTopBarColors() = getTopAppBarColors(
+    containerColor = if (CardConfig.isCustomBackgroundEnabled) MaterialTheme.colorScheme.surfaceContainerLow
+        else MaterialTheme.colorScheme.background,
 )
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)

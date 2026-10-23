@@ -22,6 +22,7 @@ import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.activity.util.*
 import com.anatdx.yukisu.ui.screen.BottomBarDestination
 import com.anatdx.yukisu.ui.theme.CardConfig.cardElevation
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getBarColor
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.util.*
 
@@ -33,7 +34,7 @@ fun BottomBar(navController: NavHostController) {
     val navigationLeaveGuard = LocalNavigationLeaveGuard.current
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val isFullFeatured by AppData.DataRefreshManager.isFullFeatured.collectAsState()
-    val cardColor = MaterialTheme.colorScheme.surfaceContainer
+    val cardColor = getBarColor(MaterialTheme.colorScheme.surfaceContainer)
     val activity = LocalContext.current as MainActivity
     val settings by activity.settingsStateFlow.collectAsState()
 

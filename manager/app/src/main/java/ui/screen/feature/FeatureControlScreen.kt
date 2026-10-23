@@ -23,6 +23,7 @@ import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.KsuIsValid
 import com.anatdx.yukisu.ui.component.YukiIcon
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.util.rememberSnackbarController
 import com.anatdx.yukisu.ui.util.getFeatureStatus
@@ -549,7 +550,7 @@ private fun FeatureControlTopBar(
             )
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
     )

@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.YukiIcon
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getBarColor
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import ui.screen.moreSettings.component.MoreSettingsItemPosition
 import ui.screen.moreSettings.component.SettingsControlGroup
@@ -76,7 +78,7 @@ internal fun KasumiTopBar(
             title = title,
             navigationIcon = navigation,
             actions = refresh,
-            colors = TopAppBarDefaults.topAppBarColors(
+            colors = getTopAppBarColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             ),
@@ -104,7 +106,7 @@ internal fun KasumiTabs(selected: KasumiTab, onSelect: (KasumiTab) -> Unit) {
         PrimaryScrollableTabRow(
             selectedTabIndex = selected.ordinal,
             edgePadding = 16.dp,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            containerColor = getBarColor(MaterialTheme.colorScheme.surfaceContainerLow),
         ) {
             KasumiTab.entries.forEach { tab ->
                 Tab(selected = selected == tab, onClick = { onSelect(tab) },
@@ -115,7 +117,7 @@ internal fun KasumiTabs(selected: KasumiTab, onSelect: (KasumiTab) -> Unit) {
         SecondaryScrollableTabRow(
             selectedTabIndex = selected.ordinal,
             edgePadding = 16.dp,
-            containerColor = TabRowDefaults.primaryContainerColor,
+            containerColor = getBarColor(TabRowDefaults.primaryContainerColor),
             contentColor = TabRowDefaults.primaryContentColor,
         ) {
             KasumiTab.entries.forEach { tab ->

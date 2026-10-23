@@ -36,6 +36,7 @@ import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.component.profile.RootProfileConfig
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig.cardAlpha
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.util.deleteAppProfileTemplate
@@ -310,7 +311,7 @@ private fun TopBar(
             }
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = if (isExpressiveUi) {
             MaterialTheme.colorScheme.surfaceContainerLow
         } else {

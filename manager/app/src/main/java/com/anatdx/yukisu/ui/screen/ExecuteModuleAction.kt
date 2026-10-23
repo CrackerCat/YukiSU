@@ -30,6 +30,7 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.KeyEventBlocker
 import com.anatdx.yukisu.ui.component.YukiIcon
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.util.LocalSnackbarHost
 import com.anatdx.yukisu.ui.util.listModules
@@ -237,7 +238,7 @@ private fun TopBar(
             )
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = if (isExpressiveUi) {
             MaterialTheme.colorScheme.surfaceContainerLow
         } else {

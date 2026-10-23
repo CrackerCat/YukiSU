@@ -54,6 +54,7 @@ import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.magica.MagicaHelper
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.*
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.CardConfig.cardAlpha
 import com.anatdx.yukisu.ui.theme.ExpressiveListGroupMinHeight
@@ -1043,7 +1044,7 @@ private fun TopBar(
     } else {
         colorScheme.background
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = cardColor,
         scrolledContainerColor = cardColor
     )

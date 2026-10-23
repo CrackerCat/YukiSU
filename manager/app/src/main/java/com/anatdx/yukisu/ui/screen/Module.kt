@@ -30,7 +30,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -94,7 +93,7 @@ import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.*
 import com.anatdx.yukisu.ui.theme.getCardColors
-import com.anatdx.yukisu.ui.theme.getCardElevation
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getElevatedCardElevation
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.util.*
 import com.anatdx.yukisu.ui.util.module.ModuleUtils
@@ -1311,7 +1310,7 @@ fun ModuleItem(
                 MaterialTheme.colorScheme.surfaceContainerHigh
             }
         ),
-        elevation = getCardElevation(),
+        elevation = getElevatedCardElevation(),
         shape = if (isExpressiveUi) MaterialTheme.shapes.large else CardDefaults.elevatedShape,
     ) {
         val textDecoration = if (!module.remove) null else TextDecoration.LineThrough

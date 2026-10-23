@@ -41,6 +41,7 @@ import com.anatdx.yukisu.R
 import com.anatdx.yukisu.BuildConfig
 import com.anatdx.yukisu.ui.component.KsuIsValid
 import com.anatdx.yukisu.ui.component.YukiIcon
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.*
 import com.yalantis.ucrop.UCrop
 import kotlinx.coroutines.CoroutineScope
@@ -204,7 +205,7 @@ private fun MoreSettingsTopBar(
             )
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
     )

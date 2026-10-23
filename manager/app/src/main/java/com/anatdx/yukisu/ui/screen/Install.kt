@@ -75,6 +75,7 @@ import com.anatdx.yukisu.ui.component.rememberConfirmDialog
 import com.anatdx.yukisu.ui.component.rememberCustomDialog
 import com.anatdx.yukisu.ui.component.rememberLoadingDialog
 import com.anatdx.yukisu.ui.component.performClickHapticFeedback
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.CardConfig.cardAlpha
 import com.anatdx.yukisu.ui.theme.ExpressiveListGroupMinHeight
@@ -1643,7 +1644,7 @@ private fun TopBar(
             )
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = cardColor,
         scrolledContainerColor = cardColor
     )

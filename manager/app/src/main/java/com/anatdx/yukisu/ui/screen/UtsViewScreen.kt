@@ -75,6 +75,8 @@ import androidx.compose.ui.unit.dp
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.YukiSwitch
 import com.anatdx.yukisu.ui.component.rememberConfirmDialog
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
+import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.CardConfig.cardAlpha
 import com.anatdx.yukisu.ui.theme.ExpressiveListGroupMinHeight
 import com.anatdx.yukisu.ui.theme.getCardColors
@@ -690,9 +692,14 @@ private fun UtsViewTopBar(
             )
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
-        containerColor = MaterialTheme.colorScheme.background,
-        scrolledContainerColor = MaterialTheme.colorScheme.background,
+    val containerColor = if (CardConfig.isCustomBackgroundEnabled) {
+        MaterialTheme.colorScheme.surfaceContainerLow
+    } else {
+        MaterialTheme.colorScheme.background
+    }
+    val colors = getTopAppBarColors(
+        containerColor = containerColor,
+        scrolledContainerColor = containerColor,
     )
     val windowInsets = WindowInsets.safeDrawing.only(
         WindowInsetsSides.Top + WindowInsetsSides.Horizontal

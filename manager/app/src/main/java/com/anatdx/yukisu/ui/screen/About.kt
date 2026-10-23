@@ -71,6 +71,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.anatdx.yukisu.BuildConfig
 import com.anatdx.yukisu.R
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.ExpressiveListGroupMinHeight
 import com.anatdx.yukisu.ui.theme.getCardColors
@@ -474,7 +475,7 @@ private fun AboutScaffold(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
                 }
             }
-            val colors = TopAppBarDefaults.topAppBarColors(
+            val colors = getTopAppBarColors(
                 containerColor = background,
                 scrolledContainerColor = background,
             )

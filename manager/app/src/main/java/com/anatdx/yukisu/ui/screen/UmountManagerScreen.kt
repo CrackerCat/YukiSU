@@ -27,6 +27,7 @@ import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.rememberConfirmDialog
 import com.anatdx.yukisu.ui.component.ConfirmResult
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.getCardColors
 import com.anatdx.yukisu.ui.theme.getCardElevation
@@ -285,7 +286,7 @@ private fun UmountManagerTopBar(
             Icon(Icons.Filled.Refresh, contentDescription = null)
         }
     }
-    val colors = TopAppBarDefaults.topAppBarColors(
+    val colors = getTopAppBarColors(
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
     )

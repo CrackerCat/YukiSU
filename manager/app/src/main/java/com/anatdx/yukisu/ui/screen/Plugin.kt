@@ -90,6 +90,8 @@ import com.anatdx.yukisu.ui.component.YukiSwitch
 import com.anatdx.yukisu.ui.component.rememberConfirmDialog
 import com.anatdx.yukisu.ui.component.rememberFabVisibilityState
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getElevatedCardColors
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getElevatedCardElevation
 import com.anatdx.yukisu.ui.util.rememberSnackbarController
 import com.anatdx.yukisu.ui.util.PluginCommandResult
 import com.anatdx.yukisu.ui.util.copyPluginPackageTo
@@ -607,6 +609,8 @@ private fun PluginCard(
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
+        colors = getElevatedCardColors(),
+        elevation = getElevatedCardElevation(),
         shape = if (isExpressiveUi) RoundedCornerShape(20.dp) else RoundedCornerShape(16.dp),
     ) {
         Column(Modifier.padding(16.dp)) {

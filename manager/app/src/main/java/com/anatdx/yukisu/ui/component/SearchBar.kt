@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -220,7 +221,7 @@ fun SearchAppBar(
             // Search replaces the flexible header with a compact field. Do not carry the
             // collapsed header offset into that field, otherwise it can start off-screen.
             scrollBehavior = if (searching || expressiveUi) null else scrollBehavior,
-            colors = TopAppBarDefaults.topAppBarColors(
+            colors = getTopAppBarColors(
                 containerColor = cardColor,
                 scrolledContainerColor = cardColor
             )
@@ -273,7 +274,7 @@ fun SearchAppBar(
                         WindowInsetsSides.Top + WindowInsetsSides.Horizontal
                     ),
                     scrollBehavior = scrollBehavior,
-                    colors = TopAppBarDefaults.topAppBarColors(
+                    colors = getTopAppBarColors(
                         containerColor = cardColor,
                         scrolledContainerColor = cardColor
                     )

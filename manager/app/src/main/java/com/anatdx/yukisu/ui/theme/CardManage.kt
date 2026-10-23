@@ -3,6 +3,8 @@ package com.anatdx.yukisu.ui.theme
 import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
@@ -132,6 +134,50 @@ object CardConfig {
 }
 
 object CardStyleProvider {
+
+    fun getBarColor(originalColor: Color) = if (CardConfig.isCustomBackgroundEnabled) {
+        originalColor.copy(alpha = originalColor.alpha * CardConfig.cardAlpha)
+    } else {
+        originalColor
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun getTopAppBarColors(
+        containerColor: Color = Color.Unspecified,
+        scrolledContainerColor: Color = containerColor,
+    ) = TopAppBarDefaults.topAppBarColors(
+        containerColor = containerColor,
+        scrolledContainerColor = scrolledContainerColor,
+    ).let { colors ->
+        colors.copy(
+            containerColor = getBarColor(colors.containerColor),
+            scrolledContainerColor = getBarColor(colors.scrolledContainerColor),
+        )
+    }
+
+    @Composable
+    fun getElevatedCardColors() = CardDefaults.elevatedCardColors().let { colors ->
+        colors.copy(
+            containerColor = colors.containerColor.copy(alpha = CardConfig.cardAlpha),
+            disabledContainerColor = colors.disabledContainerColor.copy(alpha = CardConfig.cardAlpha),
+        )
+    }
+
+    @Composable
+    fun getElevatedCardElevation() = if (CardConfig.isShadowEnabled && CardConfig.cardAlpha == 1f) {
+        CardDefaults.elevatedCardElevation()
+    } else {
+        // Hardware shadows show through translucent surfaces as an extra frame.
+        CardDefaults.cardElevation(
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
+            focusedElevation = 0.dp,
+            hoveredElevation = 0.dp,
+            draggedElevation = 0.dp,
+            disabledElevation = 0.dp,
+        )
+    }
 
     @Composable
     fun getCardColors(originalColor: Color) = CardDefaults.cardColors(
