@@ -846,7 +846,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk žurnāli</string>
     <string name="yukizygisk_log_dmesg_title">Dublēt uz dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Kad iespējots, zygiskd žurnāli tiek rakstīti arī dmesg. Kodola daļas žurnāli vienmēr tiek rakstīti dmesg.</string>
-    <string name="module_zygisk_loaded">Ielādēts</string>
     <string name="module_zygisk_module">Zygisk modulis</string>
     <string name="module_zn_module">ZN modulis</string>
     <string name="module_repositories">Moduļu krātuves</string>

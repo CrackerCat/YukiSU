@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">YukiZygiski logid</string>
     <string name="yukizygisk_log_dmesg_title">Peegelda dmesg-i</string>
     <string name="yukizygisk_log_dmesg_summary">Kui lubatud, kirjutatakse zygiskd logid ka dmesg-i. Tuumaosa logid kirjutatakse alati dmesg-i.</string>
-    <string name="module_zygisk_loaded">Laaditud</string>
     <string name="module_zygisk_module">Zygiski moodul</string>
     <string name="module_zn_module">ZN-moodul</string>
     <string name="module_repositories">Moodulihoidlad</string>

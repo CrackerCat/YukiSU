@@ -19,6 +19,8 @@ import com.anatdx.yukisu.BuildConfig
 import com.anatdx.yukisu.ui.util.HanziToPinyin
 import com.anatdx.yukisu.ui.util.listModules
 import com.anatdx.yukisu.ui.util.getRootShell
+import com.anatdx.yukisu.ui.util.module.ModuleRuntimeKind
+import com.anatdx.yukisu.ui.util.module.parseModuleRuntimeKinds
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -34,11 +36,6 @@ import androidx.core.content.edit
  * @author ShirkNeko
  * @date 2025/5/31.
  */
-enum class ModuleRuntimeKind {
-    Zygisk,
-    Native,
-}
-
 data class ModuleUpdateInfo(
     val zipUrl: String = "",
     val version: String = "",
@@ -98,8 +95,7 @@ class ModuleViewModel : ViewModel() {
         val dirId: String, // real module id (dir name)
         val actionIconPath: String? = null,
         val webUiIconPath: String? = null,
-        val runtimeKind: ModuleRuntimeKind? = null,
-        val runtimeLoaded: Boolean = false,
+        val runtimeKinds: Set<ModuleRuntimeKind> = emptySet(),
         val zygiskConflict: Boolean = false,
         var config: ModuleConfig? = null,
         val preinit: String = "",
@@ -185,8 +181,12 @@ class ModuleViewModel : ViewModel() {
                             obj.optString("dir_id", obj.getString("id")),
                             obj.optString("actionIcon").takeIf { it.isNotBlank() },
                             obj.optString("webuiIcon").takeIf { it.isNotBlank() },
-                            parseRuntimeKind(obj.optString("runtime")),
-                            obj.getBooleanCompat("runtimeLoaded"),
+                            parseModuleRuntimeKinds(
+                                obj.optJSONArray("runtimes")?.let { runtimes ->
+                                    List(runtimes.length()) { runtimes.optString(it) }
+                                },
+                                obj.optString("runtime"),
+                            ),
                             obj.getBooleanCompat("yzConflict"),
                             preinit = obj.optString("preinit")
                         )
@@ -248,12 +248,6 @@ class ModuleViewModel : ViewModel() {
 
             Log.i(TAG, "load cost: ${SystemClock.elapsedRealtime() - start}, modules: $modules")
         }
-    }
-
-    private fun parseRuntimeKind(runtime: String): ModuleRuntimeKind? = when (runtime) {
-        "native" -> ModuleRuntimeKind.Native
-        "zygisk" -> ModuleRuntimeKind.Zygisk
-        else -> null
     }
 
     private fun sanitizeVersionString(version: String): String {
@@ -330,8 +324,7 @@ fun ModuleViewModel.ModuleInfo.copy(
     dirId: String = this.dirId,
     actionIconPath: String? = this.actionIconPath,
     webUiIconPath: String? = this.webUiIconPath,
-    runtimeKind: ModuleRuntimeKind? = this.runtimeKind,
-    runtimeLoaded: Boolean = this.runtimeLoaded,
+    runtimeKinds: Set<ModuleRuntimeKind> = this.runtimeKinds,
     zygiskConflict: Boolean = this.zygiskConflict,
     config: ModuleConfig? = this.config,
     preinit: String = this.preinit,
@@ -339,7 +332,7 @@ fun ModuleViewModel.ModuleInfo.copy(
     return ModuleViewModel.ModuleInfo(
         id, name, author, version, versionCode, description,
         enabled, update, remove, updateJson, hasWebUi, hasActionScript, metamodule,
-        dirId, actionIconPath, webUiIconPath, runtimeKind, runtimeLoaded, zygiskConflict, config, preinit
+        dirId, actionIconPath, webUiIconPath, runtimeKinds, zygiskConflict, config, preinit
     )
 }
 

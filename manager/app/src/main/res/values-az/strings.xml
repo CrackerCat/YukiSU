@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk jurnalları</string>
     <string name="yukizygisk_log_dmesg_title">dmesg-ə də yaz</string>
     <string name="yukizygisk_log_dmesg_summary">Aktivləşdirildikdə zygiskd jurnalları dmesg-ə də yazılır. Nüvə hissəsinin jurnalları həmişə dmesg-ə yazılır</string>
-    <string name="module_zygisk_loaded">Yüklənib</string>
     <string name="module_zygisk_module">Zygisk modulu</string>
     <string name="module_zn_module">ZN modulu</string>
     <string name="module_repositories">Modul repozitoriyaları</string>

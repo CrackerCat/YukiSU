@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk günlükleri</string>
     <string name="yukizygisk_log_dmesg_title">dmesg\'e yansıt</string>
     <string name="yukizygisk_log_dmesg_summary">Etkinleştirildiğinde zygiskd günlükleri dmesg\'e de yazılır. Çekirdek kısmının günlükleri her zaman dmesg\'e yazılır</string>
-    <string name="module_zygisk_loaded">Yüklendi</string>
     <string name="module_zygisk_module">Zygisk modülü</string>
     <string name="module_zn_module">ZN modülü</string>
     <string name="module_repositories">Modül depoları</string>

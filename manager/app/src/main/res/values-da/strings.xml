@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk-logge</string>
     <string name="yukizygisk_log_dmesg_title">Spejl til dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Når aktiveret, skrives zygiskd-logge også til dmesg. Kernelogge skrives altid til dmesg.</string>
-    <string name="module_zygisk_loaded">Indlæst</string>
     <string name="module_zygisk_module">Zygisk-modul</string>
     <string name="module_zn_module">ZN-modul</string>
     <string name="module_repositories">Modullagre</string>

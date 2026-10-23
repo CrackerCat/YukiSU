@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">گزارش‌های YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">رونوشت در dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">در حالت فعال، گزارش‌های zygiskd در dmesg نیز نوشته می‌شوند؛ گزارش‌های بخش هسته همیشه در dmesg نوشته می‌شوند</string>
-    <string name="module_zygisk_loaded">بارگذاری شده</string>
     <string name="module_zygisk_module">ماژول Zygisk</string>
     <string name="module_zn_module">ماژول ZN</string>
     <string name="module_repositories">مخزن‌های ماژول</string>

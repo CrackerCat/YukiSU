@@ -848,7 +848,6 @@
     <string name="yukizygisk_logging_title">Nhật ký YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Sao chép nhật ký vào dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Khi bật, nhật ký zygiskd cũng được ghi vào dmesg. Nhật ký phía nhân luôn được ghi vào dmesg</string>
-    <string name="module_zygisk_loaded">Đã tải</string>
     <string name="module_zygisk_module">Mô-đun Zygisk</string>
     <string name="module_zn_module">Mô-đun ZN</string>
     <string name="module_repositories">Kho mô-đun</string>

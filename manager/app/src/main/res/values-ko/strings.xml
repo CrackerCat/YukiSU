@@ -848,7 +848,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk 로그</string>
     <string name="yukizygisk_log_dmesg_title">dmesg에 로그 복제</string>
     <string name="yukizygisk_log_dmesg_summary">활성화하면 zygiskd 로그를 dmesg에도 기록합니다. 커널 측 로그는 항상 dmesg에 기록됩니다</string>
-    <string name="module_zygisk_loaded">로드됨</string>
     <string name="module_zygisk_module">Zygisk 모듈</string>
     <string name="module_zn_module">ZN 모듈</string>
     <string name="module_repositories">모듈 저장소</string>

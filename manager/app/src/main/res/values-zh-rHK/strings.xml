@@ -855,7 +855,6 @@
     <string name="yukizygisk_early_load_title">早載入原生模組</string>
     <string name="yukizygisk_early_load_summary">早期啟動階段載入部分原生模組。</string>
     <string name="yukizygisk_log_dmesg_summary">將 zygiskd 日誌同步寫入 dmesg。</string>
-    <string name="module_zygisk_loaded">已加載</string>
     <string name="module_zygisk_module">Zygisk 模組</string>
     <string name="module_zn_module">ZN 模組</string>
     <string name="module_repositories">模組儲存庫</string>

@@ -848,7 +848,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk ಲಾಗ್‌ಗಳು</string>
     <string name="yukizygisk_log_dmesg_title">dmesg ಗೆ ಲಾಗ್ ಪ್ರತಿಬಿಂಬಿಸಿ</string>
     <string name="yukizygisk_log_dmesg_summary">ಸಕ್ರಿಯವಾಗಿದ್ದರೆ zygiskd ಲಾಗ್‌ಗಳನ್ನು dmesg ಗೂ ಬರೆಯುತ್ತದೆ. ಕರ್ನಲ್ ಭಾಗದ ಲಾಗ್‌ಗಳು ಯಾವಾಗಲೂ dmesg ಗೆ ಬರೆಯಲ್ಪಡುತ್ತವೆ</string>
-    <string name="module_zygisk_loaded">ಲೋಡ್ ಆಗಿದೆ</string>
     <string name="module_zygisk_module">Zygisk ಮಾಡ್ಯೂಲ್</string>
     <string name="module_zn_module">ZN ಮಾಡ್ಯೂಲ್</string>
     <string name="module_repositories">ಮಾಡ್ಯೂಲ್ ರೆಪೊಸಿಟರಿಗಳು</string>

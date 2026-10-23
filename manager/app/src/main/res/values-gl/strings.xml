@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">Rexistros de YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Duplicar en dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Ao activalo, os rexistros de zygiskd tamén se escriben en dmesg; os rexistros do núcleo sempre se escriben en dmesg.</string>
-    <string name="module_zygisk_loaded">Cargado</string>
     <string name="module_zygisk_module">Módulo Zygisk</string>
     <string name="module_zn_module">Módulo ZN</string>
     <string name="module_repositories">Repositorios de módulos</string>

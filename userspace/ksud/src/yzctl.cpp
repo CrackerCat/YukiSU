@@ -610,26 +610,6 @@ bool yz_has_native_modules(const std::string& module_path) {
     return access((module_path + "/zn_modules.txt").c_str(), F_OK) == 0;
 }
 
-std::set<std::string> yz_loaded_module_ids() {
-    RuntimeSnapshot snapshot;
-    if (!query_runtime(&snapshot))
-        return {};
-
-    const ModuleInventory inventory = scan_modules();
-    const std::vector<NativeInjection> injections = build_native_injections(snapshot, inventory);
-
-    std::set<std::string> loaded(inventory.zygisk_modules.begin(), inventory.zygisk_modules.end());
-    for (const NativeInjection& injection : injections) {
-        if (injection.state == "injected")
-            loaded.insert(injection.module_id);
-    }
-    for (const NativeModuleView& view : build_native_module_views(inventory, injections)) {
-        if (view.state == "injected")
-            loaded.insert(view.module_id);
-    }
-    return loaded;
-}
-
 int yzctl_run(const std::vector<std::string>& args) {
     if (args.empty() || args[0] == "help" || args[0] == "-h" || args[0] == "--help") {
         print_usage(stdout);

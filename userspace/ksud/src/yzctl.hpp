@@ -1,6 +1,5 @@
 #pragma once
 
-#include <set>
 #include <string>
 #include <vector>
 
@@ -18,10 +17,5 @@ bool yz_is_zygisk_module(const std::string& module_path);
 
 // Whether a module directory declares native (ZN) modules.
 bool yz_has_native_modules(const std::string& module_path);
-
-// Module directory ids YukiZygisk currently has loaded: its Zygisk inventory plus
-// the native modules the kernel reports as injected. Empty when the kernel
-// runtime query fails.
-std::set<std::string> yz_loaded_module_ids();
 
 }  // namespace ksud

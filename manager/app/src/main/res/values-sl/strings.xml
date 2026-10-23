@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">Dnevniki YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Podvoji v dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Ko je omogočeno, se dnevniki zygiskd zapisujejo tudi v dmesg. Dnevniki dela v jedru se vedno zapisujejo v dmesg.</string>
-    <string name="module_zygisk_loaded">Naloženo</string>
     <string name="module_zygisk_module">Modul Zygisk</string>
     <string name="module_zn_module">Modul ZN</string>
     <string name="module_repositories">Repozitoriji modulov</string>

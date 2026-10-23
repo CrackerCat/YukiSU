@@ -846,7 +846,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk-Protokolle</string>
     <string name="yukizygisk_log_dmesg_title">Nach dmesg spiegeln</string>
     <string name="yukizygisk_log_dmesg_summary">Bei Aktivierung werden zygiskd-Protokolle zusätzlich nach dmesg geschrieben. Kernel-Protokolle werden immer nach dmesg geschrieben.</string>
-    <string name="module_zygisk_loaded">Geladen</string>
     <string name="module_zygisk_module">Zygisk-Modul</string>
     <string name="module_zn_module">ZN-Modul</string>
     <string name="module_repositories">Modul-Repositorys</string>

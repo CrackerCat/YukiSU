@@ -845,7 +845,6 @@ A</string>
     <string name="yukizygisk_logging_title">YukiZygisk-napló</string>
     <string name="yukizygisk_log_dmesg_title">Tükrözés a dmesg-be</string>
     <string name="yukizygisk_log_dmesg_summary">Bekapcsolva a zygiskd naplóit a dmesg-be is írja. A kernelrész naplói mindig a dmesg-be kerülnek</string>
-    <string name="module_zygisk_loaded">Betöltve</string>
     <string name="module_zygisk_module">Zygisk-modul</string>
     <string name="module_zn_module">ZN-modul</string>
     <string name="module_repositories">Modultárolók</string>

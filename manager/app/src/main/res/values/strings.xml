@@ -894,7 +894,6 @@
     <string name="yukizygisk_logging_title" tools:ignore="MissingTranslation">YukiZygisk logs</string>
     <string name="yukizygisk_log_dmesg_title" tools:ignore="MissingTranslation">Mirror to dmesg</string>
     <string name="yukizygisk_log_dmesg_summary" tools:ignore="MissingTranslation">Mirror zygiskd logs to dmesg.</string>
-    <string name="module_zygisk_loaded" tools:ignore="MissingTranslation">Loaded</string>
     <string name="module_zygisk_module" tools:ignore="MissingTranslation">Zygisk module</string>
     <string name="module_zn_module" tools:ignore="MissingTranslation">ZN module</string>
 

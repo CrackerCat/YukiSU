@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">Zapisnik YukiZygiska</string>
     <string name="yukizygisk_log_dmesg_title">Preslikaj u dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Kad je omogućeno, zapisnik zygiskd-a zapisuje se i u dmesg. Zapisnik dijela u jezgri uvijek se zapisuje u dmesg</string>
-    <string name="module_zygisk_loaded">Učitano</string>
     <string name="module_zygisk_module">Zygisk modul</string>
     <string name="module_zn_module">ZN modul</string>
     <string name="module_repositories">Repozitoriji modula</string>

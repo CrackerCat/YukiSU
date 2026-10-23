@@ -848,7 +848,6 @@
     <string name="yukizygisk_logging_title">Mga log ng YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Kopyahin ang mga log sa dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Kapag pinagana, isusulat din sa dmesg ang mga log ng zygiskd. Palaging isinusulat sa dmesg ang mga log ng bahagi ng kernel</string>
-    <string name="module_zygisk_loaded">Na-load</string>
     <string name="module_zygisk_module">Module ng Zygisk</string>
     <string name="module_zn_module">Module ng ZN</string>
     <string name="module_repositories">Mga repository ng module</string>

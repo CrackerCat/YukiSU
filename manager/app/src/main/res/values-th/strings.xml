@@ -850,7 +850,6 @@
     <string name="yukizygisk_logging_title">บันทึก YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">คัดลอกบันทึกไปยัง dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">เมื่อเปิด จะเขียนบันทึก zygiskd ลง dmesg ด้วย ส่วนบันทึกฝั่งเคอร์เนลจะเขียนลง dmesg เสมอ</string>
-    <string name="module_zygisk_loaded">โหลดแล้ว</string>
     <string name="module_zygisk_module">โมดูล Zygisk</string>
     <string name="module_zn_module">โมดูล ZN</string>
     <string name="module_repositories">คลังโมดูล</string>

@@ -846,7 +846,6 @@
     <string name="yukizygisk_logging_title">Journaux YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Dupliquer dans dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Lorsque cette option est activée, les journaux zygiskd sont aussi écrits dans dmesg ; les journaux du noyau y sont toujours écrits.</string>
-    <string name="module_zygisk_loaded">Chargé</string>
     <string name="module_zygisk_module">Module Zygisk</string>
     <string name="module_zn_module">Module ZN</string>
     <string name="module_repositories">Dépôts de modules</string>

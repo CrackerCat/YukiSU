@@ -846,7 +846,6 @@
     <string name="yukizygisk_logging_title">Log di YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Duplica in dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Se attivato, i log di zygiskd vengono scritti anche in dmesg; i log del kernel vengono sempre scritti in dmesg.</string>
-    <string name="module_zygisk_loaded">Caricato</string>
     <string name="module_zygisk_module">Modulo Zygisk</string>
     <string name="module_zn_module">Modulo ZN</string>
     <string name="module_repositories">Repository di moduli</string>

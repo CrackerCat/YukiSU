@@ -852,7 +852,6 @@
     <string name="yukizygisk_logging_title">Log YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Salin log ke dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Jika aktif, log zygiskd juga ditulis ke dmesg. Log bagian kernel selalu ditulis ke dmesg</string>
-    <string name="module_zygisk_loaded">Dimuat</string>
     <string name="module_zygisk_module">Modul Zygisk</string>
     <string name="module_zn_module">Modul ZN</string>
     <string name="module_repositories">Repositori modul</string>

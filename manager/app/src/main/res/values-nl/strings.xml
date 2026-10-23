@@ -846,7 +846,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk-logboeken</string>
     <string name="yukizygisk_log_dmesg_title">Spiegelen naar dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Indien ingeschakeld, worden zygiskd-logboeken ook naar dmesg geschreven. Kernellogboeken worden altijd naar dmesg geschreven.</string>
-    <string name="module_zygisk_loaded">Geladen</string>
     <string name="module_zygisk_module">Zygisk-module</string>
     <string name="module_zn_module">ZN-module</string>
     <string name="module_repositories">Modulerepository’s</string>

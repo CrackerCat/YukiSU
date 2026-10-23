@@ -62,6 +62,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -100,7 +102,7 @@ import com.anatdx.yukisu.ui.util.*
 import com.anatdx.yukisu.ui.util.module.ModuleUtils
 import com.anatdx.yukisu.ui.util.module.Shortcut
 import com.anatdx.yukisu.ui.util.module.ModuleLink
-import com.anatdx.yukisu.ui.viewmodel.ModuleRuntimeKind
+import com.anatdx.yukisu.ui.util.module.ModuleRuntimeKind
 import com.anatdx.yukisu.ui.viewmodel.ModuleViewModel
 import com.anatdx.yukisu.ui.webui.WebUIActivity
 import com.anatdx.yukisu.ui.webui.WebUIXActivity
@@ -1470,49 +1472,13 @@ fun ModuleItem(
             }
 
             if (!isHideTagRow) {
-                val isLoadedRuntimeModule = module.runtimeLoaded
-                val runtimeKind = module.runtimeKind
                 Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    itemVerticalAlignment = Alignment.CenterVertically,
                 ) {
-                    if (isLoadedRuntimeModule) {
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = Color(0xFF2E7D32),
-                        ) {
-                            Text(
-                                text = stringResource(R.string.module_zygisk_loaded),
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                                color = Color.White,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                    runtimeKind?.let { kind ->
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = MaterialTheme.colorScheme.tertiaryContainer,
-                        ) {
-                            Text(
-                                text = stringResource(
-                                    when (kind) {
-                                        ModuleRuntimeKind.Native -> R.string.module_zn_module
-                                        ModuleRuntimeKind.Zygisk -> R.string.module_zygisk_module
-                                    }
-                                ),
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
                     if (module.metamodule) {
                         Surface(
                             shape = RoundedCornerShape(4.dp),
@@ -1532,7 +1498,6 @@ fun ModuleItem(
                     Surface(
                         shape = RoundedCornerShape(4.dp),
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
                     ) {
                         Text(
                             text = module.dirId,
@@ -1555,6 +1520,33 @@ fun ModuleItem(
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                             maxLines = 1
                         )
+                    }
+                    if (module.runtimeKinds.isNotEmpty()) {
+                        val runtimeKinds = ModuleRuntimeKind.entries.filter { it in module.runtimeKinds }
+                        val runtimeLabel = runtimeKinds.map { kind ->
+                            stringResource(
+                                when (kind) {
+                                    ModuleRuntimeKind.Native -> R.string.module_zn_module
+                                    ModuleRuntimeKind.Zygisk -> R.string.module_zygisk_module
+                                }
+                            )
+                        }.joinToString(" + ")
+                        Surface(
+                            modifier = Modifier.clearAndSetSemantics {
+                                contentDescription = runtimeLabel
+                            },
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                        ) {
+                            Text(
+                                text = runtimeKinds.joinToString(" + ") { it.badgeLabel },
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                     if (mountInfo != null && mountConfigEnabled && !module.metamodule) {
                         val strategy = if (mountInfo.mode == "none") "none" else mountInfo.strategy

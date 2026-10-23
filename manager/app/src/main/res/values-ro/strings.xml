@@ -846,7 +846,6 @@
     <string name="yukizygisk_logging_title">Jurnale YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Duplică în dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Când este activat, jurnalele zygiskd sunt scrise și în dmesg; jurnalele nucleului sunt întotdeauna scrise în dmesg.</string>
-    <string name="module_zygisk_loaded">Încărcat</string>
     <string name="module_zygisk_module">Modul Zygisk</string>
     <string name="module_zn_module">Modul ZN</string>
     <string name="module_repositories">Depozite de module</string>

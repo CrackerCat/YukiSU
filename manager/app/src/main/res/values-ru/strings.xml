@@ -847,7 +847,6 @@
     <string name="yukizygisk_logging_title">Журнал YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Дублировать в dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">При включении журнал zygiskd также записывается в dmesg. Журнал части, работающей в ядре, всегда записывается в dmesg</string>
-    <string name="module_zygisk_loaded">Загружен</string>
     <string name="module_zygisk_module">Модуль Zygisk</string>
     <string name="module_zn_module">Модуль ZN</string>
     <string name="module_repositories">Репозитории модулей</string>

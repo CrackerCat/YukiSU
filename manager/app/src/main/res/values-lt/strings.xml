@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk žurnalai</string>
     <string name="yukizygisk_log_dmesg_title">Dubliuoti į dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Kai įjungta, zygiskd žurnalai rašomi ir į dmesg. Branduolio dalies žurnalai visada rašomi į dmesg.</string>
-    <string name="module_zygisk_loaded">Įkelta</string>
     <string name="module_zygisk_module">Zygisk modulis</string>
     <string name="module_zn_module">ZN modulis</string>
     <string name="module_repositories">Modulių saugyklos</string>

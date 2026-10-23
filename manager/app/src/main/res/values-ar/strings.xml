@@ -846,7 +846,6 @@
     <string name="yukizygisk_logging_title">سجلات YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">نسخ السجلات إلى dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">عند التفعيل، تُكتب سجلات zygiskd أيضًا في dmesg. تُكتب سجلات جزء النواة دائمًا في dmesg</string>
-    <string name="module_zygisk_loaded">محمّل</string>
     <string name="module_zygisk_module">وحدة Zygisk</string>
     <string name="module_zn_module">وحدة ZN</string>
     <string name="module_repositories">مستودعات الوحدات</string>

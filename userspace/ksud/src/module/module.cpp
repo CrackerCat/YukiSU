@@ -29,7 +29,6 @@
 #include <cstring>
 #include <filesystem>
 #include <map>
-#include <set>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -58,9 +57,7 @@ struct ModuleInfo {
     bool metamodule{};
     std::string actionIcon;
     std::string webuiIcon;
-    // How YukiZygisk would load this module: "zygisk", "native" or empty.
-    std::string runtime;
-    bool runtime_loaded{};
+    std::vector<std::string> runtimes;
     bool yz_conflict{};
     // Remaining module.prop entries, forwarded verbatim (updateJson, support, ...).
     std::map<std::string, std::string> extra_props;
@@ -1044,10 +1041,9 @@ namespace {
 
 bool is_dedicated_prop_key(const std::string& key) {
     static constexpr std::array<std::string_view, 20> kDedicatedKeys = {
-        "id",        "dir_id",      "name",          "version",    "versionCode",
-        "author",    "description", "enabled",       "update",     "remove",
-        "web",       "action",      "mount",         "metamodule", "actionIcon",
-        "webuiIcon", "runtime",     "runtimeLoaded", "yzConflict", "preinit"};
+        "id",         "dir_id",    "name",    "version",  "versionCode", "author", "description",
+        "enabled",    "update",    "remove",  "web",      "action",      "mount",  "metamodule",
+        "actionIcon", "webuiIcon", "runtime", "runtimes", "yzConflict",  "preinit"};
     return std::find(kDedicatedKeys.begin(), kDedicatedKeys.end(), key) != kDedicatedKeys.end();
 }
 
@@ -1128,10 +1124,11 @@ bool load_module_info(const std::string& module_path, const std::string& dir_id,
             resolve_module_icon_path(props["webuiIcon"], info.id, module_path, "webuiIcon");
     }
 
+    if (yz_is_zygisk_module(module_path)) {
+        info.runtimes.emplace_back("zygisk");
+    }
     if (yz_has_native_modules(module_path)) {
-        info.runtime = "native";
-    } else if (yz_is_zygisk_module(module_path)) {
-        info.runtime = "zygisk";
+        info.runtimes.emplace_back("native");
     }
 
     for (auto& [key, value] : props) {
@@ -1197,9 +1194,7 @@ int module_list() {
     collect_module_infos(MODULE_UPDATE_DIR, true, modules, module_index);
 
     if (yukizygisk_on) {
-        const std::set<std::string> loaded = yz_loaded_module_ids();
         for (ModuleInfo& module : modules) {
-            module.runtime_loaded = loaded.count(module.dir_id) != 0;
             module.yz_conflict = is_zygisk_impl_module(module.dir_id);
         }
     }
@@ -1228,10 +1223,15 @@ int module_list() {
         const auto preinit_state = preinit_states.find(m.dir_id);
         if (preinit_state != preinit_states.end())
             printf(",\n    \"preinit\": \"%s\"", escape_json(preinit_state->second).c_str());
-        if (!m.runtime.empty()) {
-            printf(",\n    \"runtime\": \"%s\"", m.runtime.c_str());
+        if (!m.runtimes.empty()) {
+            // Preserve the native-first single value for older managers.
+            printf(",\n    \"runtime\": \"%s\"", m.runtimes.back().c_str());
         }
-        printf(",\n    \"runtimeLoaded\": \"%s\"", m.runtime_loaded ? "true" : "false");
+        printf(",\n    \"runtimes\": [");
+        for (size_t index = 0; index < m.runtimes.size(); ++index) {
+            printf("%s\"%s\"", index == 0 ? "" : ", ", m.runtimes[index].c_str());
+        }
+        printf("]");
         printf(",\n    \"yzConflict\": \"%s\"", m.yz_conflict ? "true" : "false");
         if (!m.actionIcon.empty()) {
             printf(",\n    \"actionIcon\": \"%s\"", escape_json(m.actionIcon).c_str());

@@ -850,7 +850,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk ログ</string>
     <string name="yukizygisk_log_dmesg_title">dmesg にミラー出力</string>
     <string name="yukizygisk_log_dmesg_summary">有効にすると zygiskd ログを dmesg にも出力します。カーネル側のログは常に dmesg に出力されます</string>
-    <string name="module_zygisk_loaded">読み込み済み</string>
     <string name="module_zygisk_module">Zygisk モジュール</string>
     <string name="module_zn_module">ZN モジュール</string>
     <string name="module_repositories">モジュールリポジトリ</string>

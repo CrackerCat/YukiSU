@@ -848,7 +848,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk लॉग</string>
     <string name="yukizygisk_log_dmesg_title">dmesg मध्येही लिहा</string>
     <string name="yukizygisk_log_dmesg_summary">सक्षम असताना zygiskd लॉग dmesg मध्येही लिहिले जातात; कर्नलचे लॉग नेहमी dmesg मध्ये लिहिले जातात.</string>
-    <string name="module_zygisk_loaded">लोड झाले</string>
     <string name="module_zygisk_module">Zygisk मॉड्यूल</string>
     <string name="module_zn_module">ZN मॉड्यूल</string>
     <string name="module_repositories">मॉड्यूल रिपॉझिटरी</string>

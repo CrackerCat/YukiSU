@@ -846,7 +846,6 @@
     <string name="yukizygisk_logging_title">Dzienniki YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">Kopiuj do dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">Po włączeniu dzienniki zygiskd są zapisywane także w dmesg. Dzienniki części jądra są zawsze zapisywane w dmesg.</string>
-    <string name="module_zygisk_loaded">Załadowany</string>
     <string name="module_zygisk_module">Moduł Zygisk</string>
     <string name="module_zn_module">Moduł ZN</string>
     <string name="module_repositories">Repozytoria modułów</string>

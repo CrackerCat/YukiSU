@@ -844,7 +844,6 @@
     <string name="yukizygisk_logging_title">יומני YukiZygisk</string>
     <string name="yukizygisk_log_dmesg_title">שיקוף אל dmesg</string>
     <string name="yukizygisk_log_dmesg_summary">כאשר מופעל, יומני zygiskd נכתבים גם ל-dmesg. יומני רכיב הליבה נכתבים תמיד ל-dmesg</string>
-    <string name="module_zygisk_loaded">נטען</string>
     <string name="module_zygisk_module">מודול Zygisk</string>
     <string name="module_zn_module">מודול ZN</string>
     <string name="module_repositories">מאגרי מודולים</string>

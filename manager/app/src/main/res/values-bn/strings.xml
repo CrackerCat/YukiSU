@@ -848,7 +848,6 @@
     <string name="yukizygisk_logging_title">YukiZygisk লগ</string>
     <string name="yukizygisk_log_dmesg_title">dmesg-এ লগের অনুলিপি লিখুন</string>
     <string name="yukizygisk_log_dmesg_summary">চালু থাকলে zygiskd লগ dmesg-এও লেখা হবে। কার্নেলের লগ সবসময় dmesg-এ লেখা হয়</string>
-    <string name="module_zygisk_loaded">লোড হয়েছে</string>
     <string name="module_zygisk_module">Zygisk মডিউল</string>
     <string name="module_zn_module">ZN মডিউল</string>
     <string name="module_repositories">মডিউল রিপোজিটরি</string>
