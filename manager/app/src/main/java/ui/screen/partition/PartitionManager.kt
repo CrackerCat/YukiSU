@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -397,23 +398,23 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
                     bottom = 32.dp,
                 ),
                 verticalArrangement = Arrangement.spacedBy(
-                    if (isExpressiveUi) 8.dp else 12.dp
+                    if (isExpressiveUi) 0.dp else 12.dp
                 ),
             ) {
                 if (isRefreshing) {
-                    item(key = "refresh") {
+                    partitionSection(key = "refresh") {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     }
                 }
 
                 operationMessage?.let { message ->
-                    item(key = "operation") {
+                    partitionSection(key = "operation") {
                         OperationCard(message)
                     }
                 }
 
                 slotInfo?.let { slots ->
-                    item(key = "slots") {
+                    partitionSection(key = "slots") {
                         SlotInfoCard(
                             slotInfo = slots,
                             selectedSlot = selectedSlot,
@@ -432,7 +433,7 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
                         selectedSlot != null &&
                         selectedSlot != slots.currentSlot
                     ) {
-                        item(key = "map") {
+                        partitionSection(key = "map") {
                             InactiveSlotMappingCard(
                                 enabled = !isBusy && !isRefreshing,
                                 onMap = {
@@ -475,14 +476,14 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
                     }
                 }
 
-                item(key = "overview") {
+                partitionSection(key = "overview") {
                     PartitionOverviewCard(
                         partitions = allPartitionList,
                         backupDirectory = backupDirectory,
                     )
                 }
 
-                item(key = "controls") {
+                partitionSection(key = "controls") {
                     PartitionControls(
                         filter = partitionTypeFilter,
                         onFilterChange = { partitionTypeFilter = it },
@@ -498,7 +499,7 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
                 }
 
                 if (multiSelectMode) {
-                    item(key = "selection") {
+                    partitionSection(key = "selection") {
                         PartitionSelectionCard(
                             selectedCount = selectedPartitions.size,
                             selectableVisible = selectableVisible,
@@ -546,7 +547,7 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
                     }
                 }
 
-                item(key = "section-title") {
+                partitionSection(key = "section-title") {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -795,6 +796,17 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
                 )
             },
         )
+    }
+}
+
+private fun LazyListScope.partitionSection(
+    key: String,
+    content: @Composable () -> Unit,
+) {
+    item(key = key) {
+        Box(modifier = Modifier.padding(bottom = if (isExpressiveUi) 8.dp else 0.dp)) {
+            content()
+        }
     }
 }
 
