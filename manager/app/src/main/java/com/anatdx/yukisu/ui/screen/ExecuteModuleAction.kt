@@ -1,5 +1,7 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import android.annotation.SuppressLint
 import android.os.Environment
 import android.util.Log
@@ -143,12 +145,7 @@ internal fun ActionOutputScreen(
     val snackBarHost = LocalSnackbarHost.current
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
     Scaffold(
         topBar = {
             TopBar(
@@ -252,7 +249,7 @@ private fun TopBar(
     )
 
     if (isExpressiveUi) {
-        LargeFlexibleTopAppBar(
+        YukiLargeTopAppBar(
             title = title,
             actions = actions,
             colors = colors,

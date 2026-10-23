@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
+import com.anatdx.yukisu.ui.theme.LocalCompactWindow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -49,7 +50,7 @@ fun SearchAppBar(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
     var onSearch by remember { mutableStateOf(false) }
-    val expressiveUi = isExpressiveUi
+    val expressiveUi = isExpressiveUi && !LocalCompactWindow.current
     var compactHeader by remember { mutableStateOf(false) }
     var searchFieldVisible by remember { mutableStateOf(false) }
     val headerTransition = updateTransition(
@@ -82,6 +83,9 @@ fun SearchAppBar(
                 delay(150)
                 compactHeader = false
             }
+        } else {
+            compactHeader = false
+            searchFieldVisible = false
         }
     }
     val visibleSearch = if (expressiveUi) searchFieldVisible else onSearch
@@ -121,7 +125,7 @@ fun SearchAppBar(
             else -> 14.dp
         }
         OutlinedTextField(
-            shape = if (expressiveUi) {
+            shape = if (isExpressiveUi) {
                 CircleShape
             } else {
                 OutlinedTextFieldDefaults.shape
@@ -220,7 +224,7 @@ fun SearchAppBar(
             ),
             // Search replaces the flexible header with a compact field. Do not carry the
             // collapsed header offset into that field, otherwise it can start off-screen.
-            scrollBehavior = if (searching || expressiveUi) null else scrollBehavior,
+            scrollBehavior = if (searching || expressiveUi || LocalCompactWindow.current) null else scrollBehavior,
             colors = getTopAppBarColors(
                 containerColor = cardColor,
                 scrolledContainerColor = cardColor
@@ -228,7 +232,7 @@ fun SearchAppBar(
         )
     }
 
-    if (isExpressiveUi) {
+    if (expressiveUi) {
         val headerEffectsSpec = tween<Float>(durationMillis = 90)
         val headerSizeSpec = tween<IntSize>(
             durationMillis = 110,

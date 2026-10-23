@@ -1,5 +1,6 @@
 package ui.screen.ramdisk
 
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import android.content.Context
 import android.content.res.Resources
 import android.net.Uri
@@ -35,7 +36,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
@@ -1264,7 +1264,7 @@ private fun RamdiskFragmentSelector(
         containerColor = Color.Transparent,
         topBar = {
             if (isExpressiveUi) {
-                LargeFlexibleTopAppBar(
+                YukiLargeTopAppBar(
                     colors = ramdiskTopBarColors(),
                     title = title,
                     navigationIcon = navigationIcon,

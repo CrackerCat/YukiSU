@@ -1,5 +1,7 @@
 package ui.screen.yukizygisk
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,7 +40,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -51,8 +52,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -598,12 +597,7 @@ private fun zygiskModuleState(
 @Destination<RootGraph>
 @Composable
 fun YukiZygiskScreen(navigator: DestinationsNavigator) {
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
     val scope = rememberCoroutineScope()
     val snackBarHost = rememberSnackbarController()
 
@@ -900,7 +894,7 @@ private fun YukiZygiskTopBar(
     )
 
     if (isExpressiveUi) {
-        LargeFlexibleTopAppBar(
+        YukiLargeTopAppBar(
             title = title,
             navigationIcon = navigationIcon,
             colors = colors,

@@ -1,5 +1,7 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -50,12 +52,7 @@ data class UmountPathEntry(
 @Destination<RootGraph>
 @Composable
 fun UmountManagerScreen(navigator: DestinationsNavigator) {
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
     val snackBarHost = LocalSnackbarHost.current
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -295,7 +292,7 @@ private fun UmountManagerTopBar(
     )
 
     if (isExpressiveUi) {
-        LargeFlexibleTopAppBar(
+        YukiLargeTopAppBar(
             title = title,
             navigationIcon = navigationIcon,
             actions = actions,

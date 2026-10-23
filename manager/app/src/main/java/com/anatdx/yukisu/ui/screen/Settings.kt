@@ -1,5 +1,7 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -89,12 +91,7 @@ enum class SettingsItemPosition(val index: Int, val count: Int) {
 @Destination<RootGraph>
 @Composable
 fun SettingScreen(navigator: DestinationsNavigator) {
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
     val snackBarHost = rememberSnackbarController()
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -1056,7 +1053,7 @@ private fun TopBar(
     }
 
     if (isExpressiveUi) {
-        LargeFlexibleTopAppBar(
+        YukiLargeTopAppBar(
             title = title,
             colors = colors,
             windowInsets = WindowInsets.safeDrawing.only(

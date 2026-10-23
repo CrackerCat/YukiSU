@@ -2,6 +2,9 @@ package com.anatdx.yukisu.ui.activity.component
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material3.*
@@ -29,7 +32,7 @@ import com.anatdx.yukisu.ui.util.*
 @SuppressLint("ContextCastToActivity")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomBar(navController: NavHostController) {
+fun BottomBar(navController: NavHostController, vertical: Boolean = false) {
     val navigator = navController.rememberDestinationsNavigator()
     val navigationLeaveGuard = LocalNavigationLeaveGuard.current
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
@@ -68,7 +71,23 @@ fun BottomBar(navController: NavHostController) {
         }
     }
 
-    if (isExpressiveUi) {
+    if (vertical) {
+        NavigationRail(
+            modifier = Modifier.fillMaxHeight().width(96.dp).verticalScroll(rememberScrollState()),
+            containerColor = containerColor,
+            windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start),
+        ) {
+            destinations.forEach { destination ->
+                val selected by navController.isRouteOnBackStackAsState(destination.direction)
+                NavigationRailItem(
+                    selected = selected,
+                    onClick = { navigate(destination, selected) },
+                    icon = { DestinationIcon(destination, selected, badgeCountOf(destination), !isHideOtherInfo) },
+                    label = { Text(stringResource(destination.label), style = MaterialTheme.typography.labelMedium) },
+                )
+            }
+        }
+    } else if (isExpressiveUi) {
         ShortNavigationBar(
             containerColor = containerColor,
             windowInsets = WindowInsets.navigationBars.only(

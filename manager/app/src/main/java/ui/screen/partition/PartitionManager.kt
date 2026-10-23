@@ -1,5 +1,6 @@
 package ui.screen.partition
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -70,10 +71,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.TriStateCheckbox
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -153,12 +152,7 @@ fun PartitionManagerScreen(navigator: DestinationsNavigator) {
     var backupDirectoryDraft by rememberSaveable { mutableStateOf(backupDirectory) }
     var showBackupDirectoryDialog by rememberSaveable { mutableStateOf(false) }
 
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
 
     val displayList = if (showAllPartitions) allPartitionList else partitionList
     val filteredList = remember(displayList, partitionTypeFilter, searchQuery) {

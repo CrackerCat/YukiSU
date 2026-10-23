@@ -1,5 +1,7 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -152,12 +154,7 @@ fun FlashScreen(navigator: DestinationsNavigator, flashIt: FlashIt) {
     val snackBarHost = rememberSnackbarController()
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
     val viewModel: ModuleViewModel = viewModel()
 
     val errorCodeString = stringResource(R.string.error_code)
@@ -850,7 +847,7 @@ private fun TopBar(
     )
 
     if (isExpressiveUi) {
-        LargeFlexibleTopAppBar(
+        YukiLargeTopAppBar(
             title = title,
             navigationIcon = navigationIcon,
             actions = actions,

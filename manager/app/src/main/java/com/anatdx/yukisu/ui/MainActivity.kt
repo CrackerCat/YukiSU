@@ -13,10 +13,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.CompositionLocalProvider
@@ -39,8 +37,7 @@ import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import com.anatdx.yukisu.Natives
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.integrity.KsudIntegrity
-import com.anatdx.yukisu.ui.activity.component.BottomBar
-import com.anatdx.yukisu.ui.activity.util.AnimatedBottomBar
+import com.anatdx.yukisu.ui.activity.component.ManagerScaffold
 import com.anatdx.yukisu.ui.activity.util.DataRefreshUtils
 import com.anatdx.yukisu.ui.activity.util.IntentDispatcher
 import com.anatdx.yukisu.ui.activity.util.DisplayUtils
@@ -261,20 +258,14 @@ class MainActivity : ComponentActivity() {
                         LocalSnackbarHost provides snackBarHostState,
                         LocalNavigationLeaveGuard provides navigationLeaveGuard,
                     ) {
-                        Scaffold(
+                        ManagerScaffold(
+                            navController = navController,
+                            showNavigation = currentDestination?.route in bottomBarRoutes,
+                            active = !predictiveBackEnabled,
                             containerColor = if (predictiveBackEnabled) Color.Transparent else MaterialTheme.colorScheme.surface,
                             snackbarHost = {
                                 if (!predictiveBackEnabled) SnackbarHost(hostState = snackBarHostState.hostState)
                             },
-                            bottomBar = {
-                                if (!predictiveBackEnabled) {
-                                    AnimatedBottomBar.AnimatedBottomBarWrapper(
-                                        showBottomBar = currentDestination?.route in bottomBarRoutes,
-                                        content = { BottomBar(navController) },
-                                    )
-                                }
-                            },
-                            contentWindowInsets = WindowInsets(0, 0, 0, 0),
                         ) { outerPadding ->
                             DestinationsNavHost(
                                 modifier = Modifier.fillMaxSize().padding(outerPadding),
@@ -284,20 +275,14 @@ class MainActivity : ComponentActivity() {
                             ) {
                                 predictiveBackSurfaces(NavGraphs.root) { route, contentModifier, content ->
                                     val predictive = LocalPredictiveBackEnabled.current
-                                    Scaffold(
+                                    ManagerScaffold(
+                                        navController = navController,
+                                        showNavigation = route in bottomBarRoutes,
+                                        active = predictive,
                                         containerColor = if (predictive) MaterialTheme.colorScheme.surface else Color.Transparent,
                                         snackbarHost = {
                                             if (predictive) SnackbarHost(hostState = snackBarHostState.hostState)
                                         },
-                                        bottomBar = {
-                                            if (predictive) {
-                                                AnimatedBottomBar.AnimatedBottomBarWrapper(
-                                                    showBottomBar = route in bottomBarRoutes,
-                                                    content = { BottomBar(navController) },
-                                                )
-                                            }
-                                        },
-                                        contentWindowInsets = WindowInsets(0, 0, 0, 0),
                                     ) { innerPadding ->
                                         Box(Modifier.fillMaxSize().padding(innerPadding).then(contentModifier)) { content() }
                                     }

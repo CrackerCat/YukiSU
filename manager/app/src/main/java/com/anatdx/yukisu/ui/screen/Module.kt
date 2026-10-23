@@ -1,5 +1,6 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
 import com.ramcosta.composedestinations.generated.destinations.ScriptRunScreenDestination
 import com.anatdx.yukisu.ui.screen.scriptrun.ScriptRunArg
 import com.anatdx.yukisu.data.script.ScriptRepository
@@ -411,12 +412,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
     }
     val hideInstallButton = isSafeMode || hasMagisk
 
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
 
     val webUILauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()

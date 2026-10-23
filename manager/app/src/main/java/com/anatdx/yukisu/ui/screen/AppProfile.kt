@@ -1,5 +1,7 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import android.annotation.SuppressLint
 import androidx.annotation.StringRes
 import androidx.compose.animation.*
@@ -83,12 +85,7 @@ fun AppProfileScreen(
     val context = LocalContext.current
     val resources = LocalResources.current
     val snackBarHost = LocalSnackbarHost.current
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
     val scope = rememberCoroutineScope()
     val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current)
     val superUserViewModel = viewModel<SuperUserViewModel>(viewModelStoreOwner = viewModelStoreOwner)
@@ -796,7 +793,7 @@ private fun TopBar(
     )
 
     if (isExpressiveUi) {
-        LargeFlexibleTopAppBar(
+        YukiLargeTopAppBar(
             title = titleContent,
             colors = colors,
             navigationIcon = navigationIcon,

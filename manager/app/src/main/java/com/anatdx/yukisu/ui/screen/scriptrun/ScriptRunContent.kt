@@ -1,5 +1,7 @@
 package com.anatdx.yukisu.ui.screen.scriptrun
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -30,11 +32,7 @@ import com.anatdx.yukisu.ui.util.rememberShellHighlight
 @Composable
 internal fun ScriptRunContent(state: ScriptRunUiState, actions: ScriptRunActions) {
     val context = LocalContext.current
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
     Scaffold(
         topBar = {
             val title: @Composable () -> Unit = { Text(stringResource(R.string.script_run_title)) }
@@ -44,7 +42,7 @@ internal fun ScriptRunContent(state: ScriptRunUiState, actions: ScriptRunActions
                 }
             }
             if (isExpressiveUi) {
-                LargeFlexibleTopAppBar(title = title, navigationIcon = back, scrollBehavior = scrollBehavior)
+                YukiLargeTopAppBar(title = title, navigationIcon = back, scrollBehavior = scrollBehavior)
             } else {
                 TopAppBar(title = title, navigationIcon = back, scrollBehavior = scrollBehavior)
             }

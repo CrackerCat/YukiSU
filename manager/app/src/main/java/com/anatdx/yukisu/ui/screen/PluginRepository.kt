@@ -1,5 +1,6 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
@@ -84,12 +85,7 @@ fun PluginRepositoryScreen(navigator: DestinationsNavigator) {
     val locale = LocalConfiguration.current.locales[0]
     val scope = rememberCoroutineScope()
     val snackbarHost = rememberSnackbarController()
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
 
     var installTarget by remember { mutableStateOf<RepositoryPlugin?>(null) }
     var downloadingPlugin by remember { mutableStateOf<RepositoryPlugin?>(null) }

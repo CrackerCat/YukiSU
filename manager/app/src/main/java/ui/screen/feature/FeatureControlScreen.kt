@@ -1,5 +1,7 @@
 package ui.screen.feature
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -138,12 +140,7 @@ private fun CoroutineScope.persistFeature(
 @Destination<RootGraph>
 @Composable
 fun FeatureControlScreen(navigator: DestinationsNavigator) {
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHost = rememberSnackbarController()
@@ -559,7 +556,7 @@ private fun FeatureControlTopBar(
     )
 
     if (isExpressiveUi) {
-        LargeFlexibleTopAppBar(
+        YukiLargeTopAppBar(
             title = title,
             navigationIcon = navigationIcon,
             colors = colors,

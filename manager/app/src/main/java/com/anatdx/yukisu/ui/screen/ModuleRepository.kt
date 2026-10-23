@@ -1,5 +1,7 @@
 package com.anatdx.yukisu.ui.screen
 
+import com.anatdx.yukisu.ui.component.rememberYukiTopAppBarScrollBehavior
+import com.anatdx.yukisu.ui.component.YukiLargeTopAppBar
 import com.ramcosta.composedestinations.generated.destinations.ScriptRunScreenDestination
 import com.anatdx.yukisu.ui.screen.scriptrun.ScriptRunArg
 import android.text.format.Formatter
@@ -44,7 +46,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
@@ -56,9 +57,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -309,7 +308,7 @@ private fun RepositoryTopAppBar(
     }
 
     if (isExpressiveUi) {
-        LargeFlexibleTopAppBar(
+        YukiLargeTopAppBar(
             title = title,
             navigationIcon = navigationIcon,
             actions = actions,
@@ -344,12 +343,7 @@ fun ModuleRepositoryScreen(navigator: DestinationsNavigator) {
     val modules = remember(catalog, viewModel.search, viewModel.selectedSourceId, viewModel.installedModules) {
         viewModel.visibleModules(catalog)
     }
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
 
     LaunchedEffect(Unit) {
         viewModel.refreshInstalledModules()
@@ -608,12 +602,7 @@ fun RepositorySourcesScreen(navigator: DestinationsNavigator) {
     var mmrlAddError by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
     var deleteSource by remember { mutableStateOf<RepositorySource?>(null) }
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
 
     LaunchedEffect(section, mmrlDirectory.entries.isEmpty()) {
         if (section == RepositorySourcesSection.MMRL && mmrlDirectory.entries.isEmpty()) {
@@ -1156,12 +1145,7 @@ fun ModuleRepositoryDetailScreen(
     var downloadingVersion by remember { mutableStateOf<RepositoryModuleVersion?>(null) }
     var downloadProgress by remember { mutableStateOf(DownloadProgress()) }
     var downloadHandle by remember { mutableStateOf<DownloadHandle?>(null) }
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = if (isExpressiveUi) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    } else {
-        TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = rememberYukiTopAppBarScrollBehavior()
 
     LaunchedEffect(sourceId, moduleId) {
         viewModel.refreshInstalledModules()
