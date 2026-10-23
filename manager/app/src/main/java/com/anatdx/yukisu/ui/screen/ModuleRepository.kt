@@ -478,23 +478,17 @@ private fun RepositoryModuleCard(
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        module.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = if (isExpressiveUi) FontWeight.Normal else FontWeight.SemiBold,
-                    )
-                    Text(
-                        module.moduleId,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                if (module.isScript) RepositoryTag(stringResource(R.string.module_repo_script_badge))
-                if (installed != null) {
-                    RepositoryTag(stringResource(R.string.repository_installed_version, installed.version))
-                }
+            Column {
+                Text(
+                    module.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (isExpressiveUi) FontWeight.Normal else FontWeight.SemiBold,
+                )
+                Text(
+                    module.moduleId,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
             if (module.description.isNotBlank()) {
                 Text(
@@ -505,14 +499,17 @@ private fun RepositoryModuleCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     module.declaredVersion.ifBlank { module.declaredVersionCode.toString() },
                     style = MaterialTheme.typography.labelMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     source?.name ?: stringResource(R.string.repository_removed_source),
@@ -520,14 +517,22 @@ private fun RepositoryModuleCard(
                     color = MaterialTheme.colorScheme.primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
                 )
+                if (module.isScript) RepositoryTag(stringResource(R.string.module_repo_script_badge))
+                if (installed != null) {
+                    RepositoryTag(stringResource(R.string.repository_installed_version, installed.version))
+                }
                 if (duplicateCount > 1) {
                     RepositoryTag(stringResource(R.string.repository_source_count, duplicateCount))
                 }
                 module.stars?.let { stars ->
-                    Icon(Icons.Outlined.Star, null, modifier = Modifier.size(16.dp))
-                    Text(stars.toString(), style = MaterialTheme.typography.labelMedium)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Icon(Icons.Outlined.Star, null, modifier = Modifier.size(16.dp))
+                        Text(stars.toString(), style = MaterialTheme.typography.labelMedium)
+                    }
                 }
                 if (updateAvailable) {
                     RepositoryTag(stringResource(R.string.repository_update_available))
@@ -566,6 +571,8 @@ private fun RepositoryTag(text: String) {
             text,
             style = MaterialTheme.typography.labelSmall,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

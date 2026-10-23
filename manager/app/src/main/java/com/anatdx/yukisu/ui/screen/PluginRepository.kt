@@ -466,23 +466,18 @@ private fun PluginRepositoryItem(
     val uriHandler = LocalUriHandler.current
     PluginRepositoryCard {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
+            Column {
+                Text(
+                    plugin.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (isExpressiveUi) FontWeight.Normal else FontWeight.SemiBold,
+                )
+                plugin.pluginId?.let { id ->
                     Text(
-                        plugin.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = if (isExpressiveUi) FontWeight.Normal else FontWeight.SemiBold,
+                        id,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    plugin.pluginId?.let { id ->
-                        Text(
-                            id,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                installed?.let {
-                    PluginRepositoryTag(stringResource(R.string.repository_installed_version, it.version))
                 }
             }
             if (description.isNotBlank()) {
@@ -494,36 +489,49 @@ private fun PluginRepositoryItem(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+                itemVerticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 source?.let { PluginRepositoryTag(it.name) }
                 if (plugin.version.isNotBlank()) PluginRepositoryTag(plugin.version)
                 plugin.author.takeIf(String::isNotBlank)?.let { PluginRepositoryTag(it) }
-                Spacer(Modifier.weight(1f))
-                plugin.homepage?.let { url ->
-                    IconButton(onClick = { uriHandler.openUri(url) }) {
-                        YukiIcon(
-                            Icons.AutoMirrored.Outlined.OpenInNew,
-                            stringResource(R.string.repository_homepage),
+                installed?.let {
+                    PluginRepositoryTag(stringResource(R.string.repository_installed_version, it.version))
+                }
+                Row(
+                    modifier = Modifier.weight(1f).width(IntrinsicSize.Max),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                ) {
+                    plugin.homepage?.let { url ->
+                        IconButton(onClick = { uriHandler.openUri(url) }) {
+                            YukiIcon(
+                                Icons.AutoMirrored.Outlined.OpenInNew,
+                                stringResource(R.string.repository_homepage),
+                            )
+                        }
+                    }
+                    Button(onClick = onInstall, enabled = !installing) {
+                        if (installing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = LocalContentColor.current,
+                                strokeWidth = 2.dp,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                        }
+                        Text(
+                            when {
+                                installed == null -> stringResource(R.string.install)
+                                installed.version != plugin.version && plugin.version.isNotBlank() ->
+                                    stringResource(R.string.plugin_repository_update)
+                                else -> stringResource(R.string.repository_reinstall)
+                            }
                         )
                     }
-                }
-                Button(onClick = onInstall, enabled = !installing) {
-                    if (installing) {
-                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    Text(
-                        when {
-                            installed == null -> stringResource(R.string.install)
-                            installed.version != plugin.version && plugin.version.isNotBlank() ->
-                                stringResource(R.string.plugin_repository_update)
-                            else -> stringResource(R.string.repository_reinstall)
-                        }
-                    )
                 }
             }
         }
@@ -697,6 +705,12 @@ private fun PluginRepositoryTag(text: String) {
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
     ) {
-        Text(text, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall)
+        Text(
+            text,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
