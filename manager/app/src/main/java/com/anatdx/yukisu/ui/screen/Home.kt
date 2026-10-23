@@ -1049,7 +1049,6 @@ private fun HomeInfoItem(
     icon: ImageVector? = null,
     @DrawableRes iconRes: Int? = null,
     contentColor: Color = Color.Unspecified,
-    onClick: (() -> Unit)? = null,
     trailing: @Composable (() -> Unit)? = null,
     contentScrollable: Boolean = false,
     index: Int = 0,
@@ -1105,13 +1104,6 @@ private fun HomeInfoItem(
                         )
                 } else {
                     Modifier.padding(vertical = 8.dp)
-                }
-            )
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(onClick = onClick)
-                } else {
-                    Modifier
                 }
             )
             .then(
@@ -1185,7 +1177,6 @@ private data class HomeInfoEntry(
     val icon: ImageVector? = null,
     @DrawableRes val iconRes: Int? = null,
     val contentColor: Color = Color.Unspecified,
-    val onClick: (() -> Unit)? = null,
     val trailing: (@Composable () -> Unit)? = null,
     val contentScrollable: Boolean = false,
 )
@@ -1327,7 +1318,23 @@ private fun InfoCard(
             content = ksudContent,
             icon = Icons.Filled.Engineering,
             contentColor = if (hasMismatch) MaterialTheme.colorScheme.error else Color.Unspecified,
-            onClick = { showKsudDialog = true },
+            trailing = {
+                YukiIcon(
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = stringResource(R.string.home_ksud_daemon_sync),
+                    modifier = if (isExpressiveUi) {
+                        Modifier
+                            .size(36.dp)
+                            .clickable { showKsudDialog = true }
+                            .padding(4.dp)
+                    } else {
+                        Modifier
+                            .size(28.dp)
+                            .clickable { showKsudDialog = true }
+                            .padding(vertical = 4.dp)
+                    },
+                )
+            },
         ))
         if (!isSimpleMode && workingMode != null) {
             add(HomeInfoEntry(
@@ -1393,7 +1400,6 @@ private fun InfoCard(
                     icon = entry.icon,
                     iconRes = entry.iconRes,
                     contentColor = entry.contentColor,
-                    onClick = entry.onClick,
                     trailing = entry.trailing,
                     contentScrollable = entry.contentScrollable,
                     index = index,
@@ -1418,7 +1424,6 @@ private fun InfoCard(
                         icon = entry.icon,
                         iconRes = entry.iconRes,
                         contentColor = entry.contentColor,
-                        onClick = entry.onClick,
                         trailing = entry.trailing,
                         contentScrollable = entry.contentScrollable,
                     )
