@@ -916,4 +916,7 @@
     <string name="install_block_modules">阻止核心模組載入</string>
     <string name="install_block_modules_summary">名稱以逗號分隔；留空則不阻止任何模組</string>
     <string name="install_block_modules_invalid">僅限字母、數字和底線；每項最多 64 個字元，總計最多 255 個</string>
+    <string name="ui_search">搜尋</string>
+    <string name="ui_close_search">關閉搜尋</string>
+    <string name="ui_back">返回</string>
 </resources>

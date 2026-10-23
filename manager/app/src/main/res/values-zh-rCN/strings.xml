@@ -1089,4 +1089,7 @@
     <string name="module_preinit_status_invalid">ksud 返回的 preinit 状态无效：%1$s</string>
     <string name="module_shortcut_copy_scheme">复制 URL Scheme</string>
     <string name="module_shortcut_scheme_copied">已复制 URL Scheme</string>
+    <string name="ui_search">搜索</string>
+    <string name="ui_close_search">关闭搜索</string>
+    <string name="ui_back">返回</string>
 </resources>

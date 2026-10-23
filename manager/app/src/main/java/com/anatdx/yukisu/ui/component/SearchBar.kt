@@ -1,9 +1,6 @@
 package com.anatdx.yukisu.ui.component
 
-import android.util.Log
 import androidx.compose.animation.*
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -19,20 +16,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.theme.CardStyleProvider.getTopAppBarColors
 import com.anatdx.yukisu.ui.theme.LocalCompactWindow
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
 import com.anatdx.yukisu.ui.theme.CardConfig
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import kotlinx.coroutines.flow.first
-
-private const val TAG = "SearchBar"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +45,7 @@ fun SearchAppBar(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
     var onSearch by remember { mutableStateOf(false) }
     val expressiveUi = isExpressiveUi && !LocalCompactWindow.current
     var compactHeader by remember { mutableStateOf(false) }
@@ -78,21 +75,14 @@ fun SearchAppBar(
                 searchFieldVisible = true
             } else {
                 searchFieldVisible = false
-                // Start restoring the large header just before the deterministic 180 ms
-                // field exit finishes, avoiding a one-to-two-frame hand-off pause.
-                delay(150)
+                snapshotFlow {
+                    !searchTransition.currentState && !searchTransition.isRunning
+                }.first { it }
                 compactHeader = false
             }
         } else {
             compactHeader = false
             searchFieldVisible = false
-        }
-    }
-    val visibleSearch = if (expressiveUi) searchFieldVisible else onSearch
-    LaunchedEffect(visibleSearch) {
-        if (visibleSearch) {
-            if (expressiveUi) delay(50)
-            focusRequester.requestFocus()
         }
     }
     DisposableEffect(Unit) {
@@ -108,16 +98,19 @@ fun SearchAppBar(
         initialWidth = { fullWidth -> fullWidth / 10 },
     )
     val expressiveSearchExit = shrinkHorizontally(
-        animationSpec = tween(
-            durationMillis = 180,
-            easing = FastOutSlowInEasing,
-        ),
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec<IntSize>(),
         shrinkTowards = Alignment.End,
         clip = true,
         targetWidth = { 0 },
     )
 
     val searchField: @Composable () -> Unit = {
+        LaunchedEffect(onSearch) {
+            if (onSearch) {
+                withFrameNanos { }
+                focusRequester.requestFocus()
+            }
+        }
         val horizontalOffset = if (expressiveUi) 8.dp else 0.dp
         val endPadding = when {
             onBackClick != null -> 0.dp
@@ -138,22 +131,19 @@ fun SearchAppBar(
                     start = horizontalOffset,
                     end = endPadding,
                 )
-                .focusRequester(focusRequester)
-                .onFocusChanged { focusState ->
-                    if (focusState.isFocused) onSearch = true
-                    Log.d(TAG, "onFocusChanged: $focusState")
-                },
+                .focusRequester(focusRequester),
             value = searchText,
             onValueChange = onSearchTextChange,
             placeholder = placeholder,
             trailingIcon = {
                 IconButton(
                     onClick = {
+                        focusManager.clearFocus()
                         onSearch = false
                         keyboardController?.hide()
                         onClearClick()
                     },
-                    content = { YukiIcon(Icons.Filled.Close, null) }
+                    content = { YukiIcon(Icons.Filled.Close, stringResource(R.string.ui_close_search)) }
                 )
             },
             maxLines = 1,
@@ -206,7 +196,7 @@ fun SearchAppBar(
                 if (onBackClick != null) {
                     IconButton(
                         onClick = onBackClick,
-                        content = { YukiIcon(Icons.AutoMirrored.Outlined.ArrowBack, null) }
+                        content = { YukiIcon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.ui_back)) }
                     )
                 }
             },
@@ -214,7 +204,7 @@ fun SearchAppBar(
                 AnimatedVisibility(visible = showCompactTitle) {
                     IconButton(
                         onClick = { onSearch = true },
-                        content = { YukiIcon(Icons.Filled.Search, null) }
+                        content = { YukiIcon(Icons.Filled.Search, stringResource(R.string.ui_search)) }
                     )
                 }
                 dropdownContent?.invoke()
@@ -233,11 +223,8 @@ fun SearchAppBar(
     }
 
     if (expressiveUi) {
-        val headerEffectsSpec = tween<Float>(durationMillis = 90)
-        val headerSizeSpec = tween<IntSize>(
-            durationMillis = 110,
-            easing = FastOutSlowInEasing,
-        )
+        val headerEffectsSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+        val headerSizeSpec = MaterialTheme.motionScheme.fastSpatialSpec<IntSize>()
 
         headerTransition.AnimatedContent(
             contentAlignment = Alignment.TopCenter,
@@ -262,7 +249,7 @@ fun SearchAppBar(
                             IconButton(
                                 onClick = onBackClick,
                                 content = {
-                                    YukiIcon(Icons.AutoMirrored.Outlined.ArrowBack, null)
+                                    YukiIcon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.ui_back))
                                 }
                             )
                         }
@@ -270,7 +257,7 @@ fun SearchAppBar(
                     actions = {
                         IconButton(
                             onClick = { onSearch = true },
-                            content = { YukiIcon(Icons.Filled.Search, null) }
+                            content = { YukiIcon(Icons.Filled.Search, stringResource(R.string.ui_search)) }
                         )
                         dropdownContent?.invoke()
                     },
