@@ -50,7 +50,6 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -67,6 +66,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -281,7 +282,7 @@ fun PluginScreen(navigator: DestinationsNavigator) {
                     containerColor = MaterialTheme.colorScheme.primary,
                     onClick = { installLauncher.launch("application/zip") },
                 ) {
-                    Icon(
+                    YukiIcon(
                         imageVector = Icons.Outlined.Add,
                         contentDescription = stringResource(R.string.plugin_install),
                     )
@@ -615,7 +616,7 @@ private fun PluginCard(
     ) {
         Column(Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
+                YukiIcon(
                     imageVector = Icons.Outlined.Extension,
                     contentDescription = null,
                     modifier = Modifier.size(28.dp),
@@ -643,7 +644,7 @@ private fun PluginCard(
                 }
                 Box {
                     IconButton(onClick = { showMenu = true }, enabled = !operationInProgress) {
-                        Icon(
+                        YukiIcon(
                             imageVector = Icons.Filled.MoreVert,
                             contentDescription = stringResource(R.string.plugin_more_options),
                         )
@@ -656,7 +657,7 @@ private fun PluginCard(
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.plugin_action)) },
                                 leadingIcon = {
-                                    Icon(Icons.Outlined.PlayArrow, contentDescription = null)
+                                    YukiIcon(Icons.Outlined.PlayArrow, contentDescription = null)
                                 },
                                 enabled = canRunActions && !operationInProgress,
                                 onClick = {
@@ -667,7 +668,7 @@ private fun PluginCard(
                         }
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.plugin_log_view)) },
-                            leadingIcon = { Icon(Icons.Outlined.Description, contentDescription = null) },
+                            leadingIcon = { YukiIcon(Icons.Outlined.Description, contentDescription = null) },
                             onClick = {
                                 showMenu = false
                                 onViewLog()
@@ -675,7 +676,7 @@ private fun PluginCard(
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.plugin_log_clear)) },
-                            leadingIcon = { Icon(Icons.Filled.DeleteSweep, contentDescription = null) },
+                            leadingIcon = { YukiIcon(Icons.Filled.DeleteSweep, contentDescription = null) },
                             onClick = {
                                 showMenu = false
                                 onClearLog()
@@ -683,7 +684,7 @@ private fun PluginCard(
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.plugin_uninstall)) },
-                            leadingIcon = { Icon(Icons.Outlined.Delete, contentDescription = null) },
+                            leadingIcon = { YukiIcon(Icons.Outlined.Delete, contentDescription = null) },
                             onClick = {
                                 showMenu = false
                                 onUninstall()
@@ -692,6 +693,7 @@ private fun PluginCard(
                     }
                 }
                 YukiSwitch(
+                    modifier = Modifier.semantics { contentDescription = plugin.name.ifBlank { plugin.id } },
                     checked = plugin.enabled,
                     onCheckedChange = onToggle,
                     enabled = !operationInProgress,
@@ -712,7 +714,7 @@ private fun PluginCard(
             if (manifestError.isNotBlank()) {
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
+                    YukiIcon(
                         imageVector = Icons.Outlined.Warning,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
@@ -750,7 +752,7 @@ private fun PluginCard(
                             enabled = canRunActions && !operationInProgress,
                             contentPadding = ButtonDefaults.ContentPadding,
                         ) {
-                            Icon(
+                            YukiIcon(
                                 imageVector = Icons.Outlined.PlayArrow,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
@@ -770,7 +772,7 @@ private fun PluginCard(
                             enabled = !operationInProgress,
                             contentPadding = ButtonDefaults.ContentPadding,
                         ) {
-                            Icon(
+                            YukiIcon(
                                 imageVector = Icons.Outlined.Settings,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
@@ -796,7 +798,7 @@ private fun PluginEmptyState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
+        YukiIcon(
             imageVector = if (loadFailed) Icons.Outlined.Warning else Icons.Outlined.Extension,
             contentDescription = null,
             modifier = Modifier.size(56.dp),

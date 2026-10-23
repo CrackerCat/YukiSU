@@ -65,6 +65,8 @@ private fun ImageVector.toExpressiveDrawable(): Int? = when (name.substringAfter
     "DarkMode" -> R.drawable.ms_dark_mode
     "Delete" -> R.drawable.ms_delete
     "DeleteForever" -> R.drawable.ms_delete_forever
+    "DeleteSweep" -> R.drawable.ms_delete_sweep
+    "Description" -> R.drawable.ms_description
     "DeveloperMode" -> R.drawable.ms_developer_mode
     "Download" -> R.drawable.ms_download
     "ElectricalServices" -> R.drawable.ms_electrical_services
@@ -81,6 +83,7 @@ private fun ImageVector.toExpressiveDrawable(): Int? = when (name.substringAfter
     "GridView" -> R.drawable.ms_grid_view
     "Home" -> R.drawable.ms_home
     "Info" -> R.drawable.ms_info
+    "Inventory2" -> R.drawable.ms_inventory_2
     "Key" -> R.drawable.ms_key
     "KeyboardArrowDown" -> R.drawable.ms_keyboard_arrow_down
     "KeyboardArrowUp" -> R.drawable.ms_keyboard_arrow_up

@@ -1325,6 +1325,16 @@
     "evidence": "BusyBox libbb/pw_encrypt.c directly includes pw_encrypt_md5.c. This is derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm and FreeBSD md5_crypt; the original RSA attribution requirement and Poul-Henning Kamp's Beerware notice are reproduced in full."
   },
   {
+    "id": "material-symbols",
+    "name": "Google Material Symbols Rounded",
+    "license": "Apache-2.0",
+    "source": "https://github.com/google/material-design-icons/tree/master/symbols/android",
+    "texts": [
+      "Apache-2.0.txt"
+    ],
+    "evidence": "Official Material Symbols Rounded Android vectors in manager/app/src/main/res/drawable/ms_*.xml. The upstream repository licenses these assets under Apache-2.0."
+  },
+  {
     "id": "linux-nolibc",
     "name": "Linux nolibc",
     "version": "6.18",
