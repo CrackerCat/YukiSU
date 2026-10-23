@@ -155,7 +155,6 @@
     <string name="unknown_module">ماژول ناشناخته</string>
     <!-- Module shortcut related -->
     <string name="module_action_success">عمل ماژول به پایان رسید</string>
-    <string name="module_shortcut_type_title">انتخاب نوع میانبر</string>
     <string name="module_shortcut_title">میانبر ماژول</string>
     <string name="module_shortcut_icon_pick">انتخاب نماد</string>
     <string name="module_shortcut_name_label">نام میانبر</string>

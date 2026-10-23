@@ -155,7 +155,6 @@
     <string name="unknown_module">ಅಜ್ಞಾತ ಮಾಡ್ಯೂಲ್</string>
     <!-- Module shortcut related -->
     <string name="module_action_success">ಮಾಡ್ಯೂಲ್ ಕ್ರಿಯೆ ಪೂರ್ಣಗೊಂಡಿದೆ</string>
-    <string name="module_shortcut_type_title">ಶಾರ್ಟ್‌ಕಟ್ ಪ್ರಕಾರ ಆಯ್ಕೆಮಾಡಿ</string>
     <string name="module_shortcut_title">ಮಾಡ್ಯೂಲ್ ಶಾರ್ಟ್‌ಕಟ್</string>
     <string name="module_shortcut_icon_pick">ಐಕಾನ್ ಆಯ್ಕೆಮಾಡಿ</string>
     <string name="module_shortcut_name_label">ಶಾರ್ಟ್‌ಕಟ್ ಹೆಸರು</string>

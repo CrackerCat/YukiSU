@@ -26,6 +26,9 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -57,13 +60,20 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick as semanticsOnClick
+import androidx.compose.ui.semantics.onLongClick as semanticsOnLongClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -118,11 +128,6 @@ private data class ModuleDownloadUiState(
     val progress: DownloadProgress = DownloadProgress(),
 )
 
-private enum class ShortcutType {
-    Action,
-    WebUI
-}
-
 /**
  * @author ShirkNeko
  * @date 2025/9/29.
@@ -169,16 +174,12 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
     val listState = rememberLazyListState()
     val fabVisible by rememberFabVisibilityState(listState)
 
-    // 快捷方式相关状态
     var shortcutModuleId by rememberSaveable { mutableStateOf<String?>(null) }
     var shortcutName by rememberSaveable { mutableStateOf("") }
     var shortcutIconUri by rememberSaveable { mutableStateOf<String?>(null) }
     var defaultShortcutIconUri by rememberSaveable { mutableStateOf<String?>(null) }
-    var defaultActionShortcutIconUri by rememberSaveable { mutableStateOf<String?>(null) }
-    var defaultWebUiShortcutIconUri by rememberSaveable { mutableStateOf<String?>(null) }
-    var selectedShortcutType by rememberSaveable { mutableStateOf<ShortcutType?>(null) }
+    var selectedShortcutType by rememberSaveable { mutableStateOf<ModuleLink.Type?>(null) }
     var showShortcutDialog by remember { mutableStateOf(false) }
-    var showShortcutTypeDialog by remember { mutableStateOf(false) }
     var mountState by remember { mutableStateOf<KasumiManager.MountState?>(null) }
     var mountDialog by remember { mutableStateOf<Pair<String, String>?>(null) }
     var mountRefresh by remember { mutableIntStateOf(0) }
@@ -358,44 +359,30 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
         }
         val exists = withContext(Dispatchers.IO) {
             when (type) {
-                ShortcutType.Action -> Shortcut.hasModuleActionShortcut(context, moduleId)
-                ShortcutType.WebUI -> Shortcut.hasModuleWebUiShortcut(context, moduleId)
+                ModuleLink.Type.Action -> Shortcut.hasModuleActionShortcut(context, moduleId)
+                ModuleLink.Type.WebUI -> Shortcut.hasModuleWebUiShortcut(context, moduleId)
             }
         }
         hasExistingShortcut = exists
     }
 
-    // 快捷方式辅助函数
-    fun openShortcutDialogForType(type: ShortcutType) {
+    fun onModuleAddShortcut(module: ModuleViewModel.ModuleInfo, type: ModuleLink.Type) {
+        shortcutModuleId = module.dirId
+        shortcutName = module.name
         selectedShortcutType = type
+        val actionIcon = module.actionIconPath
+            ?.takeIf { it.isNotBlank() }
+            ?.let { Shortcut.moduleFileUri(module.dirId, it) }
+        val webUiIcon = module.webUiIconPath
+            ?.takeIf { it.isNotBlank() }
+            ?.let { Shortcut.moduleFileUri(module.dirId, it) }
         val defaultIcon = when (type) {
-            ShortcutType.Action -> defaultActionShortcutIconUri ?: defaultWebUiShortcutIconUri
-            ShortcutType.WebUI -> defaultWebUiShortcutIconUri ?: defaultActionShortcutIconUri
+            ModuleLink.Type.Action -> actionIcon ?: webUiIcon
+            ModuleLink.Type.WebUI -> webUiIcon ?: actionIcon
         }
         defaultShortcutIconUri = defaultIcon
         shortcutIconUri = defaultIcon
         showShortcutDialog = true
-    }
-
-    fun onModuleAddShortcut(module: ModuleViewModel.ModuleInfo) {
-        shortcutModuleId = module.dirId
-        shortcutName = module.name
-        shortcutIconUri = null
-        defaultShortcutIconUri = null
-        defaultActionShortcutIconUri = module.actionIconPath
-            ?.takeIf { it.isNotBlank() }
-            ?.let { Shortcut.moduleFileUri(module.dirId, it) }
-        defaultWebUiShortcutIconUri = module.webUiIconPath
-            ?.takeIf { it.isNotBlank() }
-            ?.let { Shortcut.moduleFileUri(module.dirId, it) }
-        if (module.hasActionScript && module.hasWebUi) {
-            selectedShortcutType = null
-            showShortcutTypeDialog = true
-        } else if (module.hasActionScript) {
-            openShortcutDialogForType(ShortcutType.Action)
-        } else if (module.hasWebUi) {
-            openShortcutDialogForType(ShortcutType.WebUI)
-        }
     }
 
     LaunchedEffect(Unit) {
@@ -581,7 +568,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                             return@ModuleList
                         }
                     },
-                    onAddShortcut = { onModuleAddShortcut(it) },
+                    onAddShortcut = ::onModuleAddShortcut,
                     context = context,
                     snackBarHost = snackBarHost
                 )
@@ -652,45 +639,6 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                 )
             }
         }
-
-    // 快捷方式类型选择对话框
-    if (showShortcutTypeDialog) {
-        YukiAlertDialog(
-            onDismissRequest = { showShortcutTypeDialog = false },
-            title = { Text(stringResource(R.string.module_shortcut_type_title)) },
-            text = {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.padding(vertical = 8.dp)
-                ) {
-                    FilledTonalButton(
-                        onClick = {
-                            showShortcutTypeDialog = false
-                            openShortcutDialogForType(ShortcutType.Action)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Action")
-                    }
-                    FilledTonalButton(
-                        onClick = {
-                            showShortcutTypeDialog = false
-                            openShortcutDialogForType(ShortcutType.WebUI)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("WebUI")
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { showShortcutTypeDialog = false }) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            }
-        )
-    }
 
     if (showShortcutDialog) {
         YukiAlertDialog(
@@ -772,11 +720,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                     FilledTonalButton(
                         onClick = {
                             val moduleId = shortcutModuleId ?: return@FilledTonalButton
-                            val type = when (selectedShortcutType) {
-                                ShortcutType.Action -> ModuleLink.Type.Action
-                                ShortcutType.WebUI -> ModuleLink.Type.WebUI
-                                null -> return@FilledTonalButton
-                            }
+                            val type = selectedShortcutType ?: return@FilledTonalButton
                             val uri = Shortcut.buildShortcutUri(context, moduleId, type)
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip = ClipData.newPlainText("", uri.toString()).apply {
@@ -799,8 +743,8 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                 val type = selectedShortcutType
                                 if (!moduleId.isNullOrBlank() && type != null) {
                                     when (type) {
-                                        ShortcutType.Action -> Shortcut.deleteModuleActionShortcut(context, moduleId)
-                                        ShortcutType.WebUI -> Shortcut.deleteModuleWebUiShortcut(context, moduleId)
+                                        ModuleLink.Type.Action -> Shortcut.deleteModuleActionShortcut(context, moduleId)
+                                        ModuleLink.Type.WebUI -> Shortcut.deleteModuleWebUiShortcut(context, moduleId)
                                     }
                                 }
                                 showShortcutDialog = false
@@ -819,7 +763,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                         val type = selectedShortcutType
                         if (!moduleId.isNullOrBlank() && shortcutName.isNotBlank() && type != null) {
                             when (type) {
-                                ShortcutType.Action -> {
+                                ModuleLink.Type.Action -> {
                                     Shortcut.createModuleActionShortcut(
                                         context = context,
                                         moduleId = moduleId,
@@ -827,7 +771,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
                                         iconUri = shortcutIconUri
                                     )
                                 }
-                                ShortcutType.WebUI -> {
+                                ModuleLink.Type.WebUI -> {
                                     Shortcut.createModuleWebUiShortcut(
                                         context = context,
                                         moduleId = moduleId,
@@ -978,7 +922,7 @@ private fun ModuleList(
     onInstallModule: (Uri) -> Unit,
     onUpdateModule: (Uri) -> Unit,
     onClickModule: (id: String, name: String, hasWebUi: Boolean) -> Unit,
-    onAddShortcut: (ModuleViewModel.ModuleInfo) -> Unit,
+    onAddShortcut: (ModuleViewModel.ModuleInfo, ModuleLink.Type) -> Unit,
     context: Context,
     snackBarHost: SnackbarController
 ) {
@@ -1246,8 +1190,8 @@ private fun ModuleList(
                             onClick = { clickedModule: ModuleViewModel.ModuleInfo ->
                                 onClickModule(clickedModule.dirId, clickedModule.name, clickedModule.hasWebUi)
                             },
-                            onAddShortcut = {
-                                onAddShortcut(module)
+                            onAddShortcut = { type ->
+                                onAddShortcut(module, type)
                             }
                         )
 
@@ -1284,7 +1228,7 @@ fun ModuleItem(
     onCheckChanged: suspend (Boolean) -> Boolean,
     onUpdate: (ModuleViewModel.ModuleInfo) -> Unit,
     onClick: (ModuleViewModel.ModuleInfo) -> Unit,
-    onAddShortcut: () -> Unit = {}
+    onAddShortcut: (ModuleLink.Type) -> Unit = {}
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -1584,14 +1528,12 @@ fun ModuleItem(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (mountInfo != null && mountConfigEnabled && !module.metamodule) {
-                    FilledTonalButton(
-                        modifier = Modifier.defaultMinSize(minWidth = 52.dp, minHeight = 32.dp),
+                    ModuleActionButton(
                         enabled = !module.remove && localEnabled,
                         onClick = onMountConfig,
-                        contentPadding = ButtonDefaults.TextButtonContentPadding,
-                    ) {
-                        Icon(Icons.Outlined.Folder, stringResource(R.string.kasumi_mount_config), Modifier.size(20.dp))
-                    }
+                        imageVector = Icons.Outlined.Folder,
+                        contentDescription = stringResource(R.string.kasumi_mount_config),
+                    )
                 }
                 if (module.hasActionScript) {
                     ModuleActionButton(
@@ -1600,8 +1542,9 @@ fun ModuleItem(
                             navigator.navigate(ExecuteModuleActionScreenDestination(module.dirId))
                             viewModel.markNeedRefresh()
                         },
+                        onLongClick = if (module.remove) null else ({ onAddShortcut(ModuleLink.Type.Action) }),
                         imageVector = Icons.Outlined.PlayArrow,
-                        contentDescription = null
+                        contentDescription = "Action"
                     )
                 }
 
@@ -1609,21 +1552,13 @@ fun ModuleItem(
                     ModuleActionButton(
                         enabled = !module.remove && !module.update && localEnabled,
                         onClick = { onClick(module) },
+                        onLongClick = if (module.remove) null else ({ onAddShortcut(ModuleLink.Type.WebUI) }),
                         imageVector = Icons.AutoMirrored.Outlined.Wysiwyg,
-                        contentDescription = null
+                        contentDescription = "WebUI"
                     )
                 }
 
                 Spacer(modifier = Modifier.weight(1f, true))
-
-                if (module.hasActionScript || module.hasWebUi) {
-                    ModuleActionButton(
-                        enabled = !module.remove,
-                        onClick = onAddShortcut,
-                        imageVector = Icons.Outlined.AddCircle,
-                        contentDescription = stringResource(R.string.module_shortcut_add)
-                    )
-                }
 
                 if (updateUrl.isNotEmpty()) {
                     ModuleActionButton(
@@ -1652,10 +1587,51 @@ private fun ModuleActionButton(
     contentDescription: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
     prominent: Boolean = false,
     interactionSource: MutableInteractionSource? = null
 ) {
+    val currentLongClick by rememberUpdatedState(onLongClick)
+    val hapticFeedback = LocalHapticFeedback.current
+    val longClickLabel = stringResource(R.string.module_shortcut_add)
+    val longClickModifier = if (onLongClick != null) {
+        Modifier
+            .clearAndSetSemantics {
+                role = Role.Button
+                contentDescription?.let { this.contentDescription = it }
+                if (enabled) {
+                    semanticsOnClick {
+                        onClick()
+                        true
+                    }
+                }
+                semanticsOnLongClick(label = longClickLabel) {
+                    currentLongClick?.invoke()
+                    true
+                }
+            }
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(pass = PointerEventPass.Initial)
+                    try {
+                        withTimeout(viewConfiguration.longPressTimeoutMillis) {
+                            waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                        }
+                    } catch (_: PointerEventTimeoutCancellationException) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        currentLongClick?.invoke()
+                        // Consume the release before the button can treat it as a click.
+                        do {
+                            val event = awaitPointerEvent(pass = PointerEventPass.Initial)
+                            event.changes.forEach { it.consume() }
+                        } while (event.changes.any { it.pressed })
+                    }
+                }
+            }
+    } else {
+        Modifier
+    }
     val icon: @Composable () -> Unit = {
         YukiIcon(
             modifier = modifier.size(20.dp),
@@ -1669,7 +1645,7 @@ private fun ModuleActionButton(
             FilledIconButton(
                 onClick = onClick,
                 shapes = IconButtonDefaults.shapes(),
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(40.dp).then(longClickModifier),
                 enabled = enabled,
                 interactionSource = interactionSource,
                 content = icon
@@ -1678,7 +1654,7 @@ private fun ModuleActionButton(
             FilledTonalIconButton(
                 onClick = onClick,
                 shapes = IconButtonDefaults.shapes(),
-                modifier = Modifier.size(40.dp),
+                modifier = Modifier.size(40.dp).then(longClickModifier),
                 enabled = enabled,
                 interactionSource = interactionSource,
                 content = icon
@@ -1686,7 +1662,7 @@ private fun ModuleActionButton(
         }
     } else if (prominent) {
         Button(
-            modifier = Modifier.defaultMinSize(minWidth = 52.dp, minHeight = 32.dp),
+            modifier = Modifier.defaultMinSize(minWidth = 52.dp, minHeight = 32.dp).then(longClickModifier),
             enabled = enabled,
             onClick = onClick,
             shape = ButtonDefaults.textShape,
@@ -1696,7 +1672,7 @@ private fun ModuleActionButton(
         )
     } else {
         FilledTonalButton(
-            modifier = Modifier.defaultMinSize(minWidth = 52.dp, minHeight = 32.dp),
+            modifier = Modifier.defaultMinSize(minWidth = 52.dp, minHeight = 32.dp).then(longClickModifier),
             enabled = enabled,
             onClick = onClick,
             interactionSource = interactionSource,

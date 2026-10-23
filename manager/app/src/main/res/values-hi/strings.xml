@@ -155,7 +155,6 @@
     <string name="unknown_module">अज्ञात मॉड्यूल</string>
     <!-- Module shortcut related -->
     <string name="module_action_success">मॉड्यूल क्रिया समाप्त हुई</string>
-    <string name="module_shortcut_type_title">शॉर्टकट प्रकार चुनें</string>
     <string name="module_shortcut_title">मॉड्यूल शॉर्टकट</string>
     <string name="module_shortcut_icon_pick">आइकन चुनें</string>
     <string name="module_shortcut_name_label">शॉर्टकट नाम</string>

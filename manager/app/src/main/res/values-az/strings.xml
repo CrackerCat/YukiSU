@@ -155,7 +155,6 @@
     <string name="unknown_module">Naməlum modul</string>
     <!-- Module shortcut related -->
     <string name="module_action_success">Modul əməliyyatı tamamlandı</string>
-    <string name="module_shortcut_type_title">Qısayol növünü seçin</string>
     <string name="module_shortcut_title">Modul qısayolu</string>
     <string name="module_shortcut_icon_pick">İkon seç</string>
     <string name="module_shortcut_name_label">Qısayol adı</string>
