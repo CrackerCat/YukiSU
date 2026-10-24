@@ -14,7 +14,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.text.isDigitsOnly
 import com.maxkeppeker.sheets.core.models.base.Header
 import com.maxkeppeker.sheets.core.models.base.rememberUseCaseState
 import com.maxkeppeler.sheets.input.InputDialog
@@ -480,6 +479,6 @@ private fun RootProfileConfigPreview() {
     }
 }
 
-private fun isTextValidUid(text: String): Boolean {
-    return text.isNotEmpty() && text.isDigitsOnly() && text.toInt() >= 0
+internal fun isTextValidUid(text: String): Boolean {
+    return text.all(Char::isDigit) && text.toIntOrNull() != null
 }
