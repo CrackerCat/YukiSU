@@ -18,12 +18,20 @@ endif()
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 set(NDK_BUSYBOX_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../ksud/third_party/ndk-busybox")
 set(BUSYBOX_EMBEDDED OFF CACHE BOOL "Build the standalone BusyBox entry point" FORCE)
-add_compile_options(-Os -ffunction-sections -fdata-sections)
+# Match ndk-box-kitchen's Application.mk; full LTO resolves BusyBox's global pointer declarations.
+add_compile_options(
+    -Wall -Oz -fomit-frame-pointer -flto
+    -fno-unwind-tables -fno-asynchronous-unwind-tables
+    -fno-stack-protector -U_FORTIFY_SOURCE
+    -ffunction-sections -fdata-sections)
 add_subdirectory("${NDK_BUSYBOX_DIR}" ndk-busybox)
+target_compile_options(busybox PRIVATE -Wno-error=format-security)
 
 add_executable(yukisu_busybox "${NDK_BUSYBOX_DIR}/applets/applets.c")
-target_compile_options(yukisu_busybox PRIVATE -include "${NDK_BUSYBOX_DIR}/include/autoconf.h")
+target_compile_options(yukisu_busybox PRIVATE -w -Wno-error=format-security
+    -include "${NDK_BUSYBOX_DIR}/include/autoconf.h")
 target_link_libraries(yukisu_busybox PRIVATE busybox)
-target_link_options(yukisu_busybox PRIVATE -static -no-pie -Wl,--gc-sections -Wl,-s
+target_link_options(yukisu_busybox PRIVATE -flto -Wl,--icf=all
+    -static -no-pie -Wl,--gc-sections -Wl,-s -Wl,-z,max-page-size=16384
     -Wl,--wrap=realpath -Wl,--wrap=rename -Wl,--wrap=renameat)
 set_target_properties(yukisu_busybox PROPERTIES OUTPUT_NAME busybox)
