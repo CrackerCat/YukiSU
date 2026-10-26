@@ -77,9 +77,9 @@ object KasumiUiAdapter {
             type == "hide" && path in userRules, bypass = flags and 1 != 0)
     }.toList()
 
-    private fun userRules(snapshot: KasumiManager.Snapshot): List<ActiveRule> {
+    private fun userRules(snapshot: KasumiManager.Snapshot, savedBypass: Boolean = true): List<ActiveRule> {
         val registered = snapshot.system.optJSONArray("user_hide") ?: return snapshot.hideRules.map {
-            ActiveRule("hide", it, isUserDefined = true, bypass = it in snapshot.hideBypasses)
+            ActiveRule("hide", it, isUserDefined = true, bypass = savedBypass && it in snapshot.hideBypasses)
         }
         val live = (0 until registered.length()).map(registered::getJSONObject).associateBy { it.getString("path") }
         return (snapshot.hideRules + live.keys).distinct().map { path ->
@@ -90,13 +90,13 @@ object KasumiUiAdapter {
                     state.optInt("management") == 1 -> 4
                     else -> state.optInt("binding")
                 }, hideError = state?.optInt("error") ?: 0,
-                bypass = if (path in snapshot.hideRules) path in snapshot.hideBypasses else state?.optBoolean("bypass") == true)
+                bypass = if (savedBypass && path in snapshot.hideRules) path in snapshot.hideBypasses else state?.optBoolean("bypass") == true)
         }
     }
 
     private fun activeRules(snapshot: KasumiManager.Snapshot): List<ActiveRule> {
         val legacy = rules(snapshot.system.optString("rules"), if (snapshot.system.has("user_hide")) emptySet() else snapshot.hideRules.toSet())
-        return if (snapshot.system.has("user_hide")) legacy + userRules(snapshot) else legacy
+        return if (snapshot.system.has("user_hide")) legacy + userRules(snapshot, savedBypass = false) else legacy
     }
 
     private fun size(value: Long): String {
