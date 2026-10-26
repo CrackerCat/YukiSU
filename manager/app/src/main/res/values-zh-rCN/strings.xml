@@ -1094,4 +1094,13 @@
     <string name="ui_search">搜索</string>
     <string name="ui_close_search">关闭搜索</string>
     <string name="ui_back">返回</string>
+    <string name="kasumi_conflict_title">Kasumi 已拦截冲突操作</string>
+    <string name="kasumi_conflict_risk">Kasumi 与以下组件同时运行可能导致内核崩溃。为避免冲突，已拒绝以下操作：</string>
+    <string name="kasumi_conflict_loaded_module">尝试启用 Kasumi 时，冲突内核模块 %1$s 已存在，Kasumi 已拒绝激活自身。</string>
+    <string name="kasumi_conflict_builtin_config">尝试启用 Kasumi 时，检测到当前内核已启用 %1$s，Kasumi 已拒绝激活自身。</string>
+    <string name="kasumi_conflict_module_load">尝试加载内核模块 %1$s 时，Kasumi 已激活，因此已拒绝加载该模块。</string>
+    <string name="kasumi_conflict_unknown">Kasumi 已拒绝涉及 %1$s 的冲突操作。</string>
+    <string name="kasumi_conflict_recovery">请二选一：停用冲突模块，或关闭 Kasumi，然后重启。若冲突功能内置于内核，请保持 Kasumi 关闭，或更换不含该功能的内核。确认此警告不会更改这些设置。</string>
+    <string name="kasumi_conflict_confirm">我已了解</string>
+    <string name="kasumi_conflict_ack_failed">未能确认此警告，请重试。</string>
 </resources>

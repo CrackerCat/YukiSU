@@ -110,10 +110,11 @@ object KasumiUiAdapter {
         val snapshot = KasumiManager.snapshot()
         val sys = snapshot.system
         val protocol = sys.optInt("kernel_version")
+        val expectedProtocol = sys.getInt("protocol_version")
         val status = when {
             snapshot.mounts.available -> KasumiStatus.AVAILABLE
             protocol == 0 -> KasumiStatus.NOT_PRESENT
-            protocol < 17 -> KasumiStatus.KERNEL_TOO_OLD
+            protocol < expectedProtocol -> KasumiStatus.KERNEL_TOO_OLD
             else -> KasumiStatus.MODULE_TOO_OLD
         }
         val features = sys.optJSONObject("features") ?: JSONObject()
@@ -148,7 +149,7 @@ object KasumiUiAdapter {
             protocol.toString(), status, viewConfig,
             snapshot.mounts.modules.values.map { ModuleInfo(it.id, it.name, it.mode, it.strategy) },
             SystemInfo(sys.optString("kernel"), base, mounts, ids,
-                protocol != 0 && protocol != 17, null,
+                protocol != 0 && protocol != expectedProtocol, null,
                 stats?.let { MountStats(it.optInt("total_mounts"), it.optInt("overlayfs_mounts")) }, partitions,
                 sys.optString("hooks"), sys.optBoolean("enabled")),
             storage, activeRules(snapshot), FeaturesResult(features.optInt("bitmask"), supported),

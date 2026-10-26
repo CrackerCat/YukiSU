@@ -43,6 +43,7 @@
 #include "kasumi_hide_rules.h"
 #include "kasumi_vnode.h"
 #include "kasumi_bootstrap.h"
+#include "kasumi_conflict.h"
 #include "feature/sucompat_vfs.h"
 #include "kasumi_store.h"
 #include "kasumi_entrypoints.h"
@@ -1326,7 +1327,13 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
  */
 long kasumi_handle_ioctl(unsigned int cmd, void __user *arg)
 {
-	long ret = kasumi_control_begin();
+	long ret;
+
+	/* Report rejected initialization without requiring an active VFS. */
+	if (cmd == KSM_IOC_GET_CONFLICTS || cmd == KSM_IOC_ACK_CONFLICTS)
+		return kasumi_conflict_ioctl(cmd, arg);
+
+	ret = kasumi_control_begin();
 
 	if (ret)
 		return ret;

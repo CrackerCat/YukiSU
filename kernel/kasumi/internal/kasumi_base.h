@@ -5,7 +5,7 @@
 #include <linux/types.h>
 #include <linux/version.h>
 
-#include "kasumi_uapi.h"
+#include "uapi/kasumi.h"
 
 #include "klog.h" // IWYU pragma: keep
 

@@ -1100,4 +1100,13 @@
     <string name="ui_search" tools:ignore="MissingTranslation">Search</string>
     <string name="ui_close_search" tools:ignore="MissingTranslation">Close search</string>
     <string name="ui_back" tools:ignore="MissingTranslation">Back</string>
+    <string name="kasumi_conflict_title" tools:ignore="MissingTranslation">Kasumi conflict blocked</string>
+    <string name="kasumi_conflict_risk" tools:ignore="MissingTranslation">Running Kasumi together with these components can cause kernel crashes. The following operations were blocked:</string>
+    <string name="kasumi_conflict_loaded_module" tools:ignore="MissingTranslation">Kasumi activation was refused because the conflicting kernel module %1$s was already present.</string>
+    <string name="kasumi_conflict_builtin_config" tools:ignore="MissingTranslation">Kasumi activation was refused because the running kernel has %1$s enabled.</string>
+    <string name="kasumi_conflict_module_load" tools:ignore="MissingTranslation">Loading the kernel module %1$s was refused because Kasumi was already active.</string>
+    <string name="kasumi_conflict_unknown" tools:ignore="MissingTranslation">Kasumi blocked a conflicting operation involving %1$s.</string>
+    <string name="kasumi_conflict_recovery" tools:ignore="MissingTranslation">Choose one implementation. Disable the conflicting module, or disable Kasumi, then reboot. For a built-in kernel feature, keep Kasumi disabled or switch to a kernel without that feature. Acknowledging this warning does not change these settings.</string>
+    <string name="kasumi_conflict_confirm" tools:ignore="MissingTranslation">I understand</string>
+    <string name="kasumi_conflict_ack_failed" tools:ignore="MissingTranslation">Could not acknowledge the warning. Please try again.</string>
 </resources>

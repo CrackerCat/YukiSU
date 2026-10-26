@@ -9,6 +9,7 @@
 #include <array>
 #include <cerrno>
 #include <chrono>
+#include <cstdint>
 #include <cstring>
 #include <fcntl.h>
 #include <functional>
@@ -30,9 +31,19 @@
 #include <unistd.h>
 
 extern "C" int ksu_grant_root(void);
+extern "C" int ksu_kasumi_ioctl(unsigned long cmd, void *arg);
 
 namespace {
 namespace ksm = kagami::kasumi;
+static_assert(sizeof(kasumi_conflict) == 80);
+static_assert(sizeof(kasumi_conflicts_arg) == 1288);
+static_assert(sizeof(kasumi_conflict_ack_arg) == 8);
+static_assert(offsetof(kasumi_conflict, sequence) == 0);
+static_assert(offsetof(kasumi_conflict, kind) == 8);
+static_assert(offsetof(kasumi_conflict, target) == 16);
+static_assert(offsetof(kasumi_conflicts_arg, events) == 8);
+static_assert(KSM_IOC_GET_CONFLICTS == 0x8508532eU);
+static_assert(KSM_IOC_ACK_CONFLICTS == 0x4008532fU);
 constexpr const char *socket_path = "/data/adb/ksu/kagami/kagamid.sock";
 constexpr const char *log_path = kagami::embedded_log_file;
 constexpr size_t response_limit = 1024UL * 1024;
@@ -368,9 +379,11 @@ std::string kernel_snapshot() {
   utsname uts{};
   if (uname(&uts))
     failure("uname");
-  auto out = std::string("{\"kernel\":") + quote(uts.release) +
-             ",\"kasumi_available\":" + (available ? "true" : "false") +
-             ",\"kernel_version\":" + std::to_string(version.kernel_protocol);
+  auto out =
+      std::string("{\"kernel\":") + quote(uts.release) +
+      ",\"kasumi_available\":" + (available ? "true" : "false") +
+      ",\"protocol_version\":" + std::to_string(version.expected_protocol) +
+      ",\"kernel_version\":" + std::to_string(version.kernel_protocol);
   if (!available)
     return out + ",\"features\":{\"bitmask\":0,\"names\":[]},\"hooks\":\"\","
                  "\"rules\":\"\"}";
@@ -539,6 +552,58 @@ extern "C" JNIEXPORT jint JNICALL
 Java_com_anatdx_yukisu_Natives_kasumiRuntimeState(JNIEnv * /*env*/,
                                                   jobject /*thiz*/) {
   return ksm::enabled_state();
+}
+
+extern "C" JNIEXPORT jobjectArray JNICALL
+Java_com_anatdx_yukisu_Natives_getKasumiConflicts(JNIEnv *env,
+                                                  jobject /*thiz*/) {
+  kasumi_conflicts_arg cmd{};
+  if (ksu_kasumi_ioctl(KSM_IOC_GET_CONFLICTS, &cmd) != 0 ||
+      cmd.count > KSM_CONFLICT_MAX)
+    return nullptr;
+
+  jclass cls = env->FindClass("com/anatdx/yukisu/ui/util/KasumiConflict");
+  if (!cls)
+    return nullptr;
+  jmethodID constructor =
+      env->GetMethodID(cls, "<init>", "(JILjava/lang/String;)V");
+  if (!constructor) {
+    env->DeleteLocalRef(cls);
+    return nullptr;
+  }
+  jobjectArray array =
+      env->NewObjectArray(static_cast<jsize>(cmd.count), cls, nullptr);
+  if (array) {
+    for (__u32 i = 0; i < cmd.count; i++) {
+      auto &event = cmd.events[i];
+      event.target[KSM_CONFLICT_NAME_LEN - 1] = '\0';
+      jstring target = env->NewStringUTF(event.target);
+      if (!target)
+        break;
+      jobject entry =
+          env->NewObject(cls, constructor, static_cast<jlong>(event.sequence),
+                         static_cast<jint>(event.kind), target);
+      env->DeleteLocalRef(target);
+      if (!entry)
+        break;
+      env->SetObjectArrayElement(array, static_cast<jsize>(i), entry);
+      env->DeleteLocalRef(entry);
+      if (env->ExceptionCheck())
+        break;
+    }
+  }
+  env->DeleteLocalRef(cls);
+  return array;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_anatdx_yukisu_Natives_ackKasumiConflicts(JNIEnv * /*env*/,
+                                                  jobject /*thiz*/,
+                                                  jlong sequence) {
+  kasumi_conflict_ack_arg ack{};
+  ack.sequence = static_cast<std::uint64_t>(sequence);
+  return ksu_kasumi_ioctl(KSM_IOC_ACK_CONFLICTS, &ack) == 0 ? JNI_TRUE
+                                                            : JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL

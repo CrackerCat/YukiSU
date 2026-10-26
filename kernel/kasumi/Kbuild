@@ -4,7 +4,7 @@ kernelsu-objs += $(addprefix kasumi/, \
  core/kasumi_runtime.o core/kasumi_fop_bridge.o \
  core/kasumi_vnode.o core/kasumi_dirhijack.o core/kasumi_sop_shadow.o \
  core/kasumi_hide_events.o core/kasumi_hide_rules.o \
- control/kasumi_ioctl.o \
+ control/kasumi_ioctl.o control/kasumi_conflict.o \
  policy/kasumi_path_policy.o overlay/kasumi_overlay.o \
  hooks/kasumi_proc_read_hooks.o \
  hooks/kasumi_vfs_hooks.o \
@@ -13,4 +13,4 @@ kernelsu-objs += $(addprefix kasumi/, \
  features/kasumi_vfs_view.o features/kasumi_owner.o)
 ccflags-y += -DKASUMI_EMBEDDED
 ccflags-y += -I$(srctree)
-ccflags-y += $(addprefix -I$(MDIR)/kasumi/,include internal core control policy overlay hooks features)
+ccflags-y += $(addprefix -I$(MDIR)/kasumi/,internal core control policy overlay hooks features)

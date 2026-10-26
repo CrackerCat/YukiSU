@@ -12,7 +12,7 @@
 #include <sys/ioctl.h>
 #endif // #ifdef __KERNEL__
 
-#define KSM_PROTOCOL_VERSION 17
+#define KSM_PROTOCOL_VERSION 18
 
 #define KSM_MAX_LEN_PATHNAME 256
 
@@ -77,9 +77,7 @@ struct kasumi_spoof_kstat {
   int err;       /* Error code for userspace feedback */
 };
 
-/*
- * Feature flags for KSM_CMD_GET_FEATURES
- */
+/* Feature flags returned by KSM_IOC_GET_FEATURES. */
 #define KSM_FEATURE_KSTAT_SPOOF (1 << 0)
 /* Bit 1 remains reserved for the removed uname feature. */
 /* Bit 2 remains reserved for the removed cmdline feature. */
@@ -166,6 +164,37 @@ struct kasumi_statfs_spoof_arg {
   int err;
 };
 
+#define KSM_CONFLICT_MAX 16
+#define KSM_CONFLICT_NAME_LEN 64
+
+#define KSM_CONFLICT_LOADED_MODULE 1
+#define KSM_CONFLICT_BUILTIN_CONFIG 2
+#define KSM_CONFLICT_MODULE_LOAD 3
+
+/* Protocol 18 diagnostics persist for the host module's lifetime. Repeated
+ * (kind, target) pairs replace their sequence; a full queue replaces its oldest
+ * entry. GET does not acknowledge events or activate VFS. Entries are
+ * unordered, target is NUL-terminated, and all reserved fields are zero on
+ * output. */
+struct kasumi_conflict {
+  __aligned_u64 sequence;
+  __u32 kind;
+  __u32 reserved;
+  char target[KSM_CONFLICT_NAME_LEN];
+};
+
+struct kasumi_conflicts_arg {
+  __u32 count;
+  __u32 reserved;
+  struct kasumi_conflict events[KSM_CONFLICT_MAX];
+};
+
+/* Acknowledge through the maximum sequence in the displayed snapshot. Zero is
+ * a no-op; a sequence not yet issued returns -EINVAL. Newer events survive. */
+struct kasumi_conflict_ack_arg {
+  __aligned_u64 sequence;
+};
+
 // ioctl definitions (for fd-based mode)
 // Must be after struct definitions
 #define KSM_IOC_MAGIC 'S'
@@ -218,5 +247,13 @@ struct kasumi_statfs_spoof_arg {
 #define KSM_IOC_USER_HIDE_CLEAR _IO(KSM_IOC_MAGIC, 43)
 #define KSM_IOC_USER_HIDE_RETRY                                                \
   _IOWR(KSM_IOC_MAGIC, 44, struct kasumi_user_hide_arg)
+
+/* Command 45 is reserved for the standalone instance-watch ABI. */
+
+/* These diagnostics remain available when VFS initialization is rejected. */
+#define KSM_IOC_GET_CONFLICTS                                                  \
+  _IOR(KSM_IOC_MAGIC, 46, struct kasumi_conflicts_arg)
+#define KSM_IOC_ACK_CONFLICTS                                                  \
+  _IOW(KSM_IOC_MAGIC, 47, struct kasumi_conflict_ack_arg)
 
 #endif /* _KASUMI_UAPI_H */

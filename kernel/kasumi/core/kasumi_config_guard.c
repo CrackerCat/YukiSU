@@ -6,6 +6,7 @@
 #include <linux/zlib.h>
 
 #include "infra/symbol_resolver.h"
+#include "kasumi_conflict.h"
 #include "kasumi_base.h"
 #include "kasumi_config_guard.h"
 
@@ -73,8 +74,9 @@ static int kasumi_check_config_data(void)
 			    "kasumi: refusing initialization: running kernel "
 			    "has %s\n",
 			    line);
+			kasumi_conflict_record(KSM_CONFLICT_BUILTIN_CONFIG,
+					       line);
 			ret = -EBUSY;
-			break;
 		}
 	}
 out:

@@ -8,14 +8,12 @@
 #include <linux/string.h>
 
 #include "feature/sucompat_module_guard.h"
+#include "kasumi_conflict.h"
 #include "infra/symbol_resolver.h"
 #include "klog.h"
 
 static const char *const conflicting_modules[] = {
-    "kasumi_lkm",
-    "pathmask",
-    "procguard",
-    "nomount",
+    "kasumi_lkm", "pathmask", "procguard", "nomount", "susfs_guard_lkm",
 };
 
 static struct mutex *loader_mutex;
@@ -47,6 +45,7 @@ static int sucompat_module_notify(struct notifier_block *nb,
 	pr_warn("kasumi: refusing conflicting module %s while VFS guard is "
 		"active\n",
 		mod->name);
+	kasumi_conflict_record(KSM_CONFLICT_MODULE_LOAD, mod->name);
 	return notifier_from_errno(-EBUSY);
 }
 
@@ -71,10 +70,13 @@ int ksu_sucompat_module_guard_acquire(void)
 			pr_warn("kasumi: %s must be unloaded before "
 				"initialization\n",
 				mod->name);
+			kasumi_conflict_record(KSM_CONFLICT_LOADED_MODULE,
+					       mod->name);
 			ret = -EBUSY;
-			goto out;
 		}
 	}
+	if (ret)
+		goto out;
 	/* Module insertion takes this mutex before the COMING notification. */
 	WRITE_ONCE(modules_blocked, true);
 out:

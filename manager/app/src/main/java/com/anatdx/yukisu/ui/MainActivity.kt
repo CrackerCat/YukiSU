@@ -49,6 +49,7 @@ import com.anatdx.yukisu.ui.activity.util.ThemeChangeContentObserver
 import com.anatdx.yukisu.ui.activity.util.ThemeUtils
 import com.anatdx.yukisu.ui.activity.util.UltraActivityUtils
 import com.anatdx.yukisu.ui.component.InstallConfirmationDialog
+import com.anatdx.yukisu.ui.component.KasumiConflictDialog
 import com.anatdx.yukisu.ui.component.ZipFileDetector
 import com.anatdx.yukisu.ui.screen.BottomBarDestination
 import com.anatdx.yukisu.ui.theme.KernelSUTheme
@@ -290,6 +291,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+                    KasumiConflictDialog()
                 }
             }
         } catch (e: Exception) {

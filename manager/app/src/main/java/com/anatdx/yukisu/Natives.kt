@@ -5,6 +5,7 @@ import androidx.annotation.Keep
 import androidx.compose.runtime.Immutable
 import kotlinx.parcelize.Parcelize
 import com.anatdx.yukisu.ui.util.rootAvailable
+import com.anatdx.yukisu.ui.util.KasumiConflict
 
 /**
  * @author weishu
@@ -28,6 +29,8 @@ object Natives {
     external fun kasumiRetryUserHide(path: ByteArray): ByteArray
     external fun kasumiIsInitialized(): Boolean
     external fun kasumiRuntimeState(): Int
+    external fun getKasumiConflicts(): Array<KasumiConflict>?
+    external fun ackKasumiConflicts(sequence: Long): Boolean
     external fun kasumiClearMapsRules()
     external fun kasumiAddMapsRule(numbers: LongArray, path: ByteArray)
     external fun kasumiReadLog(kernel: Boolean): ByteArray
