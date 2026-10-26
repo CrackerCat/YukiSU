@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Generelt</string>
     <string name="kasumi_global_override">Global tilsidesættelse: %1$s</string>
-    <string name="kasumi_hide_aggressive">Aggressiv</string>
-    <string name="kasumi_hide_normal">Normal</string>
     <string name="kasumi_info_active_mounts">Aktive monteringer:</string>
     <string name="kasumi_info_kernel">Kerne</string>
     <plurals name="kasumi_info_more_mounts">
@@ -80,7 +78,6 @@
     <string name="kasumi_mount_filter">Filtrer monteringstilstande</string>
     <string name="kasumi_mount_hide">Skjul monteringer</string>
     <string name="kasumi_mount_hide_desc">Skjul modulposter i monteringsvisningen</string>
-    <string name="kasumi_mount_hide_level">Niveau for skjulte monteringer</string>
     <string name="kasumi_mount_mode">Monteringstilstand</string>
     <string name="kasumi_mount_mode_auto">Auto</string>
     <string name="kasumi_mount_mode_hide">Skjul</string>

@@ -118,12 +118,6 @@ internal fun SettingsTab(
                         else -> Icons.Filled.Security
                     },
                     position = if (toggle == toggles.last() && !runtimeApplyPending) MoreSettingsItemPosition.Last else MoreSettingsItemPosition.Middle)
-                if (toggle.capability == "mount_hide") {
-                    if (!isExpressiveUi) Spacer(Modifier.height(8.dp))
-                    ConfigChoice(stringResource(R.string.kasumi_mount_hide_level), config.mountHideMode,
-                        if (features?.names?.contains("mount_hide_aggressive") == true) listOf("normal", "aggressive") else listOf("normal"),
-                        kernelEnabled && supported && config.enableMountHide, MoreSettingsItemPosition.Middle) { onConfigChanged(config.copy(mountHideMode = it)) }
-                }
             }
             if (runtimeApplyPending) {
                 SettingsDivider()
@@ -225,7 +219,7 @@ internal fun ConfigChoice(title: String, value: String, values: List<String>, en
     var expanded by remember { mutableStateOf(false) }
     val labels = mapOf("auto" to stringResource(R.string.kasumi_mount_mode_auto), "kasumi" to "Kasumi",
         "overlay" to "OverlayFS", "magic" to "Magic Mount", "none" to stringResource(R.string.kasumi_mount_mode_none),
-        "normal" to stringResource(R.string.kasumi_hide_normal), "aggressive" to stringResource(R.string.kasumi_hide_aggressive), "magisk" to "Magisk",
+        "magisk" to "Magisk",
         "all" to stringResource(R.string.kasumi_filter_all), "kasumi-active" to stringResource(R.string.kasumi_filter_active))
     KasumiControlGroup(position) {
         Text(title, style = if (isExpressiveUi) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge)

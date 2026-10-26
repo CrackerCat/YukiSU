@@ -23,10 +23,6 @@ namespace kagami::kasumi {
 static_assert(sizeof(kasumi_user_hide_arg) == 4160);
 static_assert(offsetof(kasumi_user_hide_arg, path) == 64);
 
-static_assert(static_cast<std::uint32_t>(MountHideMode::Normal) == KSM_MOUNT_HIDE_MODE_NORMAL);
-static_assert(static_cast<std::uint32_t>(MountHideMode::Aggressive) ==
-              KSM_MOUNT_HIDE_MODE_AGGRESSIVE);
-
 extern "C" int ksu_kasumi_ioctl(unsigned long cmd, void* arg);
 
 namespace {
@@ -146,8 +142,6 @@ std::vector<std::string> feature_names(int bitmask) {
         names.emplace_back("overlay_xattr_hide");
     if (bitmask & KSM_FEATURE_FAKE_MOUNTINFO)
         names.emplace_back("fake_mountinfo");
-    if (bitmask & KSM_FEATURE_MOUNT_HIDE_AGGRESSIVE)
-        names.emplace_back("mount_hide_aggressive");
     return names;
 }
 
@@ -312,19 +306,7 @@ bool clear_overlay_xattr_hiding() {
     return hide_overlay_xattrs("");
 }
 
-bool set_mount_hide(bool enable, MountHideMode mode) {
-    const int bitmask = features();
-    const bool mode_supported = (bitmask & KSM_FEATURE_MOUNT_HIDE_AGGRESSIVE) != 0;
-
-    if (enable && mode == MountHideMode::Aggressive && !mode_supported) {
-        errno = EOPNOTSUPP;
-        return false;
-    }
-    if (mode_supported) {
-        int raw_mode = static_cast<int>(mode);
-        if (execute(KSM_IOC_SET_MOUNT_HIDE_MODE, &raw_mode) != 0)
-            return false;
-    }
+bool set_mount_hide(bool enable) {
     kasumi_mount_hide_arg arg = {};
     arg.enable = enable ? 1 : 0;
     const int rc = execute(KSM_IOC_SET_MOUNT_HIDE, &arg);

@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Тмпфс (РАМ)</string>
     <string name="kasumi_general">Генерал</string>
     <string name="kasumi_global_override">Глобално надјачавање: %1$s</string>
-    <string name="kasumi_hide_aggressive">Агресивно</string>
-    <string name="kasumi_hide_normal">Уобичајено</string>
     <string name="kasumi_info_active_mounts">Активни носачи:</string>
     <string name="kasumi_info_kernel">Језгро</string>
     <plurals name="kasumi_info_more_mounts">
@@ -81,7 +79,6 @@
     <string name="kasumi_mount_filter">Филтрирај начине монтирања</string>
     <string name="kasumi_mount_hide">Скривање монтирања</string>
     <string name="kasumi_mount_hide_desc">Скрива ставке модула у приказу монтирања</string>
-    <string name="kasumi_mount_hide_level">Разина скривања монтирања</string>
     <string name="kasumi_mount_mode">Режим монтирања</string>
     <string name="kasumi_mount_mode_auto">Аутоматски</string>
     <string name="kasumi_mount_mode_hide">Сакриј</string>

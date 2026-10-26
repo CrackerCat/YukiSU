@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Xeral</string>
     <string name="kasumi_global_override">Substitución global: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agresivo</string>
-    <string name="kasumi_hide_normal">Normal</string>
     <string name="kasumi_info_active_mounts">Montaxes activas:</string>
     <string name="kasumi_info_kernel">Kernel</string>
     <plurals name="kasumi_info_more_mounts">
@@ -80,7 +78,6 @@
     <string name="kasumi_mount_filter">Filtrar modos de montaxe</string>
     <string name="kasumi_mount_hide">Ocultación de montaxes</string>
     <string name="kasumi_mount_hide_desc">Agochar as entradas dos módulos na vista de montaxes</string>
-    <string name="kasumi_mount_hide_level">Nivel de ocultación de montaxes</string>
     <string name="kasumi_mount_mode">Modo de montaxe</string>
     <string name="kasumi_mount_mode_auto">Automático</string>
     <string name="kasumi_mount_mode_hide">Agochar</string>

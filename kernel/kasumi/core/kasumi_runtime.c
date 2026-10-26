@@ -343,9 +343,7 @@ bool kasumi_stealth_enabled;
 int kasumi_mount_hide_vfsmnt_registered;
 int kasumi_mount_hide_mountinfo_registered;
 int kasumi_proc_proxy_registered;
-int kasumi_proc_ns_readlink_registered;
 int kasumi_feature_enabled_mask;
-int kasumi_mount_hide_mode = KSM_MOUNT_HIDE_MODE_NORMAL;
 int kasumi_fscap_kretprobe_registered;
 int kasumi_fscaps_enabled = 1;
 int kasumi_device_sources_enabled = 1;
@@ -875,7 +873,6 @@ void kasumi_cleanup_locked(void)
 	smp_store_release(&kasumi_enabled, false);
 	kasumi_stealth_enabled = false;
 	kasumi_feature_enabled_mask = 0;
-	kasumi_mount_hide_mode = KSM_MOUNT_HIDE_MODE_NORMAL;
 	/* Stop provider calls and release any external module reference. */
 
 	hash_for_each_safe(kasumi_paths, bkt, tmp, entry, node)

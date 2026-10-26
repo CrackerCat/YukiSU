@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">عام</string>
     <string name="kasumi_global_override">التجاوز العام: %1$s</string>
-    <string name="kasumi_hide_aggressive">هجومي</string>
-    <string name="kasumi_hide_normal">عادي</string>
     <string name="kasumi_info_active_mounts">عمليات التركيب النشطة:</string>
     <string name="kasumi_info_kernel">النواة</string>
     <plurals name="kasumi_info_more_mounts">
@@ -84,7 +82,6 @@
     <string name="kasumi_mount_filter">تصفية أوضاع التركيب</string>
     <string name="kasumi_mount_hide">إخفاء نقاط التركيب</string>
     <string name="kasumi_mount_hide_desc">إخفاء إدخالات الوحدات في عرض نقاط التركيب</string>
-    <string name="kasumi_mount_hide_level">مستوى إخفاء نقاط التركيب</string>
     <string name="kasumi_mount_mode">وضع التركيب</string>
     <string name="kasumi_mount_mode_auto">تلقائي</string>
     <string name="kasumi_mount_mode_hide">إخفاء</string>

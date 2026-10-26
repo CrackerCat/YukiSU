@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Bendra</string>
     <string name="kasumi_global_override">Visuotinis pakeitimas: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agresyvus</string>
-    <string name="kasumi_hide_normal">Įprastas</string>
     <string name="kasumi_info_active_mounts">Aktyvūs prijungimai:</string>
     <string name="kasumi_info_kernel">Branduolys</string>
     <plurals name="kasumi_info_more_mounts">
@@ -82,7 +80,6 @@
     <string name="kasumi_mount_filter">Filtruoti prijungimo režimus</string>
     <string name="kasumi_mount_hide">Prijungimų slėpimas</string>
     <string name="kasumi_mount_hide_desc">Slėpti modulių įrašus prijungimų rodinyje</string>
-    <string name="kasumi_mount_hide_level">Prijungimų slėpimo lygis</string>
     <string name="kasumi_mount_mode">Prijungimo režimas</string>
     <string name="kasumi_mount_mode_auto">Automatinis</string>
     <string name="kasumi_mount_mode_hide">Slėpti</string>

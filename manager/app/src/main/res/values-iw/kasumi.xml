@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">כללי</string>
     <string name="kasumi_global_override">עקיפה כללית: %1$s</string>
-    <string name="kasumi_hide_aggressive">אגרסיבי</string>
-    <string name="kasumi_hide_normal">רגיל</string>
     <string name="kasumi_info_active_mounts">עיגונים פעילים:</string>
     <string name="kasumi_info_kernel">ליבה</string>
     <plurals name="kasumi_info_more_mounts">
@@ -81,7 +79,6 @@
     <string name="kasumi_mount_filter">סינון מצבי עיגון</string>
     <string name="kasumi_mount_hide">הסתרת עיגונים</string>
     <string name="kasumi_mount_hide_desc">הסתרת רשומות מודולים בתצוגת העיגונים</string>
-    <string name="kasumi_mount_hide_level">רמת הסתרת עיגונים</string>
     <string name="kasumi_mount_mode">מצב עיגון</string>
     <string name="kasumi_mount_mode_auto">אוטומטי</string>
     <string name="kasumi_mount_mode_hide">הסתרה</string>

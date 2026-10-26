@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Kasumi কার্যকর হয়েছে</string>
     <string name="kasumi_fs_type_auto">স্বয়ংক্রিয়</string>
     <string name="kasumi_global_override">গ্লোবাল ওভাররাইড: %1$s</string>
-    <string name="kasumi_hide_aggressive">আক্রমণাত্মক</string>
-    <string name="kasumi_hide_normal">সাধারণ</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="one">…এবং আরও %dটি</item>
         <item quantity="other">…এবং আরও %dটি</item>
@@ -126,7 +124,6 @@
     <string name="kasumi_mount_filter">মাউন্ট মোড অনুযায়ী ছাঁকুন</string>
     <string name="kasumi_mount_hide">মাউন্ট লুকান</string>
     <string name="kasumi_mount_hide_desc">মাউন্ট ভিউ থেকে মডিউলের এন্ট্রি লুকান</string>
-    <string name="kasumi_mount_hide_level">মাউন্ট লুকানোর মাত্রা</string>
     <string name="kasumi_mount_mode_hide">লুকান</string>
     <string name="kasumi_mount_total">মডিউল মাউন্ট</string>
     <string name="kasumi_mountsource_invalid">নাম ফাঁকা রাখা যাবে না এবং এতে ফাঁকা স্থান, ব্যাকস্ল্যাশ বা নিয়ন্ত্রণ অক্ষর থাকতে পারবে না।</string>

@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Kasumi มีผลแล้ว</string>
     <string name="kasumi_fs_type_auto">อัตโนมัติ</string>
     <string name="kasumi_global_override">แทนที่ทั่วระบบ: %1$s</string>
-    <string name="kasumi_hide_aggressive">เชิงรุก</string>
-    <string name="kasumi_hide_normal">ปกติ</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="other">…และอีก %d รายการ</item>
     </plurals>
@@ -125,7 +123,6 @@
     <string name="kasumi_mount_filter">กรองโหมดการเมานต์</string>
     <string name="kasumi_mount_hide">ซ่อนการเมานต์</string>
     <string name="kasumi_mount_hide_desc">ซ่อนรายการโมดูลจากมุมมองการเมานต์</string>
-    <string name="kasumi_mount_hide_level">ระดับการซ่อนเมานต์</string>
     <string name="kasumi_mount_mode_hide">ซ่อน</string>
     <string name="kasumi_mount_total">การเมานต์โมดูล</string>
     <string name="kasumi_mountsource_invalid">ชื่อต้องไม่ว่าง และห้ามมีช่องว่าง แบ็กสแลช หรืออักขระควบคุม</string>

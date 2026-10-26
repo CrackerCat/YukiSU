@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Üldine</string>
     <string name="kasumi_global_override">Globaalne alistus: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agressiivne</string>
-    <string name="kasumi_hide_normal">Tavaline</string>
     <string name="kasumi_info_active_mounts">Aktiivsed haakimised:</string>
     <string name="kasumi_info_kernel">Kernel</string>
     <plurals name="kasumi_info_more_mounts">
@@ -80,7 +78,6 @@
     <string name="kasumi_mount_filter">Filtreeri haakimisrežiime</string>
     <string name="kasumi_mount_hide">Haakimiste peitmine</string>
     <string name="kasumi_mount_hide_desc">Peida moodulite kirjed haakimisvaates</string>
-    <string name="kasumi_mount_hide_level">Haakimiste peitmise tase</string>
     <string name="kasumi_mount_mode">Haakimise režiim</string>
     <string name="kasumi_mount_mode_auto">Automaatne</string>
     <string name="kasumi_mount_mode_hide">Peida</string>

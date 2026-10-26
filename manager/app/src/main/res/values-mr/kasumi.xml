@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Kasumi सक्रिय आहे</string>
     <string name="kasumi_fs_type_auto">स्वयंचलित</string>
     <string name="kasumi_global_override">जागतिक ओव्हरराइड: %1$s</string>
-    <string name="kasumi_hide_aggressive">आक्रमक</string>
-    <string name="kasumi_hide_normal">सामान्य</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="one">… आणि आणखी %d माउंट</item>
         <item quantity="other">… आणि आणखी %d माउंट</item>
@@ -126,7 +124,6 @@
     <string name="kasumi_mount_filter">माउंट मोड फिल्टर करा</string>
     <string name="kasumi_mount_hide">माउंट लपवणे</string>
     <string name="kasumi_mount_hide_desc">माउंट दृश्यातील मॉड्यूलच्या नोंदी लपवा</string>
-    <string name="kasumi_mount_hide_level">माउंट लपवण्याची पातळी</string>
     <string name="kasumi_mount_mode_hide">लपवा</string>
     <string name="kasumi_mount_total">मॉड्यूल माउंट</string>
     <string name="kasumi_mountsource_invalid">नाव रिकामे असू शकत नाही आणि त्यात रिक्त जागा, बॅकस्लॅश किंवा नियंत्रण वर्ण नसावेत.</string>

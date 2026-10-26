@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Kasumi telah diterapkan</string>
     <string name="kasumi_fs_type_auto">Otomatis</string>
     <string name="kasumi_global_override">Penimpaan global: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agresif</string>
-    <string name="kasumi_hide_normal">Normal</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="other">…dan %d lainnya</item>
     </plurals>
@@ -125,7 +123,6 @@
     <string name="kasumi_mount_filter">Filter mode mount</string>
     <string name="kasumi_mount_hide">Sembunyikan mount</string>
     <string name="kasumi_mount_hide_desc">Sembunyikan entri modul dari tampilan mount</string>
-    <string name="kasumi_mount_hide_level">Tingkat penyembunyian mount</string>
     <string name="kasumi_mount_mode_hide">Sembunyikan</string>
     <string name="kasumi_mount_total">Mount modul</string>
     <string name="kasumi_mountsource_invalid">Nama tidak boleh kosong atau mengandung spasi, garis miring terbalik, maupun karakter kontrol.</string>

@@ -91,8 +91,7 @@ struct kasumi_spoof_kstat {
               (INCONSISTENT_MOUNT) */
 #define KSM_FEATURE_FAKE_MOUNTINFO                                             \
   (1 << 9) /* shared donor mount views with normalized propagation IDs */
-#define KSM_FEATURE_MOUNT_HIDE_AGGRESSIVE                                      \
-  (1 << 12) /* mount-ns link projection */
+/* Bit 12 remains reserved for removed mount namespace link projection. */
 #define KSM_FEATURE_OVERLAY_XATTR_HIDE (1 << 13)
 #define KSM_FEATURE_MANAGED_HIDE (1 << 14)
 
@@ -120,9 +119,6 @@ struct kasumi_user_hide_arg {
   __aligned_u64 reserved[2];
   char path[KSM_USER_HIDE_PATH_MAX];
 };
-
-#define KSM_MOUNT_HIDE_MODE_NORMAL 0
-#define KSM_MOUNT_HIDE_MODE_AGGRESSIVE 1
 
 /*
  * Maps spoof rule: when a /proc/pid/maps line has (target_ino[, target_dev]),
@@ -236,7 +232,7 @@ struct kasumi_conflict_ack_arg {
   _IOW(KSM_IOC_MAGIC, 27, struct kasumi_statfs_spoof_arg)
 /* Commands 17 and 28 remain reserved for removed uname operations. */
 
-#define KSM_IOC_SET_MOUNT_HIDE_MODE _IOW(KSM_IOC_MAGIC, 38, int)
+/* Command 38 remains reserved for removed mount-hide mode selection. */
 
 #define KSM_IOC_USER_HIDE_UPSERT                                               \
   _IOWR(KSM_IOC_MAGIC, 40, struct kasumi_user_hide_arg)

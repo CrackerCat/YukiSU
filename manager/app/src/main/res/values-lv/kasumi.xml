@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Vispārīgi</string>
     <string name="kasumi_global_override">Globālā pārrakstīšana: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agresīvs</string>
-    <string name="kasumi_hide_normal">Parasts</string>
     <string name="kasumi_info_active_mounts">Aktīvie montējumi:</string>
     <string name="kasumi_info_kernel">Kodols</string>
     <plurals name="kasumi_info_more_mounts">
@@ -81,7 +79,6 @@
     <string name="kasumi_mount_filter">Filtrēt montēšanas režīmus</string>
     <string name="kasumi_mount_hide">Montējumu slēpšana</string>
     <string name="kasumi_mount_hide_desc">Slēpt moduļu ierakstus montējumu skatā</string>
-    <string name="kasumi_mount_hide_level">Montējumu slēpšanas līmenis</string>
     <string name="kasumi_mount_mode">Montēšanas režīms</string>
     <string name="kasumi_mount_mode_auto">Automātiski</string>
     <string name="kasumi_mount_mode_hide">Slēpt</string>

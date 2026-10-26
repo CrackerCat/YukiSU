@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">عمومی</string>
     <string name="kasumi_global_override">جایگزینی سراسری: %1$s</string>
-    <string name="kasumi_hide_aggressive">تهاجمی</string>
-    <string name="kasumi_hide_normal">عادی</string>
     <string name="kasumi_info_active_mounts">مانت‌های فعال:</string>
     <string name="kasumi_info_kernel">کرنل</string>
     <plurals name="kasumi_info_more_mounts">
@@ -80,7 +78,6 @@
     <string name="kasumi_mount_filter">فیلتر حالت‌های اتصال</string>
     <string name="kasumi_mount_hide">پنهان‌سازی اتصال‌ها</string>
     <string name="kasumi_mount_hide_desc">پنهان کردن ورودی‌های ماژول در نمای اتصال‌ها</string>
-    <string name="kasumi_mount_hide_level">سطح پنهان‌سازی اتصال‌ها</string>
     <string name="kasumi_mount_mode">حالت مانت</string>
     <string name="kasumi_mount_mode_auto">خودکار</string>
     <string name="kasumi_mount_mode_hide">پنهان کردن</string>

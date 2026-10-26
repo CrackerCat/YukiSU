@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Genel</string>
     <string name="kasumi_global_override">Genel geçersiz kılma: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agresif</string>
-    <string name="kasumi_hide_normal">Normal</string>
     <string name="kasumi_info_active_mounts">Etkin bağlamalar:</string>
     <string name="kasumi_info_kernel">Kernel</string>
     <plurals name="kasumi_info_more_mounts">
@@ -80,7 +78,6 @@
     <string name="kasumi_mount_filter">Bağlama kiplerini filtrele</string>
     <string name="kasumi_mount_hide">Bağlamaları gizleme</string>
     <string name="kasumi_mount_hide_desc">Bağlama görünümündeki modül girdilerini gizler</string>
-    <string name="kasumi_mount_hide_level">Bağlama gizleme düzeyi</string>
     <string name="kasumi_mount_mode">Bağlama modu</string>
     <string name="kasumi_mount_mode_auto">Otomatik</string>
     <string name="kasumi_mount_mode_hide">Gizle</string>

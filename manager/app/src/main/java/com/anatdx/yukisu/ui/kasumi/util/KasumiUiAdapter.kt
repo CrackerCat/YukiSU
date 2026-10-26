@@ -31,7 +31,7 @@ object KasumiUiAdapter {
         val mountsource: String = "KSU", val debug: Boolean = false, val verbose: Boolean = false,
         val fsType: String = "auto", val enableKernelDebug: Boolean = false,
         val enableStealth: Boolean = true, val enableOverlayXattrHide: Boolean = false,
-        val enableMountHide: Boolean = false, val mountHideMode: String = "normal",
+        val enableMountHide: Boolean = false,
         val enableMapsSpoof: Boolean = false, val enableStatfsSpoof: Boolean = false,
         val kasumiEnabled: Boolean = true,
         val mirrorPath: String = "", val partitions: List<String> = emptyList(),
@@ -55,7 +55,6 @@ object KasumiUiAdapter {
             enableStealth = raw.optBoolean("enable_stealth", true),
             enableOverlayXattrHide = raw.optBoolean("enable_overlay_xattr_hide"),
             enableMountHide = raw.optBoolean("enable_mount_hide"),
-            mountHideMode = raw.optString("mount_hide_mode", "normal"),
             enableMapsSpoof = raw.optBoolean("enable_maps_spoof"),
             enableStatfsSpoof = raw.optBoolean("enable_statfs_spoof"),
             kasumiEnabled = raw.optBoolean("kasumi_enabled", true), mirrorPath = raw.optString("mirror_dir"),
@@ -177,7 +176,6 @@ object KasumiUiAdapter {
         change("enable_stealth", old.enableStealth, value.enableStealth)
         change("enable_overlay_xattr_hide", old.enableOverlayXattrHide, value.enableOverlayXattrHide)
         change("enable_mount_hide", old.enableMountHide, value.enableMountHide)
-        change("mount_hide_mode", old.mountHideMode, value.mountHideMode)
         change("enable_maps_spoof", old.enableMapsSpoof, value.enableMapsSpoof)
         change("enable_statfs_spoof", old.enableStatfsSpoof, value.enableStatfsSpoof)
         change("kasumi_enabled", old.kasumiEnabled, value.kasumiEnabled)

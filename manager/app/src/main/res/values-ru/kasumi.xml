@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (ОЗУ)</string>
     <string name="kasumi_general">Общие</string>
     <string name="kasumi_global_override">Глобальное переопределение: %1$s</string>
-    <string name="kasumi_hide_aggressive">Агрессивный</string>
-    <string name="kasumi_hide_normal">Обычный</string>
     <string name="kasumi_info_active_mounts">Активные монтирования:</string>
     <string name="kasumi_info_kernel">Ядро</string>
     <plurals name="kasumi_info_more_mounts">
@@ -82,7 +80,6 @@
     <string name="kasumi_mount_filter">Фильтр режимов монтирования</string>
     <string name="kasumi_mount_hide">Скрытие монтирований</string>
     <string name="kasumi_mount_hide_desc">Скрывать записи модулей в представлении монтирований</string>
-    <string name="kasumi_mount_hide_level">Уровень скрытия монтирований</string>
     <string name="kasumi_mount_mode">Режим монтирования</string>
     <string name="kasumi_mount_mode_auto">Авто</string>
     <string name="kasumi_mount_mode_hide">Скрыть</string>

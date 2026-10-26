@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Generale</string>
     <string name="kasumi_global_override">Sostituzione globale: %1$s</string>
-    <string name="kasumi_hide_aggressive">Aggressivo</string>
-    <string name="kasumi_hide_normal">Normale</string>
     <string name="kasumi_info_active_mounts">Montaggi attivi:</string>
     <string name="kasumi_info_kernel">Kernel</string>
     <plurals name="kasumi_info_more_mounts">
@@ -81,7 +79,6 @@
     <string name="kasumi_mount_filter">Filtra modalità di montaggio</string>
     <string name="kasumi_mount_hide">Occultamento dei montaggi</string>
     <string name="kasumi_mount_hide_desc">Nascondi le voci dei moduli nella vista dei montaggi</string>
-    <string name="kasumi_mount_hide_level">Livello di occultamento dei montaggi</string>
     <string name="kasumi_mount_mode">Modalità di montaggio</string>
     <string name="kasumi_mount_mode_auto">Automatico</string>
     <string name="kasumi_mount_mode_hide">Nascondi</string>

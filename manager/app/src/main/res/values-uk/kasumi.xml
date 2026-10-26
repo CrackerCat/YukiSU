@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Загальні</string>
     <string name="kasumi_global_override">Глобальне перевизначення: %1$s</string>
-    <string name="kasumi_hide_aggressive">Агресивний</string>
-    <string name="kasumi_hide_normal">Звичайний</string>
     <string name="kasumi_info_active_mounts">Активні монтування:</string>
     <string name="kasumi_info_kernel">Ядро</string>
     <plurals name="kasumi_info_more_mounts">
@@ -82,7 +80,6 @@
     <string name="kasumi_mount_filter">Фільтр режимів монтування</string>
     <string name="kasumi_mount_hide">Приховування монтувань</string>
     <string name="kasumi_mount_hide_desc">Приховувати записи модулів у поданні монтувань</string>
-    <string name="kasumi_mount_hide_level">Рівень приховування монтувань</string>
     <string name="kasumi_mount_mode">Режим монтування</string>
     <string name="kasumi_mount_mode_auto">Автоматично</string>
     <string name="kasumi_mount_mode_hide">Приховати</string>

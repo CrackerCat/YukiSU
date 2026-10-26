@@ -71,7 +71,6 @@ std::string default_config_json() {
   "enable_stealth": true,
   "enable_overlay_xattr_hide": false,
   "enable_mount_hide": false,
-  "mount_hide_mode": "normal",
   "enable_maps_spoof": false,
   "enable_statfs_spoof": false,
   "kasumi_enabled": true,
@@ -125,9 +124,6 @@ bool validate_config_patch(const json::Value& patch, std::string& error) {
         if ((key == "work_dir" && (value.s.empty() || value.s.front() != '/')) ||
             (key == "mirror_dir" && !value.s.empty() && value.s.front() != '/'))
             return reject(key, "must be an absolute path");
-        if (key == "mount_hide_mode" && !value.s.empty() && value.s != "normal" &&
-            value.s != "aggressive")
-            return reject(key, "must be normal or aggressive");
         if (key == "fs_type" && !value.s.empty() && value.s != "auto" && value.s != "tmpfs" &&
             value.s != "ext4" && value.s != "erofs")
             return reject(key, "must be auto, tmpfs, ext4 or erofs");
@@ -248,9 +244,6 @@ bool parse_config_json(const std::string& json, Config& config, std::string& err
     config.enable_overlay_xattr_hide =
         json_bool_or(&root, "enable_overlay_xattr_hide", config.enable_overlay_xattr_hide);
     config.enable_mount_hide = json_bool_or(&root, "enable_mount_hide", config.enable_mount_hide);
-    config.mount_hide_mode = json_string_or(&root, "mount_hide_mode", config.mount_hide_mode);
-    if (config.mount_hide_mode != "normal" && config.mount_hide_mode != "aggressive")
-        config.mount_hide_mode = "normal";
     config.enable_maps_spoof = json_bool_or(&root, "enable_maps_spoof", config.enable_maps_spoof);
     config.enable_statfs_spoof =
         json_bool_or(&root, "enable_statfs_spoof", config.enable_statfs_spoof);

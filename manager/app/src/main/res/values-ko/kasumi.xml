@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Kasumi 적용됨</string>
     <string name="kasumi_fs_type_auto">자동</string>
     <string name="kasumi_global_override">전역 재정의: %1$s</string>
-    <string name="kasumi_hide_aggressive">적극적</string>
-    <string name="kasumi_hide_normal">일반</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="other">…외 %d개</item>
     </plurals>
@@ -125,7 +123,6 @@
     <string name="kasumi_mount_filter">마운트 모드 필터</string>
     <string name="kasumi_mount_hide">마운트 숨기기</string>
     <string name="kasumi_mount_hide_desc">마운트 보기에서 모듈 항목 숨기기</string>
-    <string name="kasumi_mount_hide_level">마운트 숨김 수준</string>
     <string name="kasumi_mount_mode_hide">숨기기</string>
     <string name="kasumi_mount_total">모듈 마운트</string>
     <string name="kasumi_mountsource_invalid">이름은 비워 둘 수 없으며 공백, 역슬래시 또는 제어 문자를 포함할 수 없습니다.</string>

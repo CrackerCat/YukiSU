@@ -71,7 +71,7 @@ void print_usage() {
               << "  ksud kagami hide list|apply|add|remove\n"
               << "  ksud kagami kasumi "
                  "version|list|enable|disable|clear|fix-mounts|hide-overlay-xattrs|mount-hide "
-                 "off|normal|aggressive|maps\n";
+                 "off|normal|maps\n";
 }
 
 std::string arg_or_default(const std::vector<std::string>& args, std::size_t index,
@@ -1096,16 +1096,14 @@ int handle_kasumi(const std::vector<std::string>& args) {
     }
     if (sub == "mount-hide" || sub == "maps-spoof" || sub == "statfs-spoof") {
         const std::string value = arg_or_default(args, 2, "off");
-        const bool on = value == "on" || value == "normal" || value == "aggressive";
+        const bool on = value == "on" || value == "normal";
         bool ok = false;
         if (sub == "mount-hide") {
-            if (value != "off" && value != "on" && value != "normal" && value != "aggressive") {
-                std::cerr << "usage: ksud kagami kasumi mount-hide off|normal|aggressive\n";
+            if (value != "off" && value != "on" && value != "normal") {
+                std::cerr << "usage: ksud kagami kasumi mount-hide off|on|normal\n";
                 return 1;
             }
-            ok =
-                kasumi::set_mount_hide(on, value == "aggressive" ? kasumi::MountHideMode::Aggressive
-                                                                 : kasumi::MountHideMode::Normal);
+            ok = kasumi::set_mount_hide(on);
         } else if (sub == "maps-spoof") {
             ok = kasumi::set_maps_spoof(on);
         } else if (sub == "statfs-spoof") {
@@ -1276,7 +1274,6 @@ std::string operation_description(const std::vector<std::string>& args) {
                                                          "enable_kernel_debug",
                                                          "enable_stealth",
                                                          "enable_mount_hide",
-                                                         "mount_hide_mode",
                                                          "enable_maps_spoof",
                                                          "enable_statfs_spoof",
                                                          "enable_overlay_xattr_hide",

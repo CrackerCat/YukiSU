@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Kasumi 適用済み</string>
     <string name="kasumi_fs_type_auto">自動</string>
     <string name="kasumi_global_override">グローバル上書き：%1$s</string>
-    <string name="kasumi_hide_aggressive">積極的</string>
-    <string name="kasumi_hide_normal">通常</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="other">…ほか %d 件</item>
     </plurals>
@@ -125,7 +123,6 @@
     <string name="kasumi_mount_filter">マウント方式を絞り込む</string>
     <string name="kasumi_mount_hide">マウントを隠す</string>
     <string name="kasumi_mount_hide_desc">マウントビューでモジュールの項目を隠す</string>
-    <string name="kasumi_mount_hide_level">マウントを隠すレベル</string>
     <string name="kasumi_mount_mode_hide">非表示</string>
     <string name="kasumi_mount_total">モジュールのマウント</string>
     <string name="kasumi_mountsource_invalid">名前を空にしたり、空白、バックスラッシュ、制御文字を含めたりすることはできません。</string>

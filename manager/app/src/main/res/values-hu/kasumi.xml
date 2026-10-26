@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Általános</string>
     <string name="kasumi_global_override">Globális felülbírálás: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agresszív</string>
-    <string name="kasumi_hide_normal">Normál</string>
     <string name="kasumi_info_active_mounts">Aktív csatolások:</string>
     <string name="kasumi_info_kernel">Kernel</string>
     <plurals name="kasumi_info_more_mounts">
@@ -80,7 +78,6 @@
     <string name="kasumi_mount_filter">Csatolási módok szűrése</string>
     <string name="kasumi_mount_hide">Csatolások elrejtése</string>
     <string name="kasumi_mount_hide_desc">A modulbejegyzések elrejtése a csatolási nézetben</string>
-    <string name="kasumi_mount_hide_level">Csatoláselrejtés szintje</string>
     <string name="kasumi_mount_mode">Csatolási mód</string>
     <string name="kasumi_mount_mode_auto">Automatikus</string>
     <string name="kasumi_mount_mode_hide">Elrejtés</string>

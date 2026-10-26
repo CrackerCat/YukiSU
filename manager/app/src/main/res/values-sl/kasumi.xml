@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Splošno</string>
     <string name="kasumi_global_override">Globalna preglasitev: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agresivno</string>
-    <string name="kasumi_hide_normal">Običajno</string>
     <string name="kasumi_info_active_mounts">Aktivni priklopi:</string>
     <string name="kasumi_info_kernel">Jedro</string>
     <plurals name="kasumi_info_more_mounts">
@@ -82,7 +80,6 @@
     <string name="kasumi_mount_filter">Filtriraj načine priklopa</string>
     <string name="kasumi_mount_hide">Skrivanje priklopov</string>
     <string name="kasumi_mount_hide_desc">Skrij zapise modulov v pogledu priklopov</string>
-    <string name="kasumi_mount_hide_level">Raven skrivanja priklopov</string>
     <string name="kasumi_mount_mode">Način priklopa</string>
     <string name="kasumi_mount_mode_auto">Samodejno</string>
     <string name="kasumi_mount_mode_hide">Skrij</string>

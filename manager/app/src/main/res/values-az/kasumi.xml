@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Ümumi</string>
     <string name="kasumi_global_override">Qlobal əvəzləmə: %1$s</string>
-    <string name="kasumi_hide_aggressive">Aqressiv</string>
-    <string name="kasumi_hide_normal">Adi</string>
     <string name="kasumi_info_active_mounts">Aktiv Bağlamalar:</string>
     <string name="kasumi_info_kernel">Nüvə</string>
     <plurals name="kasumi_info_more_mounts">
@@ -80,7 +78,6 @@
     <string name="kasumi_mount_filter">Qoşma rejimlərini süzgəcdən keçir</string>
     <string name="kasumi_mount_hide">Qoşmaların gizlədilməsi</string>
     <string name="kasumi_mount_hide_desc">Qoşma görünüşündə modul qeydlərini gizlədir</string>
-    <string name="kasumi_mount_hide_level">Qoşmaların gizlədilmə səviyyəsi</string>
     <string name="kasumi_mount_mode">Bağlama rejimi</string>
     <string name="kasumi_mount_mode_auto">Avtomatik</string>
     <string name="kasumi_mount_mode_hide">Gizlət</string>

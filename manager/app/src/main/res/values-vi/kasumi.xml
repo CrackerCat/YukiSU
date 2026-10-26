@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Kasumi đã có hiệu lực</string>
     <string name="kasumi_fs_type_auto">Tự động</string>
     <string name="kasumi_global_override">Ghi đè toàn cục: %1$s</string>
-    <string name="kasumi_hide_aggressive">Mạnh</string>
-    <string name="kasumi_hide_normal">Thông thường</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="other">…và %d mục khác</item>
     </plurals>
@@ -125,7 +123,6 @@
     <string name="kasumi_mount_filter">Lọc chế độ gắn kết</string>
     <string name="kasumi_mount_hide">Ẩn gắn kết</string>
     <string name="kasumi_mount_hide_desc">Ẩn các mục mô-đun trong khung nhìn gắn kết</string>
-    <string name="kasumi_mount_hide_level">Mức độ ẩn gắn kết</string>
     <string name="kasumi_mount_mode_hide">Ẩn</string>
     <string name="kasumi_mount_total">Gắn kết mô-đun</string>
     <string name="kasumi_mountsource_invalid">Tên không được để trống hoặc chứa khoảng trắng, dấu gạch chéo ngược hay ký tự điều khiển.</string>

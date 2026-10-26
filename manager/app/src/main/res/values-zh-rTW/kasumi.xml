@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs 分割區（記憶體）</string>
     <string name="kasumi_general">一般</string>
     <string name="kasumi_global_override">全域覆蓋：%1$s</string>
-    <string name="kasumi_hide_aggressive">激進</string>
-    <string name="kasumi_hide_normal">普通</string>
     <string name="kasumi_info_active_mounts">作用中掛載：</string>
     <string name="kasumi_info_kernel">內核</string>
     <plurals name="kasumi_info_more_mounts">
@@ -79,7 +77,6 @@
     <string name="kasumi_mount_filter">篩選掛載模式</string>
     <string name="kasumi_mount_hide">掛載隱藏</string>
     <string name="kasumi_mount_hide_desc">隱藏掛載檢視中的模組條目</string>
-    <string name="kasumi_mount_hide_level">掛載隱藏等級</string>
     <string name="kasumi_mount_mode">掛載方式</string>
     <string name="kasumi_mount_mode_auto">自動</string>
     <string name="kasumi_mount_mode_hide">隱藏</string>

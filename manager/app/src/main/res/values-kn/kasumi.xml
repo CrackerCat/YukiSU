@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Kasumi ಜಾರಿಗೆ ಬಂದಿದೆ</string>
     <string name="kasumi_fs_type_auto">ಸ್ವಯಂಚಾಲಿತ</string>
     <string name="kasumi_global_override">ಜಾಗತಿಕ ಬದಲಾವಣೆ: %1$s</string>
-    <string name="kasumi_hide_aggressive">ಆಕ್ರಮಣಕಾರಿ</string>
-    <string name="kasumi_hide_normal">ಸಾಮಾನ್ಯ</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="one">…ಮತ್ತು ಇನ್ನೂ %d</item>
         <item quantity="other">…ಮತ್ತು ಇನ್ನೂ %d</item>
@@ -126,7 +124,6 @@
     <string name="kasumi_mount_filter">ಮೌಂಟ್ ಮೋಡ್‌ಗಳನ್ನು ಫಿಲ್ಟರ್ ಮಾಡಿ</string>
     <string name="kasumi_mount_hide">ಮೌಂಟ್ ಮರೆಮಾಡಿ</string>
     <string name="kasumi_mount_hide_desc">ಮೌಂಟ್ ನೋಟದಲ್ಲಿ ಮಾಡ್ಯೂಲ್ ನಮೂದುಗಳನ್ನು ಮರೆಮಾಡಿ</string>
-    <string name="kasumi_mount_hide_level">ಮೌಂಟ್ ಮರೆಮಾಡುವ ಮಟ್ಟ</string>
     <string name="kasumi_mount_mode_hide">ಮರೆಮಾಡಿ</string>
     <string name="kasumi_mount_total">ಮಾಡ್ಯೂಲ್ ಮೌಂಟ್</string>
     <string name="kasumi_mountsource_invalid">ಹೆಸರು ಖಾಲಿಯಾಗಿರಬಾರದು; ಖಾಲಿ ಜಾಗ, ಬ್ಯಾಕ್‌ಸ್ಲ್ಯಾಶ್ ಅಥವಾ ನಿಯಂತ್ರಣ ಅಕ್ಷರಗಳನ್ನು ಹೊಂದಿರಬಾರದು.</string>

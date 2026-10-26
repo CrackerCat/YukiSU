@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Kasumi అమలులో ఉంది</string>
     <string name="kasumi_fs_type_auto">స్వయంచాలకం</string>
     <string name="kasumi_global_override">గ్లోబల్ ఓవర్‌రైడ్: %1$s</string>
-    <string name="kasumi_hide_aggressive">దూకుడు</string>
-    <string name="kasumi_hide_normal">సాధారణం</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="one">…మరియు మరో %d</item>
         <item quantity="other">…మరియు మరో %d</item>
@@ -126,7 +124,6 @@
     <string name="kasumi_mount_filter">మౌంట్ మోడ్‌లను ఫిల్టర్ చేయండి</string>
     <string name="kasumi_mount_hide">మౌంట్‌ను దాచండి</string>
     <string name="kasumi_mount_hide_desc">మౌంట్ వీక్షణలో మాడ్యూల్ అంశాలను దాచండి</string>
-    <string name="kasumi_mount_hide_level">మౌంట్ దాచే స్థాయి</string>
     <string name="kasumi_mount_mode_hide">దాచండి</string>
     <string name="kasumi_mount_total">మాడ్యూల్ మౌంట్</string>
     <string name="kasumi_mountsource_invalid">పేరు ఖాళీగా ఉండకూడదు; ఖాళీ అక్షరాలు, బ్యాక్‌స్లాష్ లేదా నియంత్రణ అక్షరాలు ఉండకూడదు.</string>

@@ -265,7 +265,7 @@ bool disable_kernel_features(std::string* error = nullptr) {
 
 bool apply_feature_config(const Config& config, std::string& error) {
     mlog("apply features: mount_hide=" + std::to_string(config.enable_mount_hide) +
-         " mode=" + config.mount_hide_mode + " maps=" + std::to_string(config.enable_maps_spoof) +
+         " maps=" + std::to_string(config.enable_maps_spoof) +
          " statfs=" + std::to_string(config.enable_statfs_spoof) +
          " overlay_xattrs=" + std::to_string(config.enable_overlay_xattr_hide));
     bool ok = true;
@@ -280,11 +280,7 @@ bool apply_feature_config(const Config& config, std::string& error) {
 
     apply(::kagami::kasumi::set_debug(config.enable_kernel_debug), "kernel debug");
     apply(::kagami::kasumi::set_stealth(config.enable_stealth), "stealth");
-    const auto mount_hide_mode = config.mount_hide_mode == "aggressive"
-                                     ? ::kagami::kasumi::MountHideMode::Aggressive
-                                     : ::kagami::kasumi::MountHideMode::Normal;
-    apply(::kagami::kasumi::set_mount_hide(config.enable_mount_hide, mount_hide_mode),
-          "mount hide");
+    apply(::kagami::kasumi::set_mount_hide(config.enable_mount_hide), "mount hide");
     apply(::kagami::kasumi::set_maps_spoof(config.enable_maps_spoof), "maps spoof");
     apply(::kagami::kasumi::set_statfs_spoof(config.enable_statfs_spoof), "statfs spoof");
     if (!ok) {

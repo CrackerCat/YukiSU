@@ -23,8 +23,6 @@
     <string name="kasumi_fs_type_tmpfs">Tmpfs (RAM)</string>
     <string name="kasumi_general">Algemeen</string>
     <string name="kasumi_global_override">Globale overschrijving: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agressief</string>
-    <string name="kasumi_hide_normal">Normaal</string>
     <string name="kasumi_info_active_mounts">Actieve koppelingen:</string>
     <string name="kasumi_info_kernel">Kernel</string>
     <plurals name="kasumi_info_more_mounts">
@@ -80,7 +78,6 @@
     <string name="kasumi_mount_filter">Koppelmodi filteren</string>
     <string name="kasumi_mount_hide">Koppelingen verbergen</string>
     <string name="kasumi_mount_hide_desc">Modulevermeldingen in de koppelweergave verbergen</string>
-    <string name="kasumi_mount_hide_level">Niveau voor verborgen koppelingen</string>
     <string name="kasumi_mount_mode">Koppelmodus</string>
     <string name="kasumi_mount_mode_auto">Automatisch</string>
     <string name="kasumi_mount_mode_hide">Verbergen</string>

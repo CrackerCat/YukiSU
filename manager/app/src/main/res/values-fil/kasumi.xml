@@ -106,8 +106,6 @@
     <string name="kasumi_filter_active">Nakalapat na ang Kasumi</string>
     <string name="kasumi_fs_type_auto">Awtomatiko</string>
     <string name="kasumi_global_override">Pangkalahatang override: %1$s</string>
-    <string name="kasumi_hide_aggressive">Agresibo</string>
-    <string name="kasumi_hide_normal">Karaniwan</string>
     <plurals name="kasumi_info_more_mounts">
         <item quantity="one">…at %d pa</item>
         <item quantity="other">…at %d pa</item>
@@ -126,7 +124,6 @@
     <string name="kasumi_mount_filter">Salain ayon sa mode ng mount</string>
     <string name="kasumi_mount_hide">Itago ang mga mount</string>
     <string name="kasumi_mount_hide_desc">Itago ang mga entry ng module sa view ng mount</string>
-    <string name="kasumi_mount_hide_level">Antas ng pagtatago ng mount</string>
     <string name="kasumi_mount_mode_hide">Itago</string>
     <string name="kasumi_mount_total">Mga mount ng module</string>
     <string name="kasumi_mountsource_invalid">Hindi maaaring blangko ang pangalan o maglaman ng whitespace, backslash o mga control character.</string>
