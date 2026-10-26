@@ -56,11 +56,8 @@ bool set_context(const std::string& path, const std::string& ctx) {
     return lsetxattr(path.c_str(), kSelinuxXattr, ctx.c_str(), ctx.size() + 1, 0) == 0;
 }
 
-void clone_attr(const std::string& src, const std::string& dst) {
-    struct stat st{};
-    if (lstat(src.c_str(), &st) != 0) {
-        return;
-    }
+namespace {
+void clone_known_attr(const std::string& src, const std::string& dst, const struct stat& st) {
     if (!S_ISLNK(st.st_mode)) {
         chmod(dst.c_str(), st.st_mode & 07777);
     }
@@ -69,6 +66,14 @@ void clone_attr(const std::string& src, const std::string& dst) {
     if (get_context(src, ctx)) {
         set_context(dst, ctx);
     }
+}
+
+}  // namespace
+
+void clone_attr(const std::string& src, const std::string& dst) {
+    struct stat st{};
+    if (lstat(src.c_str(), &st) == 0)
+        clone_known_attr(src, dst, st);
 }
 
 bool bind_mount(const std::string& src, const std::string& dst) {
@@ -167,7 +172,19 @@ bool directory_is_opaque(const std::string& path, bool& opaque) {
     return true;
 }
 
-bool copy_tree(const std::string& src, const std::string& dst) {
+namespace {
+std::size_t record_copy(CopiedTree* tree, const std::string& name, std::size_t parent) {
+    if (!tree)
+        return 0;
+    const std::size_t index = tree->entries.size();
+    tree->entries.push_back({tree->names.size(), parent});
+    tree->names.append(name);
+    tree->names.push_back('\0');
+    return index;
+}
+
+bool copy_tree_impl(const std::string& src, const std::string& dst, CopiedTree* tree,
+                    const std::string& name, std::size_t parent) {
     struct stat st{};
     if (lstat(src.c_str(), &st) != 0) {
         mlog("copy_tree lstat " + src + " failed: " + std::strerror(errno), logging::Level::Error);
@@ -190,7 +207,8 @@ bool copy_tree(const std::string& src, const std::string& dst) {
             mlog("create whiteout " + dst + ": " + std::strerror(errno), logging::Level::Error);
             return false;
         }
-        clone_attr(src, dst);
+        clone_known_attr(src, dst, st);
+        record_copy(tree, name, parent);
         return true;
     }
 
@@ -200,7 +218,7 @@ bool copy_tree(const std::string& src, const std::string& dst) {
                  logging::Level::Error);
             return false;
         }
-        clone_attr(src, dst);
+        clone_known_attr(src, dst, st);
         bool opaque = false;
         if (!directory_is_opaque(src, opaque))
             return false;
@@ -213,6 +231,7 @@ bool copy_tree(const std::string& src, const std::string& dst) {
         if (!d) {
             return false;
         }
+        const std::size_t index = record_copy(tree, name, parent);
         bool ok = true;
         struct dirent* e;
         for (;;) {
@@ -227,7 +246,8 @@ bool copy_tree(const std::string& src, const std::string& dst) {
             }
             if (std::strcmp(e->d_name, ".replace") == 0)
                 continue;
-            if (!copy_tree(src + "/" + e->d_name, dst + "/" + e->d_name)) {
+            if (!copy_tree_impl(src + "/" + e->d_name, dst + "/" + e->d_name, tree, e->d_name,
+                                index)) {
                 ok = false;
             }
         }
@@ -251,6 +271,7 @@ bool copy_tree(const std::string& src, const std::string& dst) {
         if (get_context(src, ctx)) {
             set_context(dst, ctx);
         }
+        record_copy(tree, name, parent);
         return true;
     }
 
@@ -259,11 +280,29 @@ bool copy_tree(const std::string& src, const std::string& dst) {
         if (!ok)
             mlog("copy_tree " + src + " -> " + dst + " failed: " + std::strerror(errno),
                  logging::Level::Error);
-        clone_attr(src, dst);
+        clone_known_attr(src, dst, st);
+        if (ok)
+            record_copy(tree, name, parent);
         return ok;
     }
 
     return true;  // skip device/socket/fifo nodes
+}
+
+}  // namespace
+
+bool copy_tree(const std::string& src, const std::string& dst) {
+    return copy_tree_impl(src, dst, nullptr, {}, 0);
+}
+
+bool copy_tree(const std::string& src, const std::string& dst, CopiedTree& tree) {
+    tree.entries.clear();
+    tree.names.clear();
+    if (copy_tree_impl(src, dst, &tree, {}, 0))
+        return true;
+    tree.entries.clear();
+    tree.names.clear();
+    return false;
 }
 
 bool capture_mount_identity(const std::string& path, MountRecord& record) {

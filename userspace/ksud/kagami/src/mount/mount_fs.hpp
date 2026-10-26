@@ -33,6 +33,19 @@ bool directory_is_opaque(const std::string& path, bool& opaque);
 // whiteouts. Returns false on copy or replacement-metadata errors.
 bool copy_tree(const std::string& src, const std::string& dst);
 
+// A successful copy's preorder, with names owned independently of readdir.
+// Entry zero is the root (empty name); every other parent precedes its child.
+// Overlay can relabel after the entire copy without enumerating it again.
+struct CopiedTree {
+    struct Entry {
+        std::size_t name_offset;
+        std::size_t parent;
+    };
+    std::vector<Entry> entries;
+    std::string names;
+};
+bool copy_tree(const std::string& src, const std::string& dst, CopiedTree& tree);
+
 std::string decode_mount_path(const std::string& input);
 struct MountRecord {
     std::string path;

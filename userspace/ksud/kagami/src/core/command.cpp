@@ -1300,27 +1300,52 @@ std::string operation_description(const std::vector<std::string>& args) {
 }
 }  // namespace
 
-CommandResult run_command_capture(const std::vector<std::string>& args) {
+CommandResult run_command_capture(const std::vector<std::string>& args, CommandCapture& capture) {
     const auto started = std::chrono::steady_clock::now();
     const auto operation = operation_description(args);
     const auto level = is_query(args) ? logging::Level::Debug : logging::Level::Info;
     logging::write(level, "command", "begin " + operation);
-    std::stringbuf stdout_buffer;
-    std::stringbuf stderr_buffer;
-    auto* old_stdout = std::cout.rdbuf(&stdout_buffer);
-    auto* old_stderr = std::cerr.rdbuf(&stderr_buffer);
-    errno = 0;
+    capture.out.reset();
+    capture.err.reset();
     int exit_code;
-    try {
-        exit_code = run_command(args);
-    } catch (const std::exception& error) {
-        std::cerr << "Kagami: " << error.what() << '\n';
-        errno = EIO;
-        exit_code = 1;
+    int error_number;
+    {
+        class RestoreStreams {
+        public:
+            RestoreStreams() = default;
+            RestoreStreams(const RestoreStreams&) = delete;
+            RestoreStreams& operator=(const RestoreStreams&) = delete;
+            RestoreStreams(RestoreStreams&&) = delete;
+            RestoreStreams& operator=(RestoreStreams&&) = delete;
+            ~RestoreStreams() {
+                std::cout.rdbuf(out);
+                std::cerr.rdbuf(err);
+                std::cout.clear(out_state);
+                std::cerr.clear(err_state);
+            }
+
+        private:
+            std::streambuf* out = std::cout.rdbuf();
+            std::streambuf* err = std::cerr.rdbuf();
+            std::ios::iostate out_state = std::cout.rdstate();
+            std::ios::iostate err_state = std::cerr.rdstate();
+        } restore;
+        std::cout.rdbuf(&capture.out);
+        std::cerr.rdbuf(&capture.err);
+        errno = 0;
+        try {
+            exit_code = run_command(args);
+        } catch (const std::exception& error) {
+            std::cerr << "Kagami: " << error.what() << '\n';
+            errno = EIO;
+            exit_code = 1;
+        }
+        if (capture.out.failed() || capture.err.failed()) {
+            errno = ENOBUFS;
+            exit_code = 1;
+        }
+        error_number = exit_code == 0 ? 0 : (errno != 0 ? errno : EIO);
     }
-    const int error_number = exit_code == 0 ? 0 : (errno != 0 ? errno : EIO);
-    std::cout.rdbuf(old_stdout);
-    std::cerr.rdbuf(old_stderr);
     const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
                              std::chrono::steady_clock::now() - started)
                              .count();
@@ -1328,10 +1353,12 @@ CommandResult run_command_capture(const std::vector<std::string>& args) {
                    operation + " result=" + (exit_code == 0 ? "ok" : "failed") + " exit=" +
                        std::to_string(exit_code) + " errno=" + std::to_string(error_number) +
                        " elapsed_ms=" + std::to_string(elapsed));
-    if (!stderr_buffer.str().empty())
+    if (!capture.err.view().empty())
         logging::write(exit_code == 0 ? logging::Level::Warning : logging::Level::Error, "command",
-                       operation + ": " + stderr_buffer.str());
-    return {exit_code, error_number, stdout_buffer.str(), stderr_buffer.str()};
+                       operation + ": " + std::string(capture.err.view()));
+    if (capture.out.failed() || capture.err.failed())
+        return {1, ENOBUFS, {}, "command output exceeds protocol capacity\n"};
+    return {exit_code, error_number, capture.out.view(), capture.err.view()};
 }
 
 }  // namespace kagami

@@ -434,52 +434,51 @@ std::vector<std::string> our_overlays(const std::string& source) {
     return paths;
 }
 
-bool relabel_tree(const std::string& node, const std::string& target,
-                  const std::string& parent_ctx) {
-    std::string ctx;
-    if (!fsutil::get_context(target, ctx)) {
-        if (errno != ENOENT || parent_ctx.empty()) {
-            mlog("overlay: read context " + target + ": " + std::strerror(errno),
+bool relabel_part(const std::string& dst, const std::string& part,
+                  const std::vector<std::string>& parts, const fsutil::CopiedTree& tree) {
+    struct Ancestor {
+        std::size_t index;
+        std::string path;
+        std::string target;
+        std::string context;
+    };
+    std::vector<Ancestor> ancestors;
+    // Copying must finish before final labels are applied: changing a directory's
+    // SELinux type earlier could change permissions for creating its children.
+    // The copy's owned preorder replaces a second filesystem enumeration while
+    // retaining parent-first labels and nearest-parent fallback for new paths.
+    for (std::size_t i = 0; i < tree.entries.size(); ++i) {
+        const auto& entry = tree.entries[i];
+        const char* name = tree.names.c_str() + entry.name_offset;
+        std::string path = dst;
+        std::string target = fsutil::partition_mount_point(part);
+        if (i != 0) {
+            while (!ancestors.empty() && ancestors.back().index != entry.parent)
+                ancestors.pop_back();
+            if (ancestors.empty())
+                return false;
+            path = ancestors.back().path + "/" + name;
+            target = part == "system" && entry.parent == 0 && is_sub_partition(name, parts)
+                         ? std::string("/") + name
+                         : ancestors.back().target + "/" + name;
+        }
+        std::string context;
+        if (!fsutil::get_context(target, context)) {
+            if (errno != ENOENT || ancestors.empty() || ancestors.back().context.empty()) {
+                mlog("overlay: read context " + target + ": " + std::strerror(errno),
+                     logging::Level::Error);
+                return false;
+            }
+            context = ancestors.back().context;
+        }
+        if (!fsutil::set_context(path, context)) {
+            mlog("overlay: set context " + path + ": " + std::strerror(errno),
                  logging::Level::Error);
             return false;
         }
-        ctx = parent_ctx;
+        ancestors.push_back({i, std::move(path), std::move(target), std::move(context)});
     }
-    if (!fsutil::set_context(node, ctx)) {
-        mlog("overlay: set context " + node + ": " + std::strerror(errno), logging::Level::Error);
-        return false;
-    }
-    struct stat st{};
-    if (lstat(node.c_str(), &st) != 0)
-        return false;
-    if (!S_ISDIR(st.st_mode))
-        return true;
-    std::error_code ec;
-    for (fs::directory_iterator it(node, ec), end; it != end && !ec; it.increment(ec)) {
-        if (!relabel_tree(it->path().string(), target + "/" + it->path().filename().string(), ctx))
-            return false;
-    }
-    return !ec;
-}
-
-bool relabel_part(const std::string& dst, const std::string& part,
-                  const std::vector<std::string>& parts) {
-    if (part != "system")
-        return relabel_tree(dst, fsutil::partition_mount_point(part), "");
-    std::string ctx;
-    if (!fsutil::get_context("/system", ctx) || !fsutil::set_context(dst, ctx)) {
-        mlog("overlay: label system mirror: " + std::string(std::strerror(errno)),
-             logging::Level::Error);
-        return false;
-    }
-    std::error_code ec;
-    for (fs::directory_iterator it(dst, ec), end; it != end && !ec; it.increment(ec)) {
-        const auto name = it->path().filename().string();
-        const auto target = is_sub_partition(name, parts) ? "/" + name : "/system/" + name;
-        if (!relabel_tree(it->path().string(), target, ctx))
-            return false;
-    }
-    return !ec;
+    return !tree.entries.empty();
 }
 
 bool component_name(const std::string& name) {
@@ -583,8 +582,9 @@ bool sync_content(const std::vector<ModuleEntry>& modules, const storage::Handle
                 return false;
             const auto dst = cache / part;
             fs::create_directories(dst.parent_path(), ec);
-            if (ec || !fsutil::copy_tree(src.string(), dst.string()) ||
-                !relabel_part(dst.string(), part, partitions)) {
+            fsutil::CopiedTree copied;
+            if (ec || !fsutil::copy_tree(src.string(), dst.string(), copied) ||
+                !relabel_part(dst.string(), part, partitions, copied)) {
                 mlog("overlay: sync failed for " + module.id + "/" + part, logging::Level::Error);
                 return false;
             }

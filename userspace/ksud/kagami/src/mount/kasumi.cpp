@@ -1,4 +1,5 @@
 #include "mount/kasumi.hpp"
+#include "mount/kasumi_rule_index.hpp"
 
 #include "core/json.hpp"
 #include "core/runtime.hpp"
@@ -37,37 +38,6 @@ fs::path active_file() {
 }
 fs::path mapping_plan_file() {
     return runtime_data_dir() / "run" / "kasumi_mapping_plan";
-}
-
-bool path_matches_rule(const std::string& path, const std::string& prefix) {
-    if (path == prefix) {
-        return true;
-    }
-    if (path.size() <= prefix.size() || path.compare(0, prefix.size(), prefix) != 0) {
-        return false;
-    }
-    return prefix.back() == '/' || path[prefix.size()] == '/';
-}
-
-std::string effective_mode(const std::string& path, const std::vector<ModuleRule>& rules) {
-    std::string mode = "kasumi";
-    std::size_t longest = 0;
-    for (const auto& rule : rules) {
-        if (rule.path.empty() || rule.path.front() != '/') {
-            continue;
-        }
-        if (path_matches_rule(path, rule.path) && rule.path.size() >= longest) {
-            longest = rule.path.size();
-            mode = rule.mode;
-        }
-    }
-    return mode;
-}
-
-bool has_nested_rule(const std::string& path, const std::vector<ModuleRule>& rules) {
-    return std::any_of(rules.begin(), rules.end(), [&](const ModuleRule& rule) {
-        return rule.path.size() > path.size() && path_matches_rule(rule.path, path);
-    });
 }
 
 // Resolve symlinked partition paths (e.g. /system/vendor -> /vendor) without
@@ -135,7 +105,7 @@ bool merge_tree_supported(const fs::path& root) {
 }
 
 bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
-                  const std::vector<ModuleRule>& rules, RuleBatch& batch) {
+                  const detail::RuleIndex& rules, RuleBatch& batch) {
     std::error_code ec;
     if (!fs::is_directory(source_root, ec)) {
         return !ec || ec == std::errc::no_such_file_or_directory;
@@ -156,7 +126,7 @@ bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
         }
         const std::string virtual_path =
             resolve_virtual_path((fs::path(virtual_root) / relative).string());
-        std::string mode = effective_mode(virtual_path, rules);
+        auto mode = rules.effective_mode(virtual_path);
         if (mode == "hide") {
             batch.hide.insert(virtual_path);
             if (it->is_directory(ec)) {
@@ -165,7 +135,7 @@ bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
             continue;
         }
         if (mode == "none") {
-            if (it->is_directory(ec) && !has_nested_rule(virtual_path, rules)) {
+            if (it->is_directory(ec) && !rules.has_nested_rule(virtual_path)) {
                 it.disable_recursion_pending();
             }
             continue;
@@ -194,7 +164,7 @@ bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
         if (S_ISDIR(st.st_mode)) {
             std::error_code target_ec;
             if (fs::is_directory(virtual_path, target_ec) && !target_ec &&
-                !has_nested_rule(virtual_path, rules)) {
+                !rules.has_nested_rule(virtual_path)) {
                 if (!merge_tree_supported(source))
                     return false;
                 batch.mappings.push_back({virtual_path, source.string(), true});
@@ -442,9 +412,10 @@ bool mount_modules(const std::vector<ModuleEntry>& modules, const Config& config
         const auto rule_it = rules.find(it->id);
         const std::vector<ModuleRule> empty_rules;
         const auto& module_rules = rule_it == rules.end() ? empty_rules : rule_it->second;
+        const detail::RuleIndex index(module_rules);
         const fs::path source = it->path;
         for (const auto& partition : partitions) {
-            if (!compile_tree(source / partition, "/" + partition, module_rules, batch))
+            if (!compile_tree(source / partition, "/" + partition, index, batch))
                 return false;
         }
     }

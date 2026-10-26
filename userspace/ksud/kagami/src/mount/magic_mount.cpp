@@ -409,8 +409,8 @@ bool do_directory(Node& node, const std::string& real, const std::string& work, 
         return false;
     }
 
-    // Module-overridden entries recurse; the rest are mirrored into the skeleton.
-    if (real_directory && !node.replace) {
+    // Only skeletons need untouched stock siblings; direct binds walk module entries.
+    if (now_tmpfs && real_directory && !node.replace) {
         DIR* d = opendir(real.c_str());
         if (!d) {
             mlog("magic: cannot read directory " + real + ": " + std::strerror(errno),

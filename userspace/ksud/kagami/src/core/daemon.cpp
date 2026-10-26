@@ -1,4 +1,5 @@
 #include "core/daemon.hpp"
+#include "core/socket_output.hpp"
 #include "terminal.hpp"
 #include "utils.hpp"
 
@@ -71,16 +72,11 @@ std::vector<std::string> split_request(const std::string& request) {
     return args;
 }
 
-std::string response_json(bool ok, int exit_code, int error_number, const std::string& out,
-                          const std::string& err) {
-    std::ostringstream json;
-    json << "{"
-         << "\"ok\":" << (ok ? "true" : "false") << ","
-         << "\"exit_code\":" << exit_code << ","
-         << "\"errno\":" << error_number << ","
-         << "\"stdout\":" << json_quote(out) << ","
-         << "\"stderr\":" << json_quote(err) << "}\n";
-    return json.str();
+bool send_response(int fd, bool ok, int exit_code, int error_number, std::string_view output,
+                   std::string_view error) {
+    char buffer[4096];
+    return daemon_protocol::send_response(fd, ok, exit_code, error_number, output, error, buffer,
+                                          sizeof(buffer));
 }
 
 std::string status_json(bool running) {
@@ -123,30 +119,29 @@ bool write_all(int fd, const std::string& data) {
     return true;
 }
 
-std::string read_all(int fd, std::size_t limit) {
-    std::string data;
-    char buffer[1024] = {};
+bool read_all(int fd, std::size_t limit, std::string& data) {
+    data.clear();
+    char buffer[1024];
     for (;;) {
-        const ssize_t n = read(fd, buffer, sizeof(buffer));
-        if (n < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-            break;
-        }
-        if (n == 0) {
-            break;
-        }
-        data.append(buffer, static_cast<std::size_t>(n));
-        if (data.size() > limit) {
+        const auto count = read(fd, buffer, sizeof(buffer));
+        if (count < 0 && errno == EINTR)
+            continue;
+        if (count < 0) {
             data.clear();
-            break;
+            return false;
         }
-        if (data.find('\n') != std::string::npos) {
-            break;
+        if (count == 0)
+            return true;
+        const auto size = static_cast<std::size_t>(count);
+        if (size > limit - data.size()) {
+            data.clear();
+            errno = EMSGSIZE;
+            return false;
         }
+        data.append(buffer, size);
+        if (std::memchr(buffer, '\n', size))
+            return true;
     }
-    return data;
 }
 
 int open_client_socket(std::string& error) {
@@ -185,9 +180,11 @@ int send_request(const std::vector<std::string>& args, std::size_t start, std::s
         return 1;
     }
     shutdown(fd, SHUT_WR);
-    response = read_all(fd, 1024UL * 1024);
+    const bool complete = read_all(fd, 1024UL * 1024, response);
+    if (!complete)
+        error = std::strerror(errno);
     close(fd);
-    return 0;
+    return complete ? 0 : 2;
 }
 
 bool daemon_running() {
@@ -210,6 +207,13 @@ int serve_foreground(int ready_fd = -1) {
     std::string config_error;
     if (read_config_file(log_config, config_error))
         logging::set_debug_enabled(log_config.debug || log_config.verbose);
+    CommandCapture capture;
+    if (!capture.prepare()) {
+        std::cerr << "cannot allocate daemon output buffers\n";
+        return 1;
+    }
+    std::string request;
+    request.reserve(64UL * 1024);
     std::error_code ec;
 
     const auto socket_path = runtime_socket_file().string();
@@ -322,46 +326,45 @@ int serve_foreground(int ready_fd = -1) {
         timeout.tv_sec = 5;
         (void)setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-        const auto request = read_all(client_fd, 64UL * 1024);
+        (void)read_all(client_fd, 64UL * 1024, request);
         auto request_args = split_request(request);
         if (request_args.empty()) {
             append_log("rejected malformed or empty request", logging::Level::Warning);
-            write_all(client_fd, response_json(false, 1, EINVAL, "", "empty daemon request"));
+            send_response(client_fd, false, 1, EINVAL, "", "empty daemon request");
             close(client_fd);
             continue;
         }
 
         if (request_args[0] == "daemon" && request_args.size() >= 2 && request_args[1] == "stop") {
-            write_all(client_fd, response_json(true, 0, 0, "stopping\n", ""));
+            send_response(client_fd, true, 0, 0, "stopping\n", "");
             stopping = true;
             close(client_fd);
             continue;
         }
 
         if (request_args[0] == "daemon" && request_args.size() >= 2 && request_args[1] == "ping") {
-            write_all(client_fd, response_json(true, 0, 0, "pong\n", ""));
+            send_response(client_fd, true, 0, 0, "pong\n", "");
             close(client_fd);
             continue;
         }
 
         if (request_args[0] == "daemon" && request_args.size() >= 2 &&
             request_args[1] == "status") {
-            write_all(client_fd, response_json(true, 0, 0, status_json(true), ""));
+            send_response(client_fd, true, 0, 0, status_json(true), "");
             close(client_fd);
             continue;
         }
 
         if (request_args[0] == "daemon") {
-            write_all(client_fd, response_json(false, 1, EINVAL, "",
-                                               "daemon control commands cannot be forwarded\n"));
+            send_response(client_fd, false, 1, EINVAL, "",
+                          "daemon control commands cannot be forwarded\n");
             close(client_fd);
             continue;
         }
 
-        const auto result = run_command_capture(request_args);
-        write_all(client_fd,
-                  response_json(result.exit_code == 0, result.exit_code, result.error_number,
-                                result.stdout_text, result.stderr_text));
+        const auto result = run_command_capture(request_args, capture);
+        send_response(client_fd, result.exit_code == 0, result.exit_code, result.error_number,
+                      result.stdout_text, result.stderr_text);
         close(client_fd);
     }
 
@@ -443,15 +446,18 @@ int run_via_daemon(const std::vector<std::string>& args, bool display_errors) {
 
     std::string response;
     std::string error;
-    if (send_request(args, 0, response, error) != 0) {
-        if (start_background(false) != 0 || send_request(args, 0, response, error) != 0) {
-            if (display_errors)
-                return ksud::terminal::error(
-                    "mount daemon unavailable: " + error,
-                    "Inspect 'ksud kagami daemon status' and retry with --verbose.");
-            std::cerr << "daemon unavailable: " << error << "\n";
-            return 1;
-        }
+    int request_status = send_request(args, 0, response, error);
+    if (request_status == 1) {
+        if (start_background(false) == 0)
+            request_status = send_request(args, 0, response, error);
+    }
+    if (request_status != 0) {
+        if (display_errors)
+            return ksud::terminal::error(
+                "mount daemon unavailable: " + error,
+                "Inspect 'ksud kagami daemon status' and retry with --verbose.");
+        std::cerr << "daemon unavailable: " << error << "\n";
+        return 1;
     }
 
     JsonValue envelope;
