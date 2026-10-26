@@ -118,6 +118,7 @@ add_library(yukizncore SHARED
     ../endpoint.cpp
     src/hyos_runtime.cpp
     src/yukizncore.cpp
+    src/native_bionic.cpp
     src/runtime_log.cpp
     src/yukilinker.cpp
     ${YUKILINKER_ARCH_SOURCES}
