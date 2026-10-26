@@ -1103,4 +1103,7 @@
     <string name="kasumi_conflict_recovery">请二选一：停用冲突模块，或关闭 Kasumi，然后重启。若冲突功能内置于内核，请保持 Kasumi 关闭，或更换不含该功能的内核。确认此警告不会更改这些设置。</string>
     <string name="kasumi_conflict_confirm">我已了解</string>
     <string name="kasumi_conflict_ack_failed">未能确认此警告，请重试。</string>
+    <string name="kasumi_rule_bypass">全局生效（绕过策略）</string>
+    <string name="kasumi_rule_bypass_summary">仅作用于 Kasumi 规则。开启后规则对所有进程生效，不再跟随策略；模块开关作用于该模块的全部 Kasumi 规则。</string>
+    <string name="kasumi_rule_bypass_unavailable">当前内核不支持规则 bypass。</string>
 </resources>

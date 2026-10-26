@@ -203,6 +203,7 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
             initialInfo = state.modules[id],
             kasumiAvailable = state.available,
             globalMode = state.globalMode,
+            bypassSupported = state.bypassSupported,
             onDismiss = { mountDialog = null },
             onSaved = {
                 mountDialog = null

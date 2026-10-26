@@ -131,7 +131,7 @@ internal fun SettingsTab(
                 }
             }
         }
-        UserHideRulesCard(enabled, snackbarHostState)
+        UserHideRulesCard(enabled, features?.names?.contains("rule_bypass") == true, snackbarHostState)
         if (config.kernelAvailable && features?.names?.contains("maps_spoof") == true) MapsSpoofCard(snackbarHostState)
 
     }
@@ -289,23 +289,24 @@ private fun EditableConfigPath(title: Int, subtitle: Int, value: String, enabled
 }
 
 @Composable
-private fun UserHideRulesCard(enabled: Boolean, snackbar: SnackbarController) {
+private fun UserHideRulesCard(enabled: Boolean, bypassSupported: Boolean, snackbar: SnackbarController) {
     val scope = rememberCoroutineScope()
     val resources = LocalResources.current
     var states by remember { mutableStateOf(emptyList<Controller.ActiveRule>()) }
     val paths = states.map { it.src }
+    var newBypass by remember { mutableStateOf(false) }
     var newPath by remember { mutableStateOf("") }
     var working by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         try { states = Controller.userHideStates() }
         catch (error: Exception) { if (error is CancellationException) throw error; snackbar.showSnackbar(error.message.orEmpty()) }
     }
-    fun change(path: String, remove: Boolean) {
+    fun change(path: String, remove: Boolean, bypass: Boolean = false) {
         if (!enabled || working) return
         working = true
         scope.launch {
             try {
-                val ok = if (remove) Controller.removeUserHideRule(path) else Controller.addUserHideRule(path)
+                val ok = if (remove) Controller.removeUserHideRule(path) else Controller.addUserHideRule(path, bypass)
                 states = Controller.userHideStates()
                 working = false
                 if (ok) newPath = "" else snackbar.showSnackbar(resources.getString(R.string.operation_failed))
@@ -320,7 +321,7 @@ private fun UserHideRulesCard(enabled: Boolean, snackbar: SnackbarController) {
             try {
                 val ok = when {
                     path == null -> true
-                    states.find { it.src == path }?.hideState == -1 -> Controller.addUserHideRule(path)
+                    states.find { it.src == path }?.hideState == -1 -> Controller.addUserHideRule(path, states.find { it.src == path }?.bypass == true)
                     else -> Controller.retryUserHide(path)
                 }
                 states = Controller.userHideStates()
@@ -347,6 +348,7 @@ private fun UserHideRulesCard(enabled: Boolean, snackbar: SnackbarController) {
         states.forEach { rule -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             val path = rule.src
             Column(Modifier.weight(1f)) {
+                KasumiBypassSwitch(rule.bypass, { change(path, false, it) }, enabled && !working && (bypassSupported || rule.bypass))
                 Text(path, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                 if (rule.hideState != null) Text(userHideStatus(rule), style = MaterialTheme.typography.bodySmall,
                     color = if (rule.hideState == 3) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
@@ -360,10 +362,12 @@ private fun UserHideRulesCard(enabled: Boolean, snackbar: SnackbarController) {
                 YukiIcon(Icons.Filled.Delete, stringResource(R.string.kasumi_user_hide_remove))
             }
         } }
+        Text(stringResource(R.string.kasumi_rule_bypass_summary), style = MaterialTheme.typography.bodySmall)
+        KasumiBypassSwitch(newBypass, { newBypass = it }, enabled && !working && bypassSupported)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(newPath, { newPath = it }, Modifier.weight(1f), enabled = enabled && !working,
                 singleLine = true, placeholder = { Text(stringResource(R.string.kasumi_user_hide_placeholder)) })
-            Button(onClick = { change(newPath.trim(), false) }, enabled = enabled && !working && newPath.startsWith('/') && newPath != "/system/bin/su") {
+            Button(onClick = { change(newPath.trim(), false, newBypass) }, enabled = enabled && !working && newPath.startsWith('/') && newPath != "/system/bin/su") {
                 Text(stringResource(R.string.kasumi_user_hide_add))
             }
         }

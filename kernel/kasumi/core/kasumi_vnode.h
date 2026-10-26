@@ -10,6 +10,7 @@
 #define KASUMI_VNODE_F_VIRTUAL_DIR (1u << 1) /* synthesized dir, no source */
 #define KASUMI_VNODE_F_LNK (1u << 2) /* node is a symlink */
 #define KASUMI_VNODE_F_SPECIAL (1u << 3) /* char/blk/fifo source wrapper */
+#define KASUMI_VNODE_F_BYPASS (1u << 5)
 #define KASUMI_VNODE_F_SU (1u << 4)
 
 /*

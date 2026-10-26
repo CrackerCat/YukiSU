@@ -37,6 +37,7 @@ struct ModuleEntry {
 struct ModuleRule {
     std::string path;
     std::string mode;
+    bool bypass = false;
 };
 
 using ModuleModeMap = std::map<std::string, std::string>;
@@ -54,8 +55,8 @@ struct MountReport {
 // no module.prop or with a disable/remove/skip_mount marker.
 std::vector<ModuleEntry> enumerate_mountable_modules();
 
-ModuleModeMap load_module_modes();
-bool save_module_modes(const ModuleModeMap& modes);
+ModuleModeMap load_module_modes(const char* file = "module_mode.json");
+bool save_module_modes(const ModuleModeMap& modes, const char* file = "module_mode.json");
 ModuleRuleMap load_module_rules();
 bool save_module_rules(const ModuleRuleMap& rules);
 

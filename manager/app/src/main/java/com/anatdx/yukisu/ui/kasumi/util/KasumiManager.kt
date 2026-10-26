@@ -19,12 +19,12 @@ object KasumiManager {
     private val changes = MutableStateFlow(0L)
     val revision = changes.asStateFlow()
 
-    data class ModuleRule(val path: String, val mode: String)
+    data class ModuleRule(val path: String, val mode: String, val bypass: Boolean = false)
     data class ConfigSaveResult(val persisted: Boolean, val applied: Boolean, val error: String? = null, val noChanges: Boolean = false)
     data class MountConflict(val path: String, val modules: List<String>)
     data class ModuleInfo(
         val id: String, val mode: String, val rules: List<ModuleRule>,
-        val name: String = id, val strategy: String = "none",
+        val name: String = id, val strategy: String = "none", val bypass: Boolean = false,
     )
     data class MountState(
         val modules: Map<String, ModuleInfo>,
@@ -34,6 +34,7 @@ object KasumiManager {
         val externalOwner: String,
         val builtinEnabled: Boolean = true,
         val activeKasumiIds: Set<String> = emptySet(),
+        val bypassSupported: Boolean = false,
     )
     data class Snapshot(
         val system: JSONObject,
@@ -41,6 +42,7 @@ object KasumiManager {
         val activeRules: JSONArray,
         val hideRules: List<String>,
         val mounts: MountState,
+        val hideBypasses: Set<String> = emptySet(),
     )
 
     private fun command(vararg args: String): String {
@@ -75,9 +77,9 @@ object KasumiManager {
                 module.getString("id"), module.getString("mode"),
                 (0 until entries.length()).map { index ->
                     val rule = entries.getJSONObject(index)
-                    ModuleRule(rule.getString("path"), rule.getString("mode"))
+                    ModuleRule(rule.getString("path"), rule.getString("mode"), rule.optBoolean("bypass"))
                 },
-                module.optString("name", module.getString("id")), module.optString("strategy", "none"),
+                module.optString("name", module.getString("id")), module.optString("strategy", "none"), module.optBoolean("bypass"),
             )
             info.id to info
         }
@@ -96,6 +98,9 @@ object KasumiManager {
             if (kernel.optBoolean("enabled"))
                 Regex("/data/adb/modules/([^/\\s]+)").findAll(kernel.optString("rules")).map { it.groupValues[1] }.toSet()
             else emptySet(),
+            kernel.optJSONObject("features")?.optJSONArray("names")?.let { names ->
+                (0 until names.length()).any { names.optString(it) == "rule_bypass" }
+            } == true,
         )
     }
 
@@ -111,13 +116,14 @@ object KasumiManager {
         val mountState = readMountState(config, system)
         val mounts = objectResult("api", "mounts")
         mounts.keys().forEach { key -> system.put(key, mounts.get(key)) }
-        val hides = arrayResult("hide", "list")
+        val hides = arrayResult("hide", "list", "--details")
         Snapshot(
             system, config,
             JSONArray(system.optString("rules").lineSequence().filter(String::isNotBlank)
                 .map { JSONObject().put("args", it) }.toList()),
-            (0 until hides.length()).map(hides::getString),
+            (0 until hides.length()).map { hides.getJSONObject(it).getString("path") },
             mountState,
+            (0 until hides.length()).map(hides::getJSONObject).filter { it.optBoolean("bypass") }.map { it.getString("path") }.toSet(),
         )
     }
 
@@ -165,7 +171,7 @@ object KasumiManager {
 
     suspend fun applyConfig() = mutate { command("config", "apply") }
 
-    suspend fun saveModule(id: String, mode: String, rules: List<ModuleRule>) = mutate {
+    suspend fun saveModule(id: String, mode: String, rules: List<ModuleRule>, bypass: Boolean = false) = mutate {
         require(mode in mountModes)
         require(rules.all { it.path.startsWith('/') && it.mode in ruleModes })
         require(rules.map { it.path }.distinct().size == rules.size)
@@ -174,17 +180,18 @@ object KasumiManager {
         val previous = parseModules(objectResult("module", "list", "--all"))[id]
         check(previous != null) { "Module is no longer mountable" }
         command("module", "set-mode", id, mode)
+        if (previous.bypass != bypass) command("module", "set-bypass", id, if (bypass) "on" else "off")
         previous.rules.filter { old -> rules.none { it.path == old.path } }.forEach {
             command("module", "remove-rule", id, it.path)
         }
         rules.filter { it !in previous.rules }.forEach {
-            command("module", "add-rule", id, it.path, it.mode)
+            command(*(listOf("module", "add-rule", id, it.path, it.mode) + if (it.bypass) listOf("--bypass") else emptyList()).toTypedArray())
         }
     }
 
-    suspend fun saveHide(path: String, remove: Boolean = false) = mutate {
+    suspend fun saveHide(path: String, remove: Boolean = false, bypass: Boolean = false) = mutate {
         require(path.startsWith('/') && path != "/system/bin/su")
-        command("hide", if (remove) "remove" else "add", path)
+        command(*(listOf("hide", if (remove) "remove" else "add", path) + if (!remove && bypass) listOf("--bypass") else emptyList()).toTypedArray())
     }
 
     suspend fun clearRules() = mutate { command("kasumi", "clear") }

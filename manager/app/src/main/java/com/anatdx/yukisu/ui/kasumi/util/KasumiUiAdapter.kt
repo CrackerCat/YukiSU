@@ -13,7 +13,7 @@ object KasumiUiAdapter {
     data class FeaturesResult(val bitmask: Int, val names: List<String>)
     data class ModuleInfo(val id: String, val name: String, val mode: String, val strategy: String)
     data class ActiveRule(val type: String, val src: String, val target: String? = null, val isUserDefined: Boolean = false,
-        val hideState: Int? = null, val hideError: Int = 0)
+        val hideState: Int? = null, val hideError: Int = 0, val bypass: Boolean = false)
     data class PartitionInfo(val name: String)
     data class MountStats(
         val totalMounts: Int, val overlayfsMounts: Int,
@@ -70,15 +70,16 @@ object KasumiUiAdapter {
         val fields = line.trim().split(Regex("\\s+"), limit = 3)
         val type = fields[0].lowercase(Locale.ROOT)
         if (type == "inject" || type == "kasumi") return@mapNotNull null
-        val path = if (type == "hide") line.substringAfter(' ', "") else fields.getOrElse(1) { line }
-        val source = fields.getOrNull(2)?.let { if (type == "add") it.replace(Regex("\\s+-?\\d+$"), "") else it }
+        val flags = Regex("\\s+(\\d+)$").find(line)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+        val path = if (type == "hide") line.substringAfter(' ', "").replace(Regex("\\s+\\d+$"), "") else fields.getOrElse(1) { line }
+        val source = fields.getOrNull(2)?.let { if (type == "add" || type == "merge") it.replace(Regex("\\s+-?\\d+$"), "") else it }
         ActiveRule(type, path, if (type in listOf("add", "merge")) source else null,
-            type == "hide" && path in userRules)
+            type == "hide" && path in userRules, bypass = flags and 1 != 0)
     }.toList()
 
     private fun userRules(snapshot: KasumiManager.Snapshot): List<ActiveRule> {
         val registered = snapshot.system.optJSONArray("user_hide") ?: return snapshot.hideRules.map {
-            ActiveRule("hide", it, isUserDefined = true)
+            ActiveRule("hide", it, isUserDefined = true, bypass = it in snapshot.hideBypasses)
         }
         val live = (0 until registered.length()).map(registered::getJSONObject).associateBy { it.getString("path") }
         return (snapshot.hideRules + live.keys).distinct().map { path ->
@@ -88,7 +89,8 @@ object KasumiUiAdapter {
                     state == null -> -1
                     state.optInt("management") == 1 -> 4
                     else -> state.optInt("binding")
-                }, hideError = state?.optInt("error") ?: 0)
+                }, hideError = state?.optInt("error") ?: 0,
+                bypass = if (path in snapshot.hideRules) path in snapshot.hideBypasses else state?.optBoolean("bypass") == true)
         }
     }
 
@@ -198,7 +200,7 @@ object KasumiUiAdapter {
         return userRules(snapshot).filter { it.src in snapshot.hideRules }
     }
     suspend fun retryUserHide(path: String) = success { KasumiManager.retryUserHide(path) }
-    suspend fun addUserHideRule(path: String) = success { KasumiManager.saveHide(path) }
+    suspend fun addUserHideRule(path: String, bypass: Boolean = false) = success { KasumiManager.saveHide(path, bypass = bypass) }
     suspend fun removeUserHideRule(path: String) = success { KasumiManager.saveHide(path, true) }
     suspend fun clearAllRules() = success { KasumiManager.clearRules() }
     suspend fun clearMapsRules() = success { KasumiManager.clearMapsRules() }

@@ -43,6 +43,11 @@
 #define BIT_KASUMI_FOP_INSTALLED BIT(45)
 #endif // #ifdef __KERNEL__
 
+/* API 18: zero preserves policy; bit 0 explicitly enables global rules.
+ * Valid for ADD_RULE, ADD_MERGE_RULE and HIDE_RULE. Other bits are rejected. */
+#define KSM_RULE_BYPASS_POLICY (1U << 0)
+#define KSM_RULE_FLAGS_MASK KSM_RULE_BYPASS_POLICY
+
 struct kasumi_syscall_arg {
   const char *src;
   const char *target;
@@ -94,6 +99,7 @@ struct kasumi_spoof_kstat {
 /* Bit 12 remains reserved for removed mount namespace link projection. */
 #define KSM_FEATURE_OVERLAY_XATTR_HIDE (1 << 13)
 #define KSM_FEATURE_MANAGED_HIDE (1 << 14)
+#define KSM_FEATURE_RULE_BYPASS (1 << 15)
 
 #define KSM_USER_HIDE_PATH_MAX 4096
 #define KSM_USER_HIDE_LIVE 0
@@ -105,7 +111,9 @@ struct kasumi_spoof_kstat {
 
 /* Protocol 17 extension. QUERY returns the first ID greater than rule_id;
  * rule_id == 0 in the reply marks the end. Paths include a terminating NUL,
- * excluded from path_len. Input flags and reserved fields must be zero. */
+ * excluded from path_len. UPSERT accepts KSM_RULE_BYPASS_POLICY in flags; QUERY
+ * returns stored flags. Other input commands require flags == 0. Reserved
+ * fields must be zero. */
 struct kasumi_user_hide_arg {
   __u32 size;
   __u32 flags;

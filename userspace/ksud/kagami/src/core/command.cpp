@@ -705,10 +705,20 @@ int handle_api(const std::vector<std::string>& args) {
     return 1;
 }
 
+bool save_bypass(const std::string& key, bool enabled, const char* file) {
+    auto values = mount::load_module_modes(file);
+    if (enabled)
+        values[key] = "on";
+    else
+        values.erase(key);
+    return mount::save_module_modes(values, file);
+}
+
 int handle_module(const std::vector<std::string>& args) {
     const auto sub = arg_or_default(args, 1, "");
     if (sub == "list") {
         const auto modes = mount::load_module_modes();
+        const auto bypasses = mount::load_module_modes("module_bypass.json");
         const bool include_disabled = args.size() == 3 && args[2] == "--all";
         const auto rule_map = mount::load_module_rules();
         const auto replayable = mount::kasumi::replayable_module_ids();
@@ -781,6 +791,9 @@ int handle_module(const std::vector<std::string>& args) {
                           << json_quote(props.count("description") ? props.at("description") : "")
                           << ","
                           << "\"mode\":" << json_quote(mode) << ","
+                          << "\"bypass\":"
+                          << ((bypasses.count(id) && bypasses.at(id) == "on") ? "true" : "false")
+                          << ","
                           << "\"strategy\":" << json_quote(strategy) << ","
                           << "\"path\":" << json_quote(entry.path().string()) << ","
                           << "\"rules\":[";
@@ -790,13 +803,28 @@ int handle_module(const std::vector<std::string>& args) {
                             std::cout << ",";
                         }
                         std::cout << "{\"path\":" << json_quote(rules_it->second[i].path)
-                                  << ",\"mode\":" << json_quote(rules_it->second[i].mode) << "}";
+                                  << ",\"mode\":" << json_quote(rules_it->second[i].mode)
+                                  << ",\"bypass\":"
+                                  << (rules_it->second[i].bypass ? "true}" : "false}");
                     }
                 }
                 std::cout << "]}";
             }
         }
         std::cout << "]}\n";
+        return 0;
+    }
+    if (sub == "set-bypass") {
+        const std::string id = arg_or_default(args, 2, "");
+        const std::string value = arg_or_default(args, 3, "");
+        if (!valid_module_id(id) || args.size() != 4 || (value != "on" && value != "off"))
+            return 1;
+        if (value == "on" && !kasumi::rule_flags_supported(KSM_RULE_BYPASS_POLICY)) {
+            std::cerr << "bypass requires a kernel with rule_bypass support\n";
+            return 1;
+        }
+        if (!save_bypass(id, value == "on", "module_bypass.json"))
+            return 1;
         return 0;
     }
     if (sub == "set-mode") {
@@ -823,10 +851,16 @@ int handle_module(const std::vector<std::string>& args) {
         const std::string id = arg_or_default(args, 2, "");
         const std::string path = arg_or_default(args, 3, "");
         const std::string mode = arg_or_default(args, 4, "");
+        const bool bypass = args.size() == 6 && args[5] == "--bypass";
+        if ((args.size() != 5 && !bypass) ||
+            (bypass && !kasumi::rule_flags_supported(KSM_RULE_BYPASS_POLICY))) {
+            std::cerr << "bypass requires a kernel with rule_bypass support\n";
+            return 1;
+        }
         if (!valid_module_id(id) || path.empty() || path.front() != '/' ||
             !valid_module_mode(mode)) {
             std::cerr << "usage: ksud kagami module add-rule <id> <absolute-path> "
-                         "kasumi|overlay|magic|none|hide\n";
+                         "kasumi|overlay|magic|none|hide [--bypass]\n";
             return 1;
         }
         auto rules = mount::load_module_rules();
@@ -834,9 +868,10 @@ int handle_module(const std::vector<std::string>& args) {
         const auto existing = std::find_if(module_rules.begin(), module_rules.end(),
                                            [&](const auto& rule) { return rule.path == path; });
         if (existing == module_rules.end()) {
-            module_rules.push_back({path, mode});
+            module_rules.push_back({path, mode, bypass});
         } else {
             existing->mode = mode;
+            existing->bypass = bypass;
         }
         if (!mount::save_module_rules(rules)) {
             std::cerr << "failed to save module rules\n";
@@ -1136,12 +1171,33 @@ int handle_hide(const std::vector<std::string>& args) {
     }
     if (sub == "list") {
         const auto rules = load_user_hide_rules();
+        if (args.size() == 3 && args[2] == "--details") {
+            const auto bypasses = mount::load_module_modes("hide_bypass.json");
+            std::cout << "[";
+            bool first = true;
+            for (const auto& path : rules) {
+                if (!first)
+                    std::cout << ",";
+                first = false;
+                std::cout << "{\"path\":" << json_quote(path) << ",\"bypass\":"
+                          << (bypasses.count(path) && bypasses.at(path) == "on" ? "true}"
+                                                                                : "false}");
+            }
+            std::cout << "]\n";
+            return 0;
+        }
         print_string_array(rules);
         std::cout << "\n";
         return 0;
     }
     if (sub == "add") {
         const std::string path = arg_or_default(args, 2, "");
+        const bool bypass = args.size() == 4 && args[3] == "--bypass";
+        if ((args.size() != 3 && !bypass) ||
+            (bypass && !kasumi::rule_flags_supported(KSM_RULE_BYPASS_POLICY))) {
+            std::cerr << "bypass requires a kernel with rule_bypass support\n";
+            return 1;
+        }
         if (path.empty() || path[0] != '/') {
             std::cerr << "hide path must be absolute\n";
             return 1;
@@ -1150,13 +1206,16 @@ int handle_hide(const std::vector<std::string>& args) {
         if (std::find(rules.begin(), rules.end(), path) == rules.end()) {
             rules.push_back(path);
         }
+        if (!save_bypass(path, bypass, "hide_bypass.json"))
+            return 1;
         if (!save_user_hide_rules(rules)) {
             return 1;
         }
         bool managed = false;
         if (kasumi::is_available() &&
             (!kasumi::managed_hide_mode(managed) ||
-             !(managed ? kasumi::upsert_user_hide(path) : kasumi::hide_path(path)))) {
+             !(managed ? kasumi::upsert_user_hide(path, nullptr, bypass)
+                       : kasumi::hide_path(path, bypass ? KSM_RULE_BYPASS_POLICY : 0)))) {
             std::cerr << "hide rule saved, but the kernel rejected it: " << std::strerror(errno)
                       << "\n";
             return 1;
@@ -1167,6 +1226,8 @@ int handle_hide(const std::vector<std::string>& args) {
         const std::string path = arg_or_default(args, 2, "");
         auto rules = load_user_hide_rules();
         rules.erase(std::remove(rules.begin(), rules.end(), path), rules.end());
+        if (!save_bypass(path, false, "hide_bypass.json"))
+            return 1;
         if (!save_user_hide_rules(rules)) {
             return 1;
         }

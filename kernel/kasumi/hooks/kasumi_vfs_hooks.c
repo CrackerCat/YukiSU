@@ -63,8 +63,8 @@ kasumi_filldir_filter(struct dir_context *ctx, const char *name, int namlen,
 
 	/* Inject phase: before first real entry, emit entries from merge
 	 * targets and kasumi_paths into the directory listing. */
-	if (w->view_allowed && w->dir_has_inject && !w->inject_done &&
-	    w->dir_path && w->parent_dentry) {
+	if (w->dir_has_inject && !w->inject_done && w->dir_path &&
+	    w->parent_dentry) {
 		struct list_head head;
 		struct kasumi_name_list *item, *tmp;
 		loff_t inj_pos = KASUMI_MAGIC_POS;
@@ -120,8 +120,8 @@ kasumi_filldir_filter(struct dir_context *ctx, const char *name, int namlen,
 	 * resolved to same inode via symlink) - otherwise we'd hide everything.
 	 * This is independent of app-hide policy because explicit merge rules
 	 * must not emit duplicate names even during root/manual validation. */
-	if (w->view_allowed && kasumi_d_hash_and_lookup &&
-	    w->merge_target_count > 0 && w->parent_dentry) {
+	if (kasumi_d_hash_and_lookup && w->merge_target_count > 0 &&
+	    w->parent_dentry) {
 		int i;
 		for (i = 0; i < w->merge_target_count; i++) {
 			struct dentry *tgt = w->merge_target_dentries[i];
@@ -279,7 +279,7 @@ kasumi_iterate_prepare_wrapper(struct file *file, struct dir_context *orig_ctx)
 	if (orig_ctx->actor == kasumi_filldir_filter)
 		return NULL;
 	scope = kasumi_policy_current_scope();
-	if (scope == KASUMI_POLICY_SCOPE_NONE)
+	if (!kasumi_rule_scope_active())
 		return NULL;
 
 	w = kmem_cache_zalloc(kasumi_filldir_cache, GFP_ATOMIC);
@@ -305,7 +305,6 @@ kasumi_iterate_prepare_wrapper(struct file *file, struct dir_context *orig_ctx)
 			/* Fast path: if dir has no inject flag, skip
 			 * rcu_read_lock + hash traversal */
 			w->dir_has_inject =
-			    w->view_allowed &&
 			    test_bit(AS_FLAGS_KASUMI_DIR_HAS_INJECT,
 				     &dir_inode->i_mapping->flags);
 		}
@@ -319,8 +318,7 @@ kasumi_iterate_prepare_wrapper(struct file *file, struct dir_context *orig_ctx)
 		 * and traverse hash to get merge_target_dentries. Most dirs
 		 * skip this.
 		 */
-		if (w->view_allowed && atomic_read(&kasumi_rule_count) > 0 &&
-		    w->dir_has_inject) {
+		if (atomic_read(&kasumi_rule_count) > 0 && w->dir_has_inject) {
 			char *buf =
 			    kasumi_iterate_buf_base +
 			    (smp_processor_id() * KASUMI_ITERATE_PATH_BUF);
@@ -365,6 +363,9 @@ kasumi_iterate_prepare_wrapper(struct file *file, struct dir_context *orig_ctx)
 				hash_for_each_rcu(kasumi_merge_dirs, mbkt, me,
 						  node)
 				{
+					if (!kasumi_rule_current_sees(
+						me->rule_flags))
+						continue;
 					if (strcmp(me->src, dp) == 0 ||
 					    (me->resolved_src &&
 					     strcmp(me->resolved_src, dp) ==

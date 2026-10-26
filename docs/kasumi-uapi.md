@@ -23,6 +23,55 @@ Only the two conflict ioctls below bypass Kasumi's VFS initialization gate. They
 remain available before activation and after initialization is refused, even
 when the ordinary `GET_VERSION` ioctl fails. Reading them does not enable Kasumi.
 
+## Rule policy bypass
+
+API 18 uses bit 0 of `kasumi_syscall_arg.type` as `KSM_RULE_BYPASS_POLICY`:
+`type = 0` preserves the existing policy, and `type = 1` explicitly opts a rule
+into global visibility or hiding. API 17 and existing controllers initialize
+this field to zero. The structure size and ioctl encodings do not change.
+This field is a flag mask, not a directory-entry file type.
+
+The flag applies to `ADD_RULE`, `ADD_MERGE_RULE`, and `HIDE_RULE`; other bits
+are rejected with `EINVAL`. Non-rule commands require zero. Materialized merge
+children inherit the parent flag. Managed user hides use the same bit in
+`kasumi_user_hide_arg.flags` on UPSERT, and QUERY returns the saved flags.
+Other managed-hide requests still require zero input flags. RETRY preserves
+the saved flag, including across storage rebinding.
+
+Check `KSM_FEATURE_RULE_BYPASS` (feature bit 15, name `rule_bypass`) before
+requesting bypass. Kagami rejects requests when this capability is unavailable
+instead of silently treating them as ordinary rules.
+
+Bypass rules apply even to processes excluded by policy, including privileged
+and storage-service observers. They still obey Kasumi enablement, teardown,
+and internal control/resolution recursion guards. Ordinary sibling rules keep
+their existing policy. Bypass does not change mount hiding, maps spoofing, or
+other unrelated features.
+
+Manager and Kagami WebUI expose module and individual-rule switches, initially
+off. The module flag applies to every Kasumi rule owned by that module; a
+single path rule uses the existing longest-prefix selection. Effective bypass
+is the module flag OR the selected path-rule flag. OverlayFS and Magic Mount
+do not consume this setting. Module edits take effect when the module rules
+are rebuilt, such as a Kasumi hot mount or the next boot; saved user hides are
+submitted immediately and retain their existing binding-status reporting.
+
+CLI examples (`ksud kagami` in YukiSU, `kagamid` standalone):
+
+```sh
+ksud kagami module set-bypass example on
+ksud kagami module add-rule example /system/etc/example kasumi --bypass
+ksud kagami hide add /data/local/tmp/example --bypass
+ksud kagami hide list --details
+```
+
+Omitting `--bypass` writes zero; `set-bypass example off` disables the module
+flag. Module rules persist a boolean `bypass`. Module-wide and user-hide
+overrides are stored as `"on"` entries in `module_bypass.json` and
+`hide_bypass.json`; absence means off. `hide list` retains the legacy string
+array, while `--details` returns `{path, bypass}` objects. `LIST_RULES` reports
+the numeric flags after ADD, MERGE, and HIDE records.
+
 ## Conflict diagnostics
 
 | Command | Number | Encoded ioctl | Payload | Direction |

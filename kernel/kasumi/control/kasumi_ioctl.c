@@ -277,14 +277,15 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 				break;
 			written += scnprintf(kbuf + written, buf_size - written,
 					     "add %s %s %d\n", entry->src,
-					     entry->target, entry->type);
+					     entry->target, entry->rule_flags);
 		}
 		hash_for_each_rcu(kasumi_hide_paths, bkt, hide_entry, node)
 		{
 			if (written >= buf_size)
 				break;
 			written += scnprintf(kbuf + written, buf_size - written,
-					     "hide %s\n", hide_entry->path);
+					     "hide %s %u\n", hide_entry->path,
+					     READ_ONCE(hide_entry->rule_flags));
 		}
 		hash_for_each_rcu(kasumi_inject_dirs, bkt, inject_entry, node)
 		{
@@ -297,9 +298,10 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 		{
 			if (written >= buf_size)
 				break;
-			written += scnprintf(kbuf + written, buf_size - written,
-					     "merge %s %s\n", merge_entry->src,
-					     merge_entry->target);
+			written += scnprintf(
+			    kbuf + written, buf_size - written,
+			    "merge %s %s %u\n", merge_entry->src,
+			    merge_entry->target, merge_entry->rule_flags);
 		}
 		hash_for_each_rcu(kasumi_xattr_sbs, bkt, sb_entry, node)
 		{
@@ -641,6 +643,7 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 			features |= KSM_FEATURE_MANAGED_HIDE;
 		features |= KSM_FEATURE_KSTAT_SPOOF;
 		features |= KSM_FEATURE_MERGE_DIR;
+		features |= KSM_FEATURE_RULE_BYPASS;
 		if (kasumi_overlay_xattr_available())
 			features |= KSM_FEATURE_OVERLAY_XATTR_HIDE;
 		if (kasumi_proc_proxy_registered ||
@@ -757,6 +760,11 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 	/* Commands that use kasumi_syscall_arg */
 	if (copy_from_user(&req, arg, sizeof(req)))
 		return -EFAULT;
+	if (req.type & ~KSM_RULE_FLAGS_MASK)
+		return -EINVAL;
+	if (req.type && cmd != KSM_IOC_ADD_RULE &&
+	    cmd != KSM_IOC_ADD_MERGE_RULE && cmd != KSM_IOC_HIDE_RULE)
+		return -EINVAL;
 
 	if (req.src) {
 		src = strndup_user(req.src, PAGE_SIZE);
@@ -840,6 +848,7 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 					me->target = target;
 					me->resolved_src = resolved_src;
 					me->target_dentry = tgt_dentry;
+					me->rule_flags = req.type;
 					resolved_src = NULL;
 					tgt_dentry = NULL;
 					hlist_add_head_rcu(
@@ -870,7 +879,7 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 					    me->resolved_src);
 				if (mat_src && mat_tgt)
 					ret = kasumi_materialize_merge(
-					    mat_src, mat_tgt, 0);
+					    mat_src, mat_tgt, 0, req.type);
 			}
 			kfree(resolved_src);
 			if (tgt_dentry)
@@ -882,6 +891,9 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 	}
 
 	case KSM_IOC_ADD_RULE: {
+		u8 bypass_flag = (req.type & KSM_RULE_BYPASS_POLICY)
+				     ? KASUMI_VNODE_F_BYPASS
+				     : 0;
 		char *parent_dir = NULL;
 		char *resolved_src = NULL;
 		struct kasumi_entry *new_entry = NULL;
@@ -1004,7 +1016,7 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 		}
 		new_entry->src = kstrdup(src, GFP_KERNEL);
 		new_entry->target = kstrdup(target, GFP_KERNEL);
-		new_entry->type = req.type;
+		new_entry->rule_flags = req.type;
 		new_entry->src_hash = hash;
 		if (!new_entry->src || !new_entry->target) {
 			ret = -ENOMEM;
@@ -1059,13 +1071,13 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 				if (di && S_ISLNK(di->i_mode))
 					(void)kasumi_dirhijack_add(
 					    src, &dsrc, dh_nofollow_ino,
-					    KASUMI_VNODE_F_LNK);
+					    (KASUMI_VNODE_F_LNK) | bypass_flag);
 				path_put(&dsrc);
 			} else if (S_ISREG(dh_src_mode) &&
 				   kern_path(target, LOOKUP_FOLLOW, &dsrc) ==
 				       0) {
 				(void)kasumi_dirhijack_add(src, &dsrc, dh_v_ino,
-							   0);
+							   (0) | bypass_flag);
 				path_put(&dsrc);
 			} else if (S_ISDIR(dh_src_mode) &&
 				   kern_path(target, LOOKUP_FOLLOW, &dsrc) ==
@@ -1074,8 +1086,9 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 				 * resolves to a Kasumi directory vnode whose
 				 * lookup/iterate delegate to the pinned source
 				 * dir. */
-				(void)kasumi_dirhijack_add(src, &dsrc, dh_v_ino,
-							   KASUMI_VNODE_F_DIR);
+				(void)kasumi_dirhijack_add(
+				    src, &dsrc, dh_v_ino,
+				    (KASUMI_VNODE_F_DIR) | bypass_flag);
 				path_put(&dsrc);
 			} else if ((S_ISCHR(dh_src_mode) ||
 				    S_ISBLK(dh_src_mode) ||
@@ -1090,7 +1103,7 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 				 * getattr projects the source type+rdev). */
 				(void)kasumi_dirhijack_add(
 				    src, &dsrc, dh_v_ino,
-				    KASUMI_VNODE_F_SPECIAL);
+				    (KASUMI_VNODE_F_SPECIAL) | bypass_flag);
 				path_put(&dsrc);
 			}
 		}
@@ -1129,10 +1142,11 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 			ret = -ENOMEM;
 			goto hide_done;
 		}
+		new_hide->rule_flags = req.type;
 		new_hide->storage_managed =
 		    kasumi_hide_storage_parent(parent_inode);
 		/* Do not publish a rule that the VFS cannot enforce. */
-		ret = kasumi_dirhijack_hide(src);
+		ret = kasumi_dirhijack_hide(src, req.type);
 		if (ret)
 			goto hide_done;
 		if (target_inode)
@@ -1152,6 +1166,8 @@ static KASUMI_NOCFI int kasumi_dispatch_cmd(unsigned int cmd, void __user *arg)
 			    strcmp(hide_entry->path, src) == 0) {
 				WRITE_ONCE(hide_entry->storage_managed,
 					   new_hide->storage_managed);
+				WRITE_ONCE(hide_entry->rule_flags,
+					   new_hide->rule_flags);
 				found = true;
 				break;
 			}

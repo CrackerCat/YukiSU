@@ -418,7 +418,8 @@ std::string kernel_snapshot() {
              ",\"id\":" + std::to_string(rule.id) +
              ",\"management\":" + std::to_string(rule.management) +
              ",\"binding\":" + std::to_string(rule.binding) +
-             ",\"error\":" + std::to_string(rule.error) + "}";
+             ",\"error\":" + std::to_string(rule.error) +
+             ",\"bypass\":" + (rule.bypass ? "true}" : "false}");
     }
     out += ']';
   } else if (caps.bitmask & KSM_FEATURE_MANAGED_HIDE) {

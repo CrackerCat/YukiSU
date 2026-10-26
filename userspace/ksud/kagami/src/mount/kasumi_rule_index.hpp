@@ -40,23 +40,23 @@ public:
         ordered_.erase(unique, ordered_.end());
     }
 
-    [[nodiscard]] std::string_view effective_mode(std::string_view path) const {
+    [[nodiscard]] const ModuleRule* effective_rule(std::string_view path) const {
         if (rules_.size() <= linear_limit) {
-            std::string_view mode = "kasumi";
+            const ModuleRule* selected = nullptr;
             std::size_t longest = 0;
             for (const auto& rule : rules_) {
                 if (!rule.path.empty() && rule.path.front() == '/' && rule.path.size() >= longest &&
                     matches_path(path, rule.path)) {
                     longest = rule.path.size();
-                    mode = rule.mode;
+                    selected = &rule;
                 }
             }
-            return mode;
+            return selected;
         }
         auto prefix = path;
         while (!prefix.empty()) {
             if (const auto* rule = exact(prefix))
-                return std::string_view(rule->mode);
+                return rule;
             // A trailing slash is itself a valid rule prefix. Check it before
             // the shorter spelling, without normalizing repeated slashes.
             if (prefix.back() == '/') {
@@ -68,7 +68,17 @@ public:
                 prefix = prefix.substr(0, slash + 1);
             }
         }
-        return "kasumi";
+        return nullptr;
+    }
+
+    [[nodiscard]] std::string_view effective_mode(std::string_view path) const {
+        const auto* rule = effective_rule(path);
+        return rule ? std::string_view(rule->mode) : "kasumi";
+    }
+
+    [[nodiscard]] bool effective_bypass(std::string_view path) const {
+        const auto* rule = effective_rule(path);
+        return rule && rule->bypass;
     }
 
     [[nodiscard]] bool has_nested_rule(std::string_view path) const {

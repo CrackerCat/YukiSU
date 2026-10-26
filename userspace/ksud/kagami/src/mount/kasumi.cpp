@@ -74,9 +74,10 @@ struct RuleBatch {
     struct Mapping {
         std::string path, source;
         bool merge;
+        int flags = 0;
     };
     std::vector<Mapping> mappings;
-    std::set<std::string> hide;
+    std::map<std::string, int> hide;
 };
 
 bool merge_tree_supported(const fs::path& root) {
@@ -105,7 +106,7 @@ bool merge_tree_supported(const fs::path& root) {
 }
 
 bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
-                  const detail::RuleIndex& rules, RuleBatch& batch) {
+                  const detail::RuleIndex& rules, RuleBatch& batch, bool module_bypass) {
     std::error_code ec;
     if (!fs::is_directory(source_root, ec)) {
         return !ec || ec == std::errc::no_such_file_or_directory;
@@ -126,9 +127,12 @@ bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
         }
         const std::string virtual_path =
             resolve_virtual_path((fs::path(virtual_root) / relative).string());
-        auto mode = rules.effective_mode(virtual_path);
+        const auto* selected = rules.effective_rule(virtual_path);
+        const int flags =
+            (module_bypass || (selected && selected->bypass)) ? KSM_RULE_BYPASS_POLICY : 0;
+        auto mode = selected ? std::string_view(selected->mode) : std::string_view("kasumi");
         if (mode == "hide") {
-            batch.hide.insert(virtual_path);
+            batch.hide[virtual_path] |= flags;
             if (it->is_directory(ec)) {
                 it.disable_recursion_pending();
             }
@@ -158,7 +162,7 @@ bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
             return false;
         }
         if (S_ISCHR(st.st_mode) && major(st.st_rdev) == 0 && minor(st.st_rdev) == 0) {
-            batch.hide.insert(virtual_path);
+            batch.hide[virtual_path] |= flags;
             continue;
         }
         if (S_ISDIR(st.st_mode)) {
@@ -167,7 +171,7 @@ bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
                 !rules.has_nested_rule(virtual_path)) {
                 if (!merge_tree_supported(source))
                     return false;
-                batch.mappings.push_back({virtual_path, source.string(), true});
+                batch.mappings.push_back({virtual_path, source.string(), true, flags});
                 it.disable_recursion_pending();
             }
             continue;
@@ -203,7 +207,7 @@ bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
                     return false;
                 }
             }
-            batch.mappings.push_back({virtual_path, source.string(), false});
+            batch.mappings.push_back({virtual_path, source.string(), false, flags});
         }
     }
     if (ec) {
@@ -274,6 +278,11 @@ bool disable_control_state(std::string& error) {
 
 namespace {
 bool restore_user_hide_rules(std::string& error, bool retry) {
+    const auto bypasses = load_module_modes("hide_bypass.json");
+    const auto bypass = [&](const std::string& path) {
+        const auto it = bypasses.find(path);
+        return it != bypasses.end() && it->second == "on";
+    };
     if (ksud::getprop("sys.boot_completed") != "1" || !::kagami::kasumi::is_available()) {
         user_hide_restore_pending = false;
         return true;
@@ -299,8 +308,8 @@ bool restore_user_hide_rules(std::string& error, bool retry) {
         for (const auto& path : paths) {
             const auto found = std::find_if(registered.begin(), registered.end(),
                                             [&](const auto& rule) { return rule.path == path; });
-            if (found == registered.end())
-                ok = ::kagami::kasumi::upsert_user_hide(path) && ok;
+            if (found == registered.end() || found->bypass != bypass(path))
+                ok = ::kagami::kasumi::upsert_user_hide(path, nullptr, bypass(path)) && ok;
         }
         if (!ok)
             error = "failed to synchronize managed user hide rules; module rules remain active";
@@ -318,14 +327,16 @@ bool restore_user_hide_rules(std::string& error, bool retry) {
             mlog("kasumi: " + error, logging::Level::Error);
         return false;
     }
-    const bool ok = fsutil::run_in_init_mount_ns([retry]() {
+    const bool ok = fsutil::run_in_init_mount_ns([retry, &bypass]() {
         bool restored = true;
         for (const auto& path : load_user_hide_rules()) {
             struct stat parent = {};
             const bool parent_ready =
                 !retry || (stat(fs::path(path).parent_path().c_str(), &parent) == 0 &&
                            S_ISDIR(parent.st_mode));
-            const bool hidden = parent_ready && ::kagami::kasumi::hide_path(path);
+            const bool hidden =
+                parent_ready &&
+                ::kagami::kasumi::hide_path(path, bypass(path) ? KSM_RULE_BYPASS_POLICY : 0);
             if (!retry)
                 mlog("user hide path=" + path +
                          (hidden ? " ok" : " failed errno=" + std::to_string(errno)),
@@ -393,6 +404,11 @@ bool mount_modules(const std::vector<ModuleEntry>& modules, const Config& config
     const std::vector<std::string>& partitions =
         config.partitions.empty() ? fsutil::managed_partitions() : config.partitions;
 
+    const auto bypasses = load_module_modes("module_bypass.json");
+    const auto bypass = [&](const std::string& id) {
+        const auto it = bypasses.find(id);
+        return it != bypasses.end() && it->second == "on";
+    };
     RuleBatch batch;
     for (const auto& module : modules) {
         const auto rule_it = rules.find(module.id);
@@ -400,7 +416,8 @@ bool mount_modules(const std::vector<ModuleEntry>& modules, const Config& config
         const auto& module_rules = rule_it == rules.end() ? empty_rules : rule_it->second;
         for (const auto& rule : module_rules) {
             if (rule.mode == "hide" && !rule.path.empty() && rule.path.front() == '/') {
-                batch.hide.insert(resolve_virtual_path(rule.path));
+                batch.hide[resolve_virtual_path(rule.path)] |=
+                    (bypass(module.id) || rule.bypass) ? KSM_RULE_BYPASS_POLICY : 0;
             }
         }
     }
@@ -415,7 +432,7 @@ bool mount_modules(const std::vector<ModuleEntry>& modules, const Config& config
         const detail::RuleIndex index(module_rules);
         const fs::path source = it->path;
         for (const auto& partition : partitions) {
-            if (!compile_tree(source / partition, "/" + partition, index, batch))
+            if (!compile_tree(source / partition, "/" + partition, index, batch, bypass(it->id)))
                 return false;
         }
     }
@@ -424,16 +441,17 @@ bool mount_modules(const std::vector<ModuleEntry>& modules, const Config& config
     size_t add_count = 0;
     size_t merge_count = 0;
     for (const auto& rule : batch.mappings) {
-        const bool added = rule.merge ? ::kagami::kasumi::add_merge_rule(rule.path, rule.source)
-                                      : ::kagami::kasumi::add_rule(rule.path, rule.source, 0);
+        const bool added =
+            rule.merge ? ::kagami::kasumi::add_merge_rule(rule.path, rule.source, rule.flags)
+                       : ::kagami::kasumi::add_rule(rule.path, rule.source, rule.flags);
         rule.merge ? ++merge_count : ++add_count;
         mlog(std::string(rule.merge ? "merge" : "add") + " rule target=" + rule.path + " source=" +
                  rule.source + (added ? " ok" : " failed errno=" + std::to_string(errno)),
              added ? logging::Level::Debug : logging::Level::Error);
         ok = added && ok;
     }
-    for (const auto& path : batch.hide) {
-        const bool hidden = ::kagami::kasumi::hide_path(path);
+    for (const auto& [path, flags] : batch.hide) {
+        const bool hidden = ::kagami::kasumi::hide_path(path, flags);
         mlog("hide path=" + path + (hidden ? " ok" : " failed errno=" + std::to_string(errno)),
              hidden ? logging::Level::Debug : logging::Level::Error);
         ok = hidden && ok;

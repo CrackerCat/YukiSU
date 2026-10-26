@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
@@ -47,6 +49,7 @@ internal fun KasumiMountConfigDialog(
     initialInfo: KasumiManager.ModuleInfo?,
     kasumiAvailable: Boolean,
     globalMode: String,
+    bypassSupported: Boolean = false,
     onDismiss: () -> Unit,
     onSaved: () -> Unit
 ) {
@@ -61,6 +64,8 @@ internal fun KasumiMountConfigDialog(
     var rules by remember(moduleId) {
         mutableStateOf(initialInfo?.rules ?: emptyList<KasumiManager.ModuleRule>())
     }
+    var moduleBypass by remember(moduleId) { mutableStateOf(initialInfo?.bypass ?: false) }
+    var newBypass by remember { mutableStateOf(false) }
     var newPath by remember { mutableStateOf("") }
     var newMode by remember { mutableStateOf(if (kasumiAvailable) "kasumi" else "overlay") }
     var editingPath by remember { mutableStateOf<String?>(null) }
@@ -140,6 +145,9 @@ internal fun KasumiMountConfigDialog(
                     }
                 }
 
+                KasumiBypassSwitch(moduleBypass, { moduleBypass = it }, !isSaving && (bypassSupported || moduleBypass))
+                Text(stringResource(R.string.kasumi_rule_bypass_summary), style = MaterialTheme.typography.bodySmall)
+                if (!bypassSupported) Text(stringResource(R.string.kasumi_rule_bypass_unavailable), style = MaterialTheme.typography.bodySmall)
                 if (!isExpressiveUi) HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 Row(
@@ -184,7 +192,7 @@ internal fun KasumiMountConfigDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "${rule.path} → ${rule.mode}",
+                                    text = "${rule.path} → ${rule.mode}" + if (moduleBypass || rule.bypass) " · " + stringResource(R.string.kasumi_rule_bypass) else "",
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.weight(1f),
                                     maxLines = 1,
@@ -192,7 +200,7 @@ internal fun KasumiMountConfigDialog(
                                 )
                                 IconButton(
                                     enabled = !isSaving,
-                                    onClick = { editingPath = rule.path; newPath = rule.path; newMode = rule.mode }
+                                    onClick = { editingPath = rule.path; newPath = rule.path; newMode = rule.mode; newBypass = rule.bypass }
                                 ) { YukiIcon(Icons.Outlined.Edit, stringResource(R.string.kasumi_edit_rule)) }
                                 IconButton(
                                     enabled = !isSaving,
@@ -205,6 +213,7 @@ internal fun KasumiMountConfigDialog(
                                 }
                             }
                         }
+                        KasumiBypassSwitch(moduleBypass || newBypass, { newBypass = it }, !isSaving && !moduleBypass && (bypassSupported || newBypass))
                         OutlinedTextField(
                             value = newPath,
                             onValueChange = { newPath = it },
@@ -247,8 +256,9 @@ internal fun KasumiMountConfigDialog(
                                 enabled = !isSaving && newPath.startsWith('/') && rules.none { it.path == newPath.trim() && it.path != editingPath },
                                 onClick = {
                                     if (newPath.startsWith("/")) {
-                                        rules = rules.filterNot { it.path == editingPath } + KasumiManager.ModuleRule(newPath.trim(), newMode)
+                                        rules = rules.filterNot { it.path == editingPath } + KasumiManager.ModuleRule(newPath.trim(), newMode, newBypass)
                                         newPath = ""
+                                        newBypass = false
                                         editingPath = null
                                     }
                                 },
@@ -269,9 +279,9 @@ internal fun KasumiMountConfigDialog(
                     isSaving = true
                     scope.launch {
                         val rulesToSave = if (newPath.isNotEmpty()) rules.filterNot { it.path == editingPath } +
-                            KasumiManager.ModuleRule(newPath.trim(), newMode) else rules
+                            KasumiManager.ModuleRule(newPath.trim(), newMode, newBypass) else rules
                         try {
-                            KasumiManager.saveModule(moduleId, selectedMode, rulesToSave)
+                            KasumiManager.saveModule(moduleId, selectedMode, rulesToSave, moduleBypass)
                             onSaved()
                         } catch (e: Exception) {
                             if (e is CancellationException) throw e
@@ -292,4 +302,14 @@ internal fun KasumiMountConfigDialog(
             }
         }
     )
+}
+
+@Composable
+internal fun KasumiBypassSwitch(checked: Boolean, onChange: (Boolean) -> Unit, enabled: Boolean) {
+    val label = stringResource(R.string.kasumi_rule_bypass)
+    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        Switch(checked, onChange, enabled = enabled,
+            modifier = Modifier.semantics { contentDescription = label })
+    }
 }

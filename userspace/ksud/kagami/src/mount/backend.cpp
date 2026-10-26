@@ -160,9 +160,9 @@ std::vector<ModuleEntry> enumerate_mountable_modules() {
 
 // Per-module control-plane state is separate from module files so the manager
 // can select backends without modifying another module's contents.
-ModuleModeMap load_module_modes() {
+ModuleModeMap load_module_modes(const char* file) {
     ModuleModeMap out;
-    std::ifstream in((runtime_data_dir() / "module_mode.json").string());
+    std::ifstream in((runtime_data_dir() / file).string());
     if (!in) {
         return out;
     }
@@ -181,13 +181,12 @@ ModuleModeMap load_module_modes() {
     return out;
 }
 
-bool save_module_modes(const ModuleModeMap& modes) {
+bool save_module_modes(const ModuleModeMap& modes, const char* file) {
     JsonValue root;
     root.type = JsonValue::Type::Object;
     for (const auto& [id, mode] : modes)
         root.o[id] = JsonValue(mode);
-    return ksud::write_file_atomic(runtime_data_dir() / "module_mode.json",
-                                   stringify_json(root, 2) + "\n");
+    return ksud::write_file_atomic(runtime_data_dir() / file, stringify_json(root, 2) + "\n");
 }
 
 ModuleRuleMap load_module_rules() {
@@ -215,7 +214,8 @@ ModuleRuleMap load_module_rules() {
             const JsonValue* path = entry.find("path");
             const JsonValue* mode = entry.find("mode");
             if (path && mode && path->is_string() && mode->is_string()) {
-                out[id].push_back({path->s, mode->s});
+                const auto* bypass = entry.find("bypass");
+                out[id].push_back({path->s, mode->s, bypass && bypass->is_bool() && bypass->b});
             }
         }
     }
@@ -233,6 +233,7 @@ bool save_module_rules(const ModuleRuleMap& rules) {
             rule.type = JsonValue::Type::Object;
             rule.o["path"] = JsonValue(entry.path);
             rule.o["mode"] = JsonValue(entry.mode);
+            rule.o["bypass"] = JsonValue(entry.bypass);
             array.a.push_back(std::move(rule));
         }
     }
