@@ -116,14 +116,20 @@ object KasumiManager {
         val mountState = readMountState(config, system)
         val mounts = objectResult("api", "mounts")
         mounts.keys().forEach { key -> system.put(key, mounts.get(key)) }
-        val hides = arrayResult("hide", "list", "--details")
+        val entries = arrayResult("hide", "list", "--details")
+        val hides = (0 until entries.length()).map { index ->
+            when (val entry = entries.get(index)) {
+                is String -> JSONObject().put("path", entry).put("bypass", false)
+                else -> entries.getJSONObject(index)
+            }
+        }
         Snapshot(
             system, config,
             JSONArray(system.optString("rules").lineSequence().filter(String::isNotBlank)
                 .map { JSONObject().put("args", it) }.toList()),
-            (0 until hides.length()).map { hides.getJSONObject(it).getString("path") },
+            hides.map { it.getString("path") },
             mountState,
-            (0 until hides.length()).map(hides::getJSONObject).filter { it.optBoolean("bypass") }.map { it.getString("path") }.toSet(),
+            hides.filter { it.optBoolean("bypass") }.map { it.getString("path") }.toSet(),
         )
     }
 
