@@ -376,7 +376,15 @@ const std::vector<Command>& commands() {
          {{"--all", "", "", "", "Include disabled modules"}},
          true},
         {"kagami module set-mode", "Set a module's mount backend", "<ID> <MODE>", 2, 2},
-        {"kagami module add-rule", "Add a module path rule", "<ID> <ABSOLUTE-PATH> <MODE>", 3, 3},
+        {"kagami module set-bypass", "Set a module's policy bypass", "<ID> <STATE>", 2, 2},
+        {"kagami module apply", "Apply rules for a module already owned by Kasumi", "<ID>", 1, 1},
+        {"kagami module add-rule",
+         "Add a module path rule",
+         "<ID> <ABSOLUTE-PATH> <MODE>",
+         3,
+         3,
+         {{"--bypass", "", "", "", "Apply the rule regardless of policy"}},
+         true},
         {"kagami module remove-rule", "Remove a module path rule", "<ID> <ABSOLUTE-PATH>", 2, 2},
         {"kagami module add", "Hot-mount a Kasumi module", "<ID>", 1, 1},
         {"kagami module delete", "Hot-unmount a Kasumi module", "<ID>", 1, 1},
@@ -398,8 +406,7 @@ const std::vector<Command>& commands() {
         {"kagami kasumi fix-mounts", "Reorder mount IDs", ""},
         {"kagami kasumi hide-overlay-xattrs", "Hide OverlayFS attributes on a path",
          "<ABSOLUTE-PATH>", 1, 1},
-        {"kagami kasumi mount-hide", "Set mount hiding: off, on, normal, aggressive", "<MODE>", 1,
-         1},
+        {"kagami kasumi mount-hide", "Set mount hiding: off, on, normal", "<MODE>", 1, 1},
         {"kagami kasumi maps-spoof", "Set maps spoofing: off or on", "<STATE>", 1, 1},
         {"kagami kasumi statfs-spoof", "Set statfs spoofing: off or on", "<STATE>", 1, 1},
         {"kagami kasumi maps", "Manage maps spoofing rules", "<COMMAND>"},
@@ -411,9 +418,21 @@ const std::vector<Command>& commands() {
         {"kagami debug disable", "Disable kernel diagnostics", ""},
         {"kagami debug stealth", "Set stealth mode: enable or disable", "<STATE>", 1, 1},
         {"kagami hide", "Manage persistent path hiding", "<COMMAND>"},
-        {"kagami hide list", "Read persistent hidden paths", ""},
+        {"kagami hide list",
+         "Read persistent hidden paths",
+         "",
+         0,
+         0,
+         {{"--details", "", "", "", "Include each rule's policy bypass setting"}},
+         true},
         {"kagami hide apply", "Restore hidden paths after boot completion", ""},
-        {"kagami hide add", "Add an absolute path", "<ABSOLUTE-PATH>", 1, 1},
+        {"kagami hide add",
+         "Add an absolute path",
+         "<ABSOLUTE-PATH>",
+         1,
+         1,
+         {{"--bypass", "", "", "", "Hide the path regardless of policy"}},
+         true},
         {"kagami hide remove", "Remove an absolute path", "<ABSOLUTE-PATH>", 1, 1},
         {"kagami recovery", "Manage mount recovery state", "<COMMAND>"},
         {"kagami recovery status", "Read recovery state", ""},
@@ -898,12 +917,14 @@ int validate(const Command& command, const std::vector<std::string>& operands,
             !one_of(operands[1], "auto|kasumi|overlay|magic|none"))
             return bad("invalid mount mode '" + operands[1] +
                        "'; expected auto, kasumi, overlay, magic or none");
+        if (path == "kagami module set-bypass" && !one_of(operands[1], "off|on"))
+            return bad("invalid bypass state; expected off or on");
         if (path == "kagami module add-rule" &&
             !one_of(operands[2], "auto|kasumi|overlay|magic|none|hide"))
             return bad("invalid rule mode '" + operands[2] +
                        "'; expected auto, kasumi, overlay, magic, none or hide");
-        if (path == "kagami kasumi mount-hide" && !one_of(operands[0], "off|on|normal|aggressive"))
-            return bad("invalid mount hiding mode; expected off, on, normal or aggressive");
+        if (path == "kagami kasumi mount-hide" && !one_of(operands[0], "off|on|normal"))
+            return bad("invalid mount hiding mode; expected off, on or normal");
         if ((path == "kagami kasumi maps-spoof" || path == "kagami kasumi statfs-spoof") &&
             !one_of(operands[0], "off|on"))
             return bad("invalid state '" + operands[0] + "'; expected off or on");

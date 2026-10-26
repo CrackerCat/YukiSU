@@ -65,7 +65,8 @@ void print_usage() {
               << "  ksud kagami daemon status|serve|call|ping|stop\n"
               << "  ksud kagami api system|storage|kasumi|features|hooks|backends|meta\n"
               << "  ksud kagami module "
-                 "list|add|delete|set-mode|add-rule|remove-rule|hot-mount|hot-unmount|check-"
+                 "list|add|delete|set-mode|set-bypass|apply|add-rule|remove-rule|hot-mount|hot-"
+                 "unmount|check-"
                  "conflicts|mount-all|unmount|normalize\n"
               << "  ksud kagami recovery status|reset\n"
               << "  ksud kagami hide list|apply|add|remove\n"
@@ -716,6 +717,30 @@ bool save_bypass(const std::string& key, bool enabled, const char* file) {
 
 int handle_module(const std::vector<std::string>& args) {
     const auto sub = arg_or_default(args, 1, "");
+    if (sub == "apply") {
+        const auto id = arg_or_default(args, 2, "");
+        if (args.size() != 3 || !valid_module_id(id))
+            return 1;
+        Config config;
+        std::string error;
+        if (!read_config_file(config, error)) {
+            std::cerr << error << "\n";
+            return 1;
+        }
+        const auto replayable = mount::kasumi::replayable_module_ids();
+        const auto modules = mount::enumerate_mountable_modules();
+        const bool applicable =
+            config.kasumi_enabled &&
+            std::find(replayable.begin(), replayable.end(), id) != replayable.end() &&
+            std::any_of(modules.begin(), modules.end(),
+                        [&](const auto& module) { return module.id == id; });
+        if (applicable && !mount::refresh_kasumi_modules(config)) {
+            std::cerr << "settings saved, but Kasumi rule application failed\n";
+            return 1;
+        }
+        std::cout << "{\"applied\":" << (applicable ? "true" : "false") << "}\n";
+        return 0;
+    }
     if (sub == "list") {
         const auto modes = mount::load_module_modes();
         const auto bypasses = mount::load_module_modes("module_bypass.json");
