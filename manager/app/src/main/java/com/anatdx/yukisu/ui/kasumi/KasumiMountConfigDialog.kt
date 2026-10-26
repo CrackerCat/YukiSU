@@ -5,6 +5,8 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,11 +23,11 @@ import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import com.anatdx.yukisu.R
 import com.anatdx.yukisu.ui.component.YukiIcon
 import com.anatdx.yukisu.ui.component.YukiAlertDialog
+import com.anatdx.yukisu.ui.component.YukiSwitch
 import com.anatdx.yukisu.ui.theme.isExpressiveUi
 import com.anatdx.yukisu.ui.kasumi.util.KasumiManager
 import kotlinx.coroutines.CancellationException
@@ -306,11 +308,18 @@ internal fun KasumiMountConfigDialog(
 }
 
 @Composable
-internal fun KasumiBypassSwitch(checked: Boolean, onChange: (Boolean) -> Unit, enabled: Boolean) {
-    val label = stringResource(R.string.kasumi_rule_bypass)
-    Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        Switch(checked, onChange, enabled = enabled,
-            modifier = Modifier.semantics { contentDescription = label })
+internal fun KasumiBypassSwitch(checked: Boolean, onChange: (Boolean) -> Unit, enabled: Boolean, label: String? = null) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch,
+                interactionSource = interactionSource, indication = androidx.compose.foundation.LocalIndication.current,
+                onValueChange = onChange)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label ?: stringResource(R.string.kasumi_rule_bypass), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        YukiSwitch(checked, null, enabled = enabled, interactionSource = interactionSource)
     }
 }

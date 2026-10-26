@@ -1112,5 +1112,12 @@
     <string name="kasumi_rule_bypass" tools:ignore="MissingTranslation">Global rules (bypass policy)</string>
     <string name="kasumi_rule_bypass_summary" tools:ignore="MissingTranslation">Applies only to Kasumi rules. Enabled rules affect all processes regardless of policy. A module switch applies to all its Kasumi rules.</string>
     <string name="kasumi_rule_bypass_unavailable" tools:ignore="MissingTranslation">This kernel does not support rule bypass.</string>
+    <string name="kasumi_hide_draft_bypass" tools:ignore="MissingTranslation">Make the new rule global</string>
+    <string name="kasumi_hide_draft_summary" tools:ignore="MissingTranslation">Applies to the next path you add. Tap Add to save and apply it.</string>
+    <string name="kasumi_hide_options" tools:ignore="MissingTranslation">Rule options</string>
+    <string name="kasumi_hide_scope_global" tools:ignore="MissingTranslation">Global</string>
+    <string name="kasumi_hide_scope_policy" tools:ignore="MissingTranslation">Follow policy</string>
+    <string name="kasumi_hide_expand_options" tools:ignore="MissingTranslation">Expand rule options</string>
+    <string name="kasumi_hide_collapse_options" tools:ignore="MissingTranslation">Collapse rule options</string>
     <string name="kasumi_module_saved_applied" tools:ignore="MissingTranslation">Settings saved and Kasumi rules applied. Mount backend changes take effect after reboot.</string>
 </resources>

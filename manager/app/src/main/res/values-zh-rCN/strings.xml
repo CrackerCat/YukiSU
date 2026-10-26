@@ -1106,5 +1106,12 @@
     <string name="kasumi_rule_bypass">全局生效（绕过策略）</string>
     <string name="kasumi_rule_bypass_summary">仅作用于 Kasumi 规则。开启后规则对所有进程生效，不再跟随策略；模块开关作用于该模块的全部 Kasumi 规则。</string>
     <string name="kasumi_rule_bypass_unavailable">当前内核不支持规则 bypass。</string>
+    <string name="kasumi_hide_draft_bypass">新规则全局生效</string>
+    <string name="kasumi_hide_draft_summary">仅用于下一条添加的路径，点击添加后保存并生效。</string>
+    <string name="kasumi_hide_options">规则选项</string>
+    <string name="kasumi_hide_scope_global">全局</string>
+    <string name="kasumi_hide_scope_policy">跟随策略</string>
+    <string name="kasumi_hide_expand_options">展开规则选项</string>
+    <string name="kasumi_hide_collapse_options">收起规则选项</string>
     <string name="kasumi_module_saved_applied">设置已保存，Kasumi 规则已即时应用。挂载后端变更在重启后生效。</string>
 </resources>

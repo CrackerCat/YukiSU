@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -84,6 +85,8 @@ fun KasumiConfigScreen(
     val snackbarHostState = rememberSnackbarController()
 
     var selectedTab by remember { mutableStateOf(KasumiTab.STATUS) }
+    var hideDraftPath by rememberSaveable { mutableStateOf("") }
+    var hideDraftBypass by rememberSaveable { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) }
     var configSaving by remember { mutableStateOf(false) }
     var dataReady by remember { mutableStateOf(false) }
@@ -176,6 +179,10 @@ fun KasumiConfigScreen(
                         snackbarHostState = snackbarHostState,
                         controlsEnabled = dataReady && !configSaving,
                         runtimeApplyPending = runtimeApplyPending,
+                        hideDraftPath = hideDraftPath,
+                        hideDraftBypass = hideDraftBypass,
+                        onHideDraftPathChange = { hideDraftPath = it },
+                        onHideDraftBypassChange = { hideDraftBypass = it },
                         onRetryApply = {
                             if (!configSaving) {
                                 configSaving = true

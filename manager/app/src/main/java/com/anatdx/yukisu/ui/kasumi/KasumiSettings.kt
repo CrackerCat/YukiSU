@@ -1,5 +1,11 @@
 package com.anatdx.yukisu.ui.kasumi
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,13 +17,18 @@ import androidx.compose.material.icons.automirrored.filled.Subject
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.anatdx.yukisu.ui.util.SnackbarController
 import com.anatdx.yukisu.R
@@ -39,6 +50,10 @@ internal fun SettingsTab(
     snackbarHostState: SnackbarController,
     controlsEnabled: Boolean,
     runtimeApplyPending: Boolean,
+    hideDraftPath: String,
+    hideDraftBypass: Boolean,
+    onHideDraftPathChange: (String) -> Unit,
+    onHideDraftBypassChange: (Boolean) -> Unit,
     onRetryApply: () -> Unit,
     onConfigChanged: (Controller.KagamiConfig) -> Unit,
 ) {
@@ -131,7 +146,8 @@ internal fun SettingsTab(
                 }
             }
         }
-        UserHideRulesCard(enabled, features?.names?.contains("rule_bypass") == true, snackbarHostState)
+        UserHideRulesCard(enabled, features?.names?.contains("rule_bypass") == true, snackbarHostState,
+            hideDraftPath, hideDraftBypass, onHideDraftPathChange, onHideDraftBypassChange)
         if (config.kernelAvailable && features?.names?.contains("maps_spoof") == true) MapsSpoofCard(snackbarHostState)
 
     }
@@ -289,14 +305,16 @@ private fun EditableConfigPath(title: Int, subtitle: Int, value: String, enabled
 }
 
 @Composable
-private fun UserHideRulesCard(enabled: Boolean, bypassSupported: Boolean, snackbar: SnackbarController) {
+private fun UserHideRulesCard(
+    enabled: Boolean, bypassSupported: Boolean, snackbar: SnackbarController,
+    newPath: String, newBypass: Boolean, onNewPathChange: (String) -> Unit, onNewBypassChange: (Boolean) -> Unit,
+) {
     val scope = rememberCoroutineScope()
     val resources = LocalResources.current
     var states by remember { mutableStateOf(emptyList<Controller.ActiveRule>()) }
     val paths = states.map { it.src }
-    var newBypass by remember { mutableStateOf(false) }
-    var newPath by remember { mutableStateOf("") }
     var working by remember { mutableStateOf(false) }
+    var draftOptionsExpanded by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         try { states = Controller.userHideStates() }
         catch (error: Exception) { if (error is CancellationException) throw error; snackbar.showSnackbar(error.message.orEmpty()) }
@@ -309,7 +327,9 @@ private fun UserHideRulesCard(enabled: Boolean, bypassSupported: Boolean, snackb
                 val ok = if (remove) Controller.removeUserHideRule(path) else Controller.addUserHideRule(path, bypass)
                 states = Controller.userHideStates()
                 working = false
-                if (ok) newPath = "" else snackbar.showSnackbar(resources.getString(R.string.operation_failed))
+                if (ok) {
+                    if (!remove && path == newPath.trim()) onNewPathChange("")
+                } else snackbar.showSnackbar(resources.getString(R.string.operation_failed))
             } catch (error: Exception) { working = false; if (error is CancellationException) throw error; snackbar.showSnackbar(error.message.orEmpty()) }
             finally { working = false }
         }
@@ -334,43 +354,115 @@ private fun UserHideRulesCard(enabled: Boolean, bypassSupported: Boolean, snackb
             } finally { working = false }
         }
     }
-    ConfigSection(stringResource(R.string.kasumi_user_hide_title)) {
-        TextButton(onClick = { refresh() }, enabled = !working) {
-            Text(stringResource(R.string.kasumi_rules_refresh))
-        }
-        Text(stringResource(R.string.kasumi_quick_hide), style = MaterialTheme.typography.bodyMedium)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val externalStorage = android.os.Environment.getExternalStorageDirectory()
-            listOf("/dev/scene", "/dev/cpuset/scene-daemon", externalStorage.resolve("Download/advanced").path, externalStorage.resolve("MT2").path).forEach { path ->
-                AssistChip(onClick = { change(path, false) }, enabled = enabled && !working && path !in paths, label = { Text(path) })
-            }
-        }
-        states.forEach { rule -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            val path = rule.src
-            Column(Modifier.weight(1f)) {
-                KasumiBypassSwitch(rule.bypass, { change(path, false, it) }, enabled && !working && (bypassSupported || rule.bypass))
-                Text(path, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-                if (rule.hideState != null) Text(userHideStatus(rule), style = MaterialTheme.typography.bodySmall,
-                    color = if (rule.hideState == 3) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (rule.hideState == 3 || rule.hideState == 0 || rule.hideState == -1) {
-                IconButton(onClick = { refresh(path) }, enabled = enabled && !working) {
-                    YukiIcon(Icons.Filled.Refresh, stringResource(R.string.kasumi_hide_retry))
+    ConfigSection(stringResource(R.string.kasumi_user_hide_title), segmented = true) {
+        KasumiControlGroup(MoreSettingsItemPosition.First) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.kasumi_quick_hide), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                IconButton(onClick = { refresh() }, enabled = !working) {
+                    YukiIcon(Icons.Filled.Refresh, stringResource(R.string.kasumi_rules_refresh))
                 }
             }
-            IconButton(onClick = { change(path, true) }, enabled = enabled && !working) {
-                YukiIcon(Icons.Filled.Delete, stringResource(R.string.kasumi_user_hide_remove))
-            }
-        } }
-        Text(stringResource(R.string.kasumi_rule_bypass_summary), style = MaterialTheme.typography.bodySmall)
-        KasumiBypassSwitch(newBypass, { newBypass = it }, enabled && !working && bypassSupported)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(newPath, { newPath = it }, Modifier.weight(1f), enabled = enabled && !working,
-                singleLine = true, placeholder = { Text(stringResource(R.string.kasumi_user_hide_placeholder)) })
-            Button(onClick = { change(newPath.trim(), false, newBypass) }, enabled = enabled && !working && newPath.startsWith('/') && newPath != "/system/bin/su") {
-                Text(stringResource(R.string.kasumi_user_hide_add))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                val externalStorage = android.os.Environment.getExternalStorageDirectory()
+                listOf("/dev/scene", "/dev/cpuset/scene-daemon", externalStorage.resolve("Download/advanced").path, externalStorage.resolve("MT2").path).forEach { path ->
+                    AssistChip(onClick = { change(path, false) }, enabled = enabled && !working && path !in paths, label = { Text(path) })
+                }
             }
         }
+        states.forEach { rule -> key(rule.src) {
+            var expanded by rememberSaveable { mutableStateOf(false) }
+            KasumiControlGroup(MoreSettingsItemPosition.Middle) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        Modifier.weight(1f).heightIn(min = 56.dp).clip(MaterialTheme.shapes.medium)
+                            .clickable(role = Role.Button, onClickLabel = hideOptionsAction(expanded)) { expanded = !expanded }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(rule.src, style = MaterialTheme.typography.bodyMedium, fontFamily = FontFamily.Monospace,
+                                maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (rule.hideState != null) Text(userHideStatus(rule), style = MaterialTheme.typography.bodySmall,
+                                    color = if (rule.hideState == 3) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                                if (rule.bypass) Text(stringResource(R.string.kasumi_hide_scope_global),
+                                    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+                        HideOptionsArrow(expanded)
+                    }
+                    IconButton(onClick = { change(rule.src, true) }, enabled = enabled && !working) {
+                        YukiIcon(Icons.Filled.Delete, stringResource(R.string.kasumi_user_hide_remove))
+                    }
+                }
+                HideOptionsExpansion(expanded) {
+                    KasumiBypassSwitch(rule.bypass, { change(rule.src, false, it) }, enabled && !working && (bypassSupported || rule.bypass))
+                    if (rule.hideState == 3 || rule.hideState == 0 || rule.hideState == -1) {
+                        TextButton(onClick = { refresh(rule.src) }, enabled = enabled && !working) {
+                            YukiIcon(Icons.Filled.Refresh, null, Modifier.size(18.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(R.string.kasumi_hide_retry))
+                        }
+                    }
+                }
+            }
+        } }
+        KasumiControlGroup(MoreSettingsItemPosition.Last) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(newPath, onNewPathChange, Modifier.weight(1f), enabled = enabled && !working,
+                    singleLine = true, placeholder = { Text(stringResource(R.string.kasumi_user_hide_placeholder)) })
+                Button(onClick = { change(newPath.trim(), false, newBypass) }, enabled = enabled && !working && newPath.startsWith('/') && newPath != "/system/bin/su") {
+                    Text(stringResource(R.string.kasumi_user_hide_add))
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(MaterialTheme.shapes.medium)
+                    .clickable(role = Role.Button, onClickLabel = hideOptionsAction(draftOptionsExpanded)) { draftOptionsExpanded = !draftOptionsExpanded }
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(stringResource(R.string.kasumi_hide_options), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(if (newBypass) R.string.kasumi_hide_scope_global else R.string.kasumi_hide_scope_policy),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (newBypass) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                HideOptionsArrow(draftOptionsExpanded)
+            }
+            HideOptionsExpansion(draftOptionsExpanded) {
+                KasumiBypassSwitch(newBypass, onNewBypassChange, enabled && !working && bypassSupported,
+                    label = stringResource(R.string.kasumi_hide_draft_bypass))
+                Text(stringResource(if (bypassSupported) R.string.kasumi_hide_draft_summary else R.string.kasumi_rule_bypass_unavailable),
+                    Modifier.padding(horizontal = 8.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+@Composable
+private fun hideOptionsAction(expanded: Boolean): String =
+    stringResource(if (expanded) R.string.kasumi_hide_collapse_options else R.string.kasumi_hide_expand_options)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HideOptionsArrow(expanded: Boolean) {
+    val rotation by animateFloatAsState(if (expanded) 180f else 0f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), label = "hideOptionsArrow")
+    YukiIcon(Icons.Filled.ExpandMore, null, Modifier.rotate(rotation), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HideOptionsExpansion(expanded: Boolean, content: @Composable ColumnScope.() -> Unit) {
+    AnimatedVisibility(
+        visible = expanded,
+        enter = expandVertically(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(), expandFrom = Alignment.Top) +
+            fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
+        exit = shrinkVertically(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(), shrinkTowards = Alignment.Top) +
+            fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
+    ) {
+        Column(Modifier.fillMaxWidth().padding(top = 4.dp), content = content)
     }
 }
 
