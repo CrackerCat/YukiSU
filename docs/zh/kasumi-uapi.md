@@ -29,8 +29,15 @@ bypass 对策略排除的进程也生效，包括特权进程和存储服务，�
 Manager 与独立 Kagami WebUI 提供模块、单条规则和用户 hide 开关，默认关闭。
 模块开关作用于该模块下发的全部 Kasumi 规则；路径规则仍采用最长前缀匹配，
 最终 bypass 为“模块开关或选中路径规则开关”。OverlayFS、Magic Mount 不消费
-此设置。模块修改在下次重建规则时生效，例如 Kasumi 热挂载或下次启动；用户
-hide 保存后立即下发，继续按现有绑定状态显示结果。
+此设置。模块修改在重建规则时生效，例如 Kasumi 热挂载或下次启动。YukiSU
+Manager 保存并回读确认后，会立即重放本次启动中已由 Kasumi 接管的模块规则；
+挂载后端变更仍需重启。应用失败时保留已保存的设置，并提示失败，不能将保存
+成功视为运行时已生效。
+
+用户 hide 保存后立即下发，继续按现有绑定状态显示结果。Manager 底部的
+“规则选项”展开后显示“新规则全局生效”，只设置下一条待添加规则，路径和
+选项会跨标签保留；点击添加后才会保存并下发。修改已有规则时点击路径行
+展开开关；已开启全局生效的规则在折叠状态下仍显示“全局”标记。
 
 ```sh
 ksud kagami module set-bypass example on
@@ -45,6 +52,11 @@ ksud kagami hide list --details
 中保存为 `"on"`，缺省为关闭。`hide list` 保留字符串数组格式，
 `--details` 返回 `{path, bypass}` 对象。`LIST_RULES` 的 ADD、MERGE、HIDE
 记录末尾报告数值标志。
+
+集成版命令行完成模块设置后，可执行 `ksud kagami module apply example`。
+该命令只重放本次启动已由 Kasumi 接管的模块，不会迁移 OverlayFS 或 Magic
+Mount 挂载。返回 `{"applied":false}` 表示设置留待下次启动；应用失败返回
+非零状态，修复报告的错误后可重试该命令。
 
 ## 调用与版本
 

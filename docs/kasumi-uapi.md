@@ -53,8 +53,19 @@ off. The module flag applies to every Kasumi rule owned by that module; a
 single path rule uses the existing longest-prefix selection. Effective bypass
 is the module flag OR the selected path-rule flag. OverlayFS and Magic Mount
 do not consume this setting. Module edits take effect when the module rules
-are rebuilt, such as a Kasumi hot mount or the next boot; saved user hides are
-submitted immediately and retain their existing binding-status reporting.
+are rebuilt, such as a Kasumi hot mount or the next boot. After saving and
+verifying the stored settings, YukiSU Manager immediately replays rules for
+modules already owned by Kasumi in the current boot. Mount backend changes
+still require a reboot. If application fails, the saved settings remain and
+Manager reports the failure; a successful save alone does not mean the
+runtime rules have changed.
+
+Saved user hides are submitted immediately and retain their existing
+binding-status reporting. Expand Manager's bottom "Rule options" to reveal
+"Make the new rule global", which configures the next rule to add. Its path
+and option survive tab changes, but are saved and submitted only after
+tapping Add. Tap an existing rule's path row to expand its switch. Enabled
+global rules retain a "Global" label while collapsed.
 
 CLI examples (`ksud kagami` in YukiSU, `kagamid` standalone):
 
@@ -71,6 +82,13 @@ overrides are stored as `"on"` entries in `module_bypass.json` and
 `hide_bypass.json`; absence means off. `hide list` retains the legacy string
 array, while `--details` returns `{path, bypass}` objects. `LIST_RULES` reports
 the numeric flags after ADD, MERGE, and HIDE records.
+
+After saving module settings through the integrated CLI, run
+`ksud kagami module apply example`. This replays only modules owned by Kasumi
+in the current boot and does not migrate OverlayFS or Magic Mount mounts.
+`{"applied":false}` means the settings await the next boot. Application
+failure returns a nonzero status; resolve the reported error and retry the
+command.
 
 ## Conflict diagnostics
 
