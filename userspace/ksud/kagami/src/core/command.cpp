@@ -1240,7 +1240,8 @@ int handle_hide(const std::vector<std::string>& args) {
         if (kasumi::is_available() &&
             (!kasumi::managed_hide_mode(managed) ||
              !(managed ? kasumi::upsert_user_hide(path, nullptr, bypass)
-                       : kasumi::hide_path(path, bypass ? KSM_RULE_BYPASS_POLICY : 0)))) {
+                       : mount::kasumi::update_legacy_user_hide(
+                             path, false, bypass ? KSM_RULE_BYPASS_POLICY : 0)))) {
             std::cerr << "hide rule saved, but the kernel rejected it: " << std::strerror(errno)
                       << "\n";
             return 1;
@@ -1259,7 +1260,8 @@ int handle_hide(const std::vector<std::string>& args) {
         bool managed = false;
         if (kasumi::is_available() &&
             (!kasumi::managed_hide_mode(managed) ||
-             !(managed ? kasumi::delete_user_hide(path) : kasumi::delete_rule(path)))) {
+             !(managed ? kasumi::delete_user_hide(path)
+                       : mount::kasumi::update_legacy_user_hide(path, true)))) {
             std::cerr << "hide rule removed from config, but kernel removal failed: "
                       << std::strerror(errno) << "\n";
             return 1;

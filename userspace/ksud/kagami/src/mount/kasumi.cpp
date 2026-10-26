@@ -217,6 +217,70 @@ bool compile_tree(const fs::path& source_root, const std::string& virtual_root,
     return !ec;
 }
 
+bool collect_module_rules(const std::vector<ModuleEntry>& modules, const Config& config,
+                          const ModuleRuleMap& rules, RuleBatch& batch) {
+    const std::vector<std::string>& partitions =
+        config.partitions.empty() ? fsutil::managed_partitions() : config.partitions;
+    const auto bypasses = load_module_modes("module_bypass.json");
+    const auto bypass = [&](const std::string& id) {
+        const auto it = bypasses.find(id);
+        return it != bypasses.end() && it->second == "on";
+    };
+    for (const auto& module : modules) {
+        const auto rule_it = rules.find(module.id);
+        const std::vector<ModuleRule> empty_rules;
+        const auto& module_rules = rule_it == rules.end() ? empty_rules : rule_it->second;
+        for (const auto& rule : module_rules) {
+            if (rule.mode == "hide" && !rule.path.empty() && rule.path.front() == '/') {
+                batch.hide[resolve_virtual_path(rule.path)] |=
+                    (bypass(module.id) || rule.bypass) ? KSM_RULE_BYPASS_POLICY : 0;
+            }
+        }
+    }
+    // Kernel rules use last-write-wins semantics. Reverse the sorted modules
+    // to retain the same deterministic priority as YukiSU's hymo planner.
+    for (auto it = modules.rbegin(); it != modules.rend(); ++it) {
+        const auto rule_it = rules.find(it->id);
+        const std::vector<ModuleRule> empty_rules;
+        const auto& module_rules = rule_it == rules.end() ? empty_rules : rule_it->second;
+        const detail::RuleIndex index(module_rules);
+        for (const auto& partition : partitions) {
+            if (!compile_tree(it->path / partition, "/" + partition, index, batch, bypass(it->id)))
+                return false;
+        }
+    }
+    return true;
+}
+
+bool collect_legacy_module_hides(std::map<std::string, int>& hides) {
+    const auto replayable = replayable_module_ids();
+    if (replayable.empty())
+        return true;
+    Config config;
+    std::string error;
+    if (!read_config_file(config, error)) {
+        mlog("kasumi: " + error, logging::Level::Error);
+        errno = EIO;
+        return false;
+    }
+    std::vector<ModuleEntry> modules;
+    modules.reserve(replayable.size());
+    for (const auto& id : replayable) {
+        const auto path = runtime_modules_dir() / id;
+        std::error_code ec;
+        if (!fs::is_directory(path, ec)) {
+            errno = ec ? ec.value() : ENOENT;
+            return false;
+        }
+        modules.push_back({id, path});
+    }
+    RuleBatch batch;
+    if (!collect_module_rules(modules, config, load_module_rules(), batch))
+        return false;
+    hides = std::move(batch.hide);
+    return true;
+}
+
 bool disable_kernel_features(std::string* error = nullptr) {
     bool ok = true;
     const auto disable = [&](bool result, const char* name) {
@@ -328,15 +392,18 @@ bool restore_user_hide_rules(std::string& error, bool retry) {
         return false;
     }
     const bool ok = fsutil::run_in_init_mount_ns([retry, &bypass]() {
+        std::map<std::string, int> module_hides;
+        if (!collect_legacy_module_hides(module_hides))
+            return false;
         bool restored = true;
         for (const auto& path : load_user_hide_rules()) {
             struct stat parent = {};
             const bool parent_ready =
                 !retry || (stat(fs::path(path).parent_path().c_str(), &parent) == 0 &&
                            S_ISDIR(parent.st_mode));
-            const bool hidden =
-                parent_ready &&
-                ::kagami::kasumi::hide_path(path, bypass(path) ? KSM_RULE_BYPASS_POLICY : 0);
+            const int flags = module_hides[resolve_virtual_path(path)] |
+                              (bypass(path) ? KSM_RULE_BYPASS_POLICY : 0);
+            const bool hidden = parent_ready && ::kagami::kasumi::hide_path(path, flags);
             if (!retry)
                 mlog("user hide path=" + path +
                          (hidden ? " ok" : " failed errno=" + std::to_string(errno)),
@@ -359,6 +426,19 @@ bool restore_user_hide_rules(std::string& error, bool retry) {
 
 bool restore_persisted_hide_rules(std::string& error) {
     return restore_user_hide_rules(error, false);
+}
+
+bool update_legacy_user_hide(const std::string& path, bool remove, int flags) {
+    return fsutil::run_in_init_mount_ns([&]() {
+        std::map<std::string, int> module_hides;
+        if (!collect_legacy_module_hides(module_hides))
+            return false;
+        const auto module = module_hides.find(resolve_virtual_path(path));
+        if (module != module_hides.end())
+            return ::kagami::kasumi::hide_path(path, module->second | (remove ? 0 : flags));
+        return remove ? ::kagami::kasumi::delete_rule(path)
+                      : ::kagami::kasumi::hide_path(path, flags);
+    });
 }
 
 bool has_pending_hide_rules() {
@@ -401,41 +481,9 @@ bool mount_modules(const std::vector<ModuleEntry>& modules, const Config& config
     // /data/adb/modules; the vnode clones the source inode's SELinux SID, so no
     // relabeled mirror is needed (unlike OverlayFS, which exposes the lowerdir's
     // context). Kasumi therefore mounts no workdir.
-    const std::vector<std::string>& partitions =
-        config.partitions.empty() ? fsutil::managed_partitions() : config.partitions;
-
-    const auto bypasses = load_module_modes("module_bypass.json");
-    const auto bypass = [&](const std::string& id) {
-        const auto it = bypasses.find(id);
-        return it != bypasses.end() && it->second == "on";
-    };
     RuleBatch batch;
-    for (const auto& module : modules) {
-        const auto rule_it = rules.find(module.id);
-        const std::vector<ModuleRule> empty_rules;
-        const auto& module_rules = rule_it == rules.end() ? empty_rules : rule_it->second;
-        for (const auto& rule : module_rules) {
-            if (rule.mode == "hide" && !rule.path.empty() && rule.path.front() == '/') {
-                batch.hide[resolve_virtual_path(rule.path)] |=
-                    (bypass(module.id) || rule.bypass) ? KSM_RULE_BYPASS_POLICY : 0;
-            }
-        }
-    }
-
-    // Kernel rules use last-write-wins semantics. Enumerated modules are sorted
-    // by id, so emit them backwards to retain the same deterministic priority as
-    // YukiSU's hymo planner.
-    for (auto it = modules.rbegin(); it != modules.rend(); ++it) {
-        const auto rule_it = rules.find(it->id);
-        const std::vector<ModuleRule> empty_rules;
-        const auto& module_rules = rule_it == rules.end() ? empty_rules : rule_it->second;
-        const detail::RuleIndex index(module_rules);
-        const fs::path source = it->path;
-        for (const auto& partition : partitions) {
-            if (!compile_tree(source / partition, "/" + partition, index, batch, bypass(it->id)))
-                return false;
-        }
-    }
+    if (!collect_module_rules(modules, config, rules, batch))
+        return false;
 
     bool ok = true;
     size_t add_count = 0;
