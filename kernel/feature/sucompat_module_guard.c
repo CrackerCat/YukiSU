@@ -13,7 +13,8 @@
 #include "klog.h"
 
 static const char *const conflicting_modules[] = {
-    "kasumi_lkm", "pathmask", "procguard", "nomount", "susfs_guard_lkm",
+    "kasumi_lkm", "pathmask",	     "procguard",
+    "nomount",	  "susfs_guard_lkm", "hybridmount",
 };
 
 static struct mutex *loader_mutex;

@@ -97,9 +97,10 @@ KernelSU supercall 的 UAPI 版本和命令定义保持原状。
 | `KSM_CONFLICT_BUILTIN_CONFIG` | 2 | 检测到冲突内置配置后激活 Kasumi |
 | `KSM_CONFLICT_MODULE_LOAD` | 3 | Kasumi VFS 防冲突保护生效时加载冲突模块 |
 
-当前模块黑名单为 `kasumi_lkm`、`pathmask`、`procguard`、`nomount` 和
-`susfs_guard_lkm`。内置检查读取运行内核的 IKCONFIG，识别 `CONFIG_KSU_SUSFS=y`
-和 `CONFIG_NOMOUNT=y`。读取失败时沿用现有行为：记录日志并允许初始化。
+当前模块黑名单为 `kasumi_lkm`、`pathmask`、`procguard`、`nomount`、
+`susfs_guard_lkm` 和 `hybridmount`。内置检查读取运行内核的 IKCONFIG，识别
+`CONFIG_KSU_SUSFS=y`、`CONFIG_NOMOUNT=y` 和 `CONFIG_HYBRIDMOUNT=y`。
+读取失败时沿用现有行为：记录日志并允许初始化。
 因此，空告警快照不能证明运行内核不存在冲突功能。
 
 事件保存在内核内存中，生命周期与承载它的 KernelSU 模块相同。管理器重启、

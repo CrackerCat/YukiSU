@@ -118,9 +118,10 @@ contains only an 8-byte aligned sequence at offset 0.
 | `KSM_CONFLICT_MODULE_LOAD` | 3 | Conflicting module load while the Kasumi VFS guard is active |
 
 The blacklist currently contains `kasumi_lkm`, `pathmask`, `procguard`, `nomount`,
-and `susfs_guard_lkm`. Built-in checks recognize `CONFIG_KSU_SUSFS=y` and
-`CONFIG_NOMOUNT=y` in the running kernel's IKCONFIG. If that configuration cannot
-be read, the existing guard logs the failure and permits initialization; an
+`susfs_guard_lkm`, and `hybridmount`. Built-in checks recognize `CONFIG_KSU_SUSFS=y`,
+`CONFIG_NOMOUNT=y`, and `CONFIG_HYBRIDMOUNT=y` in the running kernel's IKCONFIG.
+If that configuration cannot be read, the existing guard logs the failure and
+permits initialization; an
 empty conflict snapshot is not proof that the running kernel contains no
 conflicting functionality.
 
