@@ -68,6 +68,16 @@ object KasumiManager {
         return JSONArray(output)
     }
 
+    private fun readHideRules(): List<JSONObject> {
+        val entries = arrayResult("hide", "list", "--details")
+        return (0 until entries.length()).map { index ->
+            when (val entry = entries.get(index)) {
+                is String -> JSONObject().put("path", entry).put("bypass", false)
+                else -> entries.getJSONObject(index)
+            }
+        }
+    }
+
     internal fun parseModules(root: JSONObject): Map<String, ModuleInfo> {
         val modules = root.getJSONArray("modules")
         return (0 until modules.length()).associate { i ->
@@ -116,13 +126,7 @@ object KasumiManager {
         val mountState = readMountState(config, system)
         val mounts = objectResult("api", "mounts")
         mounts.keys().forEach { key -> system.put(key, mounts.get(key)) }
-        val entries = arrayResult("hide", "list", "--details")
-        val hides = (0 until entries.length()).map { index ->
-            when (val entry = entries.get(index)) {
-                is String -> JSONObject().put("path", entry).put("bypass", false)
-                else -> entries.getJSONObject(index)
-            }
-        }
+        val hides = readHideRules()
         Snapshot(
             system, config,
             JSONArray(system.optString("rules").lineSequence().filter(String::isNotBlank)
@@ -133,7 +137,7 @@ object KasumiManager {
         )
     }
 
-    private suspend fun mutate(block: () -> Unit) = withContext(NonCancellable + Dispatchers.IO) {
+    private suspend fun <T> mutate(block: () -> T): T = withContext(NonCancellable + Dispatchers.IO) {
         writes.withLock {
             try { block() } finally { changes.value++ }
         }
@@ -177,7 +181,7 @@ object KasumiManager {
 
     suspend fun applyConfig() = mutate { command("config", "apply") }
 
-    suspend fun saveModule(id: String, mode: String, rules: List<ModuleRule>, bypass: Boolean = false) = mutate {
+    suspend fun saveModule(id: String, mode: String, rules: List<ModuleRule>, bypass: Boolean = false): ConfigSaveResult = mutate {
         require(mode in mountModes)
         require(rules.all { it.path.startsWith('/') && it.mode in ruleModes })
         require(rules.map { it.path }.distinct().size == rules.size)
@@ -193,11 +197,24 @@ object KasumiManager {
         rules.filter { it !in previous.rules }.forEach {
             command(*(listOf("module", "add-rule", id, it.path, it.mode) + if (it.bypass) listOf("--bypass") else emptyList()).toTypedArray())
         }
+        val saved = parseModules(objectResult("module", "list", "--all"))[id]
+        check(saved != null && saved.mode == mode && saved.bypass == bypass && saved.rules.toSet() == rules.toSet()) {
+            "The controller did not retain the requested module settings"
+        }
+        try {
+            ConfigSaveResult(persisted = true, applied = objectResult("module", "apply", id).getBoolean("applied"))
+        } catch (error: Exception) {
+            ConfigSaveResult(persisted = true, applied = false, error = error.message ?: "Kasumi rule application failed")
+        }
     }
 
     suspend fun saveHide(path: String, remove: Boolean = false, bypass: Boolean = false) = mutate {
         require(path.startsWith('/') && path != "/system/bin/su")
         command(*(listOf("hide", if (remove) "remove" else "add", path) + if (!remove && bypass) listOf("--bypass") else emptyList()).toTypedArray())
+        val match = readHideRules().find { it.getString("path") == path }
+        check(if (remove) match == null else match != null && match.optBoolean("bypass") == bypass) {
+            "The controller did not retain the requested hide rule"
+        }
     }
 
     suspend fun clearRules() = mutate { command("kasumi", "clear") }

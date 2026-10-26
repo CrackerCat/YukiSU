@@ -51,7 +51,7 @@ internal fun KasumiMountConfigDialog(
     globalMode: String,
     bypassSupported: Boolean = false,
     onDismiss: () -> Unit,
-    onSaved: () -> Unit
+    onSaved: (Boolean) -> Unit
 ) {
     val resources = LocalResources.current
     val scope = rememberCoroutineScope()
@@ -281,8 +281,9 @@ internal fun KasumiMountConfigDialog(
                         val rulesToSave = if (newPath.isNotEmpty()) rules.filterNot { it.path == editingPath } +
                             KasumiManager.ModuleRule(newPath.trim(), newMode, newBypass) else rules
                         try {
-                            KasumiManager.saveModule(moduleId, selectedMode, rulesToSave, moduleBypass)
-                            onSaved()
+                            val result = KasumiManager.saveModule(moduleId, selectedMode, rulesToSave, moduleBypass)
+                            if (result.error == null) onSaved(result.applied)
+                            else error = resources.getString(R.string.kasumi_saved_apply_failed, result.error)
                         } catch (e: Exception) {
                             if (e is CancellationException) throw e
                             error = e.message ?: resources.getString(R.string.operation_failed)

@@ -1106,4 +1106,5 @@
     <string name="kasumi_rule_bypass">全局生效（绕过策略）</string>
     <string name="kasumi_rule_bypass_summary">仅作用于 Kasumi 规则。开启后规则对所有进程生效，不再跟随策略；模块开关作用于该模块的全部 Kasumi 规则。</string>
     <string name="kasumi_rule_bypass_unavailable">当前内核不支持规则 bypass。</string>
+    <string name="kasumi_module_saved_applied">设置已保存，Kasumi 规则已即时应用。挂载后端变更在重启后生效。</string>
 </resources>

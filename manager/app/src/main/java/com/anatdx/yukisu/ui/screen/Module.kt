@@ -205,9 +205,14 @@ fun ModuleScreen(navigator: DestinationsNavigator) {
             globalMode = state.globalMode,
             bypassSupported = state.bypassSupported,
             onDismiss = { mountDialog = null },
-            onSaved = {
+            onSaved = { applied ->
                 mountDialog = null
                 mountRefresh++
+                scope.launch {
+                    snackBarHost.showSnackbar(resources.getString(
+                        if (applied) R.string.kasumi_module_saved_applied else R.string.kasumi_saved_reboot,
+                    ))
+                }
             },
         )
     }
