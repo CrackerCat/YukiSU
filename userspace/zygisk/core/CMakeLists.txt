@@ -60,6 +60,8 @@ set(CXX_SLIM_SOURCE ${REPO_ROOT}/userspace/common/cxx_slim.cpp)
 add_library(zygisk SHARED
     ../endpoint.cpp
     src/core.cpp
+    src/core_bindings.cpp
+    src/loader_handoff.cpp
     src/hook.cpp
     src/runtime_log.cpp
     ${CXX_SLIM_SOURCE}
@@ -118,6 +120,8 @@ add_library(yukizncore SHARED
     ../endpoint.cpp
     src/hyos_runtime.cpp
     src/yukizncore.cpp
+    src/core_bindings.cpp
+    src/loader_handoff.cpp
     src/native_bionic.cpp
     src/runtime_log.cpp
     src/yukilinker.cpp
